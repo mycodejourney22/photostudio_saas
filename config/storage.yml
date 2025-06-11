@@ -1,0 +1,45 @@
+test:
+  service: Disk
+  root: <%= Rails.root.join("tmp/storage") %>
+
+local:
+  service: Disk
+  root: <%= Rails.root.join("storage") %>
+
+# Use this for development with local disk storage
+development:
+  service: Disk
+  root: <%= Rails.root.join("storage") %>
+
+# For production - you can choose between local disk or cloud storage
+production:
+  service: Disk
+  root: <%= Rails.root.join("storage") %>
+
+# AWS S3 configuration (uncomment when ready to use)
+# amazon:
+#   service: S3
+#   access_key_id: <%= Rails.application.credentials.dig(:aws, :access_key_id) %>
+#   secret_access_key: <%= Rails.application.credentials.dig(:aws, :secret_access_key) %>
+#   region: us-east-1
+#   bucket: your-bucket-name
+
+# Google Cloud Storage (uncomment when ready to use)
+# google:
+#   service: GCS
+#   project: your-project
+#   credentials: <%= Rails.application.credentials.dig(:gcs, :keyfile) %>
+#   bucket: your-bucket
+
+# Microsoft Azure Storage (uncomment when ready to use)
+# microsoft:
+#   service: AzureStorage
+#   account_name: your-account-name
+#   access_key: <%= Rails.application.credentials.dig(:azure_storage, :access_key) %>
+#   container: your-container-name-here
+
+# Mirror service (for redundancy)
+# mirror:
+#   service: Mirror
+#   primary: local
+#   mirrors: [ amazon ]
