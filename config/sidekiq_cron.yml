@@ -1,0 +1,19 @@
+daily_metrics:
+  cron: '0 2 * * *'
+  class: DailyMetricsJob
+  description: "Calculate daily metrics for all tenants"
+
+subscription_checks:
+  cron: '0 1 * * *'
+  class: SubscriptionCheckJob
+  description: "Check subscription statuses and handle renewals"
+
+cleanup_expired_sessions:
+  cron: '0 3 * * *'
+  class: CleanupExpiredSessionsJob
+  description: "Clean up expired user sessions"
+
+backup_data:
+  cron: '0 4 * * 0'
+  class: BackupDataJob
+  description: "Weekly data backup for all tenants"

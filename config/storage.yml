@@ -24,6 +24,14 @@ production:
 #   region: us-east-1
 #   bucket: your-bucket-name
 
+amazon:
+  service: S3
+  access_key_id: <%= ENV['AWS_ACCESS_KEY_ID'] %>
+  secret_access_key: <%= ENV['AWS_SECRET_ACCESS_KEY'] %>
+  region: <%= ENV['AWS_REGION'] %>
+  bucket: <%= ENV['AWS_BUCKET'] %>
+  public: true
+
 # Google Cloud Storage (uncomment when ready to use)
 # google:
 #   service: GCS

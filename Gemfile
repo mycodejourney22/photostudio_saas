@@ -34,10 +34,13 @@ gem 'httparty', '~> 0.21'
 gem 'money-rails', '~> 1.15'
 
 # UI & Frontend
-gem 'importmap-rails', '~> 1.2'  # Modern Rails 7 approach
-gem 'turbo-rails', '~> 1.5'
-gem 'stimulus-rails', '~> 1.3'
-gem 'tailwindcss-rails', '~> 2.0'
+gem "importmap-rails"
+gem "turbo-rails"
+gem "stimulus-rails"
+gem "tailwindcss-rails"
+
+
+gem "rack-attack"
 
 # Utilities
 gem 'bootsnap', '>= 1.16.0', require: false

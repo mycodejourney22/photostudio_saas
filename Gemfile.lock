@@ -284,6 +284,8 @@ GEM
       nio4r (~> 2.0)
     racc (1.8.1)
     rack (3.1.16)
+    rack-attack (6.7.0)
+      rack (>= 1.0, < 4)
     rack-cors (2.0.2)
       rack (>= 2.0.0)
     rack-session (2.1.1)
@@ -389,16 +391,16 @@ GEM
     stimulus-rails (1.3.4)
       railties (>= 6.0.0)
     stringio (3.1.7)
-    tailwindcss-rails (2.7.9-aarch64-linux)
+    tailwindcss-rails (4.2.3)
       railties (>= 7.0.0)
-    tailwindcss-rails (2.7.9-arm-linux)
-      railties (>= 7.0.0)
-    tailwindcss-rails (2.7.9-arm64-darwin)
-      railties (>= 7.0.0)
-    tailwindcss-rails (2.7.9-x86_64-darwin)
-      railties (>= 7.0.0)
-    tailwindcss-rails (2.7.9-x86_64-linux)
-      railties (>= 7.0.0)
+      tailwindcss-ruby (~> 4.0)
+    tailwindcss-ruby (4.1.8)
+    tailwindcss-ruby (4.1.8-aarch64-linux-gnu)
+    tailwindcss-ruby (4.1.8-aarch64-linux-musl)
+    tailwindcss-ruby (4.1.8-arm64-darwin)
+    tailwindcss-ruby (4.1.8-x86_64-darwin)
+    tailwindcss-ruby (4.1.8-x86_64-linux-gnu)
+    tailwindcss-ruby (4.1.8-x86_64-linux-musl)
     thor (1.3.2)
     timeout (0.4.3)
     turbo-rails (1.5.0)
@@ -454,7 +456,7 @@ DEPENDENCIES
   friendly_id (~> 5.5)
   httparty (~> 0.21)
   image_processing (~> 1.2)
-  importmap-rails (~> 1.2)
+  importmap-rails
   jbuilder (~> 2.7)
   jsbundling-rails
   jsonapi-serializer (~> 2.2)
@@ -464,6 +466,7 @@ DEPENDENCIES
   paystack (~> 0.1.6)
   pg (~> 1.1)
   puma (~> 6.0)
+  rack-attack
   rack-cors (~> 2.0)
   rails (~> 7.1.0)
   redis (~> 5.0)
@@ -472,9 +475,9 @@ DEPENDENCIES
   shoulda-matchers (~> 5.0)
   sidekiq (~> 7.2)
   sprockets-rails
-  stimulus-rails (~> 1.3)
-  tailwindcss-rails (~> 2.0)
-  turbo-rails (~> 1.5)
+  stimulus-rails
+  tailwindcss-rails
+  turbo-rails
   validate_url (~> 1.0)
   web-console
 

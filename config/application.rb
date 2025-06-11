@@ -24,5 +24,47 @@ module PhotostudioSaas
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    config.middleware.insert_before 0, Rack::Cors do
+      allow do
+        origins '*'
+        resource '/api/*',
+          headers: :any,
+          methods: [:get, :post, :put, :patch, :delete, :options, :head],
+          credentials: false
+      end
+    end
+
+    # Active Job configuration
+    config.active_job.queue_adapter = :sidekiq
+
+    # Time zone
+    config.time_zone = 'UTC'
+
+    # Domain configuration
+    config.app_domain = ENV.fetch('APP_DOMAIN', 'photostudio.local')
+    config.main_domain = ENV.fetch('MAIN_DOMAIN', 'www.photostudio.com')
+
+
+     config.active_storage.variant_processor = :image_processing
+    config.active_storage.analyzers.delete ActiveStorage::Analyzer::VideoAnalyzer
+
+    # Security configurations
+    config.force_ssl = Rails.env.production?
+    config.ssl_options = {
+      redirect: { exclude: ->(request) { request.path =~ /health/ } }
+    }
+
+    # Custom configurations
+    config.max_file_size = 10.megabytes
+    config.allowed_file_types = %w[image/jpeg image/png image/webp image/gif]
+
+    # Pagination defaults
+    config.default_per_page = 25
+    config.max_per_page = 100
+
+    # Rate limiting (using Rack::Attack)
+    config.middleware.use Rack::Attack
+
   end
 end
