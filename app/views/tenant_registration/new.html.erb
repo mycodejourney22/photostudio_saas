@@ -13,10 +13,10 @@
 <!-- Main Form -->
 <div class="max-w-xl mx-auto">
   <div class="bg-white bg-opacity-95 backdrop-blur-lg rounded-3xl shadow-2xl p-8">
-    <%= form_with model: @tenant, url: tenant_registration_path, local: true, class: "space-y-6", data: { controller: "tenant-registration" } do |form| %>
+    <%= form_with url: tenant_registration_path, method: :post, local: true, class: "space-y-6", data: { controller: "tenant-registration" } do |form| %>
 
       <!-- Error Messages -->
-      <% if defined?(@errors) && @errors.any? %>
+      <% if defined?(@errors) && @errors&.any? %>
         <div class="bg-red-50 border border-red-200 rounded-lg p-4">
           <div class="flex">
             <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -37,7 +37,7 @@
       <!-- Studio Name -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Studio Name</label>
-        <%= form.text_field :name,
+        <%= text_field_tag "tenant[name]", @tenant&.name,
               placeholder: "Sunset Studios",
               class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
               required: true %>
@@ -46,7 +46,7 @@
       <!-- Subdomain -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Choose Your URL</label>
-        <%= form.text_field :subdomain,
+        <%= text_field_tag "tenant[subdomain]", @tenant&.subdomain,
               placeholder: "sunset-studios",
               class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
               required: true,
@@ -68,7 +68,7 @@
       <!-- Contact Email -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Contact Email</label>
-        <%= form.email_field :email,
+        <%= email_field_tag "tenant[email]", @tenant&.email,
               placeholder: "info@sunsetstudios.com",
               class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
               required: true %>
@@ -78,51 +78,49 @@
       <div class="border-t pt-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">Owner Information</h3>
 
-        <%= fields_for :user, @user do |user_form| %>
-          <div class="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-              <%= user_form.text_field :first_name,
-                    class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
-                    required: true %>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-              <%= user_form.text_field :last_name,
-                    class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
-                    required: true %>
-            </div>
-          </div>
-
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-            <%= user_form.email_field :email,
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+            <%= text_field_tag "user[first_name]", @user&.first_name,
                   class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
                   required: true %>
           </div>
-
-          <div class="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-              <%= user_form.password_field :password,
-                    class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
-                    required: true,
-                    minlength: 8 %>
-              <p class="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
-              <%= user_form.password_field :password_confirmation,
-                    class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
-                    required: true %>
-            </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+            <%= text_field_tag "user[last_name]", @user&.last_name,
+                  class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
+                  required: true %>
           </div>
-        <% end %>
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+          <%= email_field_tag "user[email]", @user&.email,
+                class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
+                required: true %>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <%= password_field_tag "user[password]", "",
+                  class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
+                  required: true,
+                  minlength: 8 %>
+            <p class="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+            <%= password_field_tag "user[password_confirmation]", "",
+                  class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
+                  required: true %>
+          </div>
+        </div>
       </div>
 
       <!-- Submit Button -->
       <div>
-        <%= form.submit "Create Studio Account",
+        <%= submit_tag "Create Studio Account",
               class: "w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
               data: { disable_with: "Creating Studio..." } %>
       </div>

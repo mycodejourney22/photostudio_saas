@@ -14,57 +14,51 @@
       <h1 class="text-2xl font-bold text-gray-900 mb-4">Studio Verified! 🎉</h1>
 
       <p class="text-gray-600 mb-6">
-        Your photography studio is now active and ready to use.
+        Your photography studio <strong><%= @tenant.name %></strong> is now active and ready to use.
         You can now sign in and start managing your business.
       </p>
 
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <p class="text-sm text-blue-800 mb-2">
+          <strong>Your Studio URL:</strong>
+        </p>
+        <% if Rails.env.development? %>
+          <% studio_url = "http://#{@tenant.subdomain}.localhost:3000" %>
+        <% else %>
+          <% studio_url = "https://#{@tenant.subdomain}.#{Rails.application.config.app_domain}" %>
+        <% end %>
+        <p class="font-mono text-blue-600 text-sm break-all">
+          <%= studio_url %>
+        </p>
+      </div>
+
       <div class="space-y-4">
-        <%= link_to "Sign In to Your Studio",
-              new_user_session_path,
-              class: "block w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors" %>
-
-        <p class="text-sm text-gray-500">
-          Studio URL: <span class="font-mono text-green-600"><%= request.host %></span>
-        </p>
-      </div>
-    </div>
-  </div>
-</div> Verified - PhotoStudio Pro</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <%= csrf_meta_tags %>
-  <%= csp_meta_tag %>
-  <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
-</head>
-
-<body class="bg-gradient-to-br from-green-500 to-green-600 min-h-screen">
-  <div class="flex items-center justify-center min-h-screen px-4">
-    <div class="max-w-md w-full">
-      <div class="bg-white rounded-2xl shadow-xl p-8 text-center">
-        <!-- Verified Icon -->
-        <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-6">
-          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-        </div>
-
-        <h1 class="text-2xl font-bold text-gray-900 mb-4">Studio Verified! 🎉</h1>
-
-        <p class="text-gray-600 mb-6">
-          Your photography studio is now active and ready to use.
-          You can now sign in and start managing your business.
-        </p>
-
-        <div class="space-y-4">
+        <% if Rails.env.development? %>
           <%= link_to "Sign In to Your Studio",
-                new_user_session_path,
+                "http://#{@tenant.subdomain}.localhost:3000/users/sign_in",
+                class: "block w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors",
+                target: "_blank" %>
+        <% else %>
+          <%= link_to "Sign In to Your Studio",
+                new_user_session_url(subdomain: @tenant.subdomain),
                 class: "block w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors" %>
+        <% end %>
 
-          <p class="text-sm text-gray-500">
-            Studio URL: <span class="font-mono text-green-600"><%= request.host %></span>
-          </p>
-        </div>
+        <%= link_to "Back to Main Site",
+              root_path,
+              class: "block w-full bg-gray-200 text-gray-800 py-3 px-4 rounded-lg font-medium hover:bg-gray-300 transition-colors" %>
+      </div>
+
+      <div class="mt-6 pt-6 border-t border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">Next Steps:</h3>
+        <ul class="text-sm text-gray-600 text-left space-y-1">
+          <li>✅ Email verified</li>
+          <li>📝 Complete your studio profile</li>
+          <li>👥 Add your first customer</li>
+          <li>📅 Schedule your first appointment</li>
+          <li>🎨 Customize your branding</li>
+        </ul>
       </div>
     </div>
   </div>
-</body>
-</html>
+</div>

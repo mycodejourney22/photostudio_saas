@@ -1,4 +1,4 @@
-# config/routes.rb - Simplified for now
+# config/routes.rb - Fixed routing
 Rails.application.routes.draw do
   # Health check
   get '/health', to: 'health#check'
@@ -6,10 +6,11 @@ Rails.application.routes.draw do
   # Root route - tenant registration for now
   root 'tenant_registration#new'
 
-  # Tenant registration
+  # Tenant registration routes - FIXED
   get 'signup', to: 'tenant_registration#new', as: :new_tenant_registration
   post 'signup', to: 'tenant_registration#create', as: :tenant_registration
   get 'signup/verify/:token', to: 'tenant_registration#verify', as: :tenant_registration_verify
+  get 'signup/verified', to: 'tenant_registration#verified', as: :tenant_registration_verified
   get 'signup/success', to: 'tenant_registration#success', as: :tenant_registration_success
   get 'check-subdomain', to: 'tenant_registration#check_subdomain'
 

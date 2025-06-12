@@ -1,9 +1,7 @@
-# app/controllers/tenant_registration_controller.rb
 class TenantRegistrationController < ApplicationController
   skip_before_action :authenticate_user!
   skip_before_action :set_current_tenant
   layout 'public'
-
 
   def new
     @tenant = Tenant.new
@@ -14,8 +12,15 @@ class TenantRegistrationController < ApplicationController
     @tenant = Tenant.new(tenant_params)
     @user = User.new(user_params)
 
-    ActiveRecord::Base.transaction do
-      if @tenant.save && @user.save
+    # Validate both models before attempting to save
+    tenant_valid = @tenant.valid?
+    user_valid = @user.valid?
+
+    if tenant_valid && user_valid
+      ActiveRecord::Base.transaction do
+        @tenant.save!
+        @user.save!
+
         # Create tenant-user relationship as owner
         @tenant.tenant_users.create!(
           user: @user,
@@ -23,19 +28,32 @@ class TenantRegistrationController < ApplicationController
           active: true
         )
 
-        # Send verification email
-        # TenantMailer.verification_email(@tenant).deliver_now
+        # Send verification email (uncomment when ready)
+        TenantMailer.verification_email(@tenant).deliver_now
 
         redirect_to tenant_registration_success_path(token: @tenant.verification_token),
                     notice: 'Studio created! Check your email to verify your account.'
-      else
-        # Merge errors for unified display
-        @errors = @tenant.errors.full_messages + @user.errors.full_messages
-        render :new, status: :unprocessable_entity
+        return # Important: exit the method here
       end
+    else
+      # Merge errors for unified display
+      @errors = []
+      @errors += @tenant.errors.full_messages if @tenant.errors.any?
+      @errors += @user.errors.full_messages if @user.errors.any?
+
+      Rails.logger.debug "Tenant errors: #{@tenant.errors.full_messages}"
+      Rails.logger.debug "User errors: #{@user.errors.full_messages}"
+
+      render :new, status: :unprocessable_entity
     end
   rescue ActiveRecord::RecordInvalid => e
+    Rails.logger.error "Record invalid: #{e.message}"
     @errors = [e.message]
+    render :new, status: :unprocessable_entity
+  rescue StandardError => e
+    Rails.logger.error "Unexpected error: #{e.message}"
+    Rails.logger.error e.backtrace.join("\n")
+    @errors = ["An unexpected error occurred. Please try again."]
     render :new, status: :unprocessable_entity
   end
 
@@ -43,13 +61,19 @@ class TenantRegistrationController < ApplicationController
     @tenant = Tenant.find_by(verification_token: params[:token])
 
     if @tenant&.pending?
-      @tenant.update!(status: 'active', verified_at: Time.current)
-      TenantSetupJob.perform_async(@tenant.id)
+      @tenant.verify!
 
-      redirect_to new_user_session_url(subdomain: @tenant.subdomain),
-                  notice: 'Studio verified! You can now sign in.'
+      # Setup tenant data (optional)
+      # TenantSetupJob.perform_async(@tenant.id)
+
+      # Send welcome email
+      # TenantMailer.welcome_email(@tenant).deliver_now
+
+      # Instead of redirecting to subdomain, show verification success page
+      render :verified
     else
-      redirect_to new_tenant_registration_path, alert: 'Invalid or expired verification link.'
+      redirect_to new_tenant_registration_path,
+                  alert: 'Invalid or expired verification link.'
     end
   end
 

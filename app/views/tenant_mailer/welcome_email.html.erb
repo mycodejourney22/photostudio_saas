@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to PhotoStudio Pro!</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        line-height: 1.6;
+        margin: 0;
+        padding: 0;
+        background-color: #f8fafc;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 40px 30px;
+        text-align: center;
+      }
+      .content {
+        padding: 40px 30px;
+      }
+      .button {
+        display: inline-block;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        text-decoration: none;
+        padding: 15px 30px;
+        border-radius: 6px;
+        font-weight: 600;
+        margin: 20px 0;
+      }
+      .feature-box {
+        background-color: #f8fafc;
+        border-left: 4px solid #10b981;
+        padding: 15px;
+        margin: 15px 0;
+      }
+      .footer {
+        background-color: #f8fafc;
+        padding: 20px 30px;
+        text-align: center;
+        color: #6b7280;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🎉 Studio Verified!</h1>
+        <p>Your PhotoStudio Pro account is now active</p>
+      </div>
+
+      <div class="content">
+        <h2>Congratulations, <%= @tenant.name %>!</h2>
+
+        <p>Your photography studio is now live and ready to help you grow your business. You can start managing appointments, customers, and growing your photography business right away.</p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <%= link_to "Access Your Studio", @studio_url, class: "button" %>
+        </div>
+
+        <div style="background-color: #f3f4f6; padding: 20px; border-radius: 6px; margin: 20px 0;">
+          <p><strong>Your Studio is Live:</strong></p>
+          <p><%= @studio_url %></p>
+        </div>
+
+        <h3>🚀 Quick Start Guide</h3>
+
+        <div class="feature-box">
+          <h4>1. Set Up Your Studio Profile</h4>
+          <p>Customize your branding, upload your logo, and personalize your studio's appearance.</p>
+        </div>
+
+        <div class="feature-box">
+          <h4>2. Add Your First Customer</h4>
+          <p>Start building your customer database by adding client information and contact details.</p>
+        </div>
+
+        <div class="feature-box">
+          <h4>3. Create Your First Appointment</h4>
+          <p>Schedule your first photo session and experience our booking management system.</p>
+        </div>
+
+        <div class="feature-box">
+          <h4>4. Explore Analytics</h4>
+          <p>Track your business performance with our comprehensive dashboard and reporting tools.</p>
+        </div>
+
+        <h3>📱 Coming Soon: Mobile Apps</h3>
+        <p>We're working on mobile apps for both you and your clients. Stay tuned for updates!</p>
+
+        <h3>💡 Need Help?</h3>
+        <p>Our support team is here to help you get the most out of PhotoStudio Pro:</p>
+        <ul>
+          <li>📧 Email: support@photostudio.com</li>
+          <li>📚 Knowledge Base: docs.photostudio.com</li>
+          <li>💬 Live Chat: Available in your dashboard</li>
+        </ul>
+
+        <p>Thank you for choosing PhotoStudio Pro. We're excited to see your photography business thrive!</p>
+
+        <p>Best regards,</p>
+        <p><strong>The PhotoStudio Pro Team</strong></p>
+      </div>
+
+      <div class="footer">
+        <p>This email was sent to <%= @tenant.email %></p>
+        <p>PhotoStudio Pro - Professional Photography Business Management</p>
+      </div>
+    </div>
+  </body>
+</html>

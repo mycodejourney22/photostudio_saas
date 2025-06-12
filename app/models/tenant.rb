@@ -1,6 +1,5 @@
 class Tenant < ApplicationRecord
   # extend FriendlyId
-
   # friendly_id :subdomain, use: :slugged
 
   has_many :tenant_users, dependent: :destroy
@@ -19,13 +18,15 @@ class Tenant < ApplicationRecord
   validates :plan_type, inclusion: { in: %w[starter professional enterprise] }
 
   before_validation :normalize_subdomain
+  before_create :generate_verification_token
   after_create :create_default_branding
   # after_create :setup_tenant_schema
 
   scope :active, -> { where(status: 'active') }
   scope :by_plan, ->(plan) { where(plan_type: plan) }
 
-  enum status: { trial: 0, active: 1, suspended: 2, cancelled: 3 }
+  # Updated enum to include 'pending' status
+  enum status: { pending: 0, trial: 1, active: 2, suspended: 3, cancelled: 4 }
   enum plan_type: { starter: 0, professional: 1, enterprise: 2 }
 
   def full_domain
@@ -40,10 +41,28 @@ class Tenant < ApplicationRecord
     plan_limits.within_limit?(resource_type, current_usage(resource_type))
   end
 
+  # Check if tenant is verified
+  def verified?
+    verified_at.present?
+  end
+
+  # Verify the tenant
+  def verify!
+    update!(
+      status: 'active',
+      verified_at: Time.current,
+      verification_token: nil  # Clear the token for security
+    )
+  end
+
   private
 
   def normalize_subdomain
     self.subdomain = subdomain.to_s.downcase.strip
+  end
+
+  def generate_verification_token
+    self.verification_token = SecureRandom.urlsafe_base64(32)
   end
 
   def create_default_branding
@@ -65,6 +84,7 @@ class Tenant < ApplicationRecord
       appointments.current_month.count
     when 'storage'
       # Calculate storage usage
+      0
     when 'team_members'
       users.active.count
     end
