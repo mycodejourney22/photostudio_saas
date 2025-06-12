@@ -14,23 +14,33 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="<%= content_for?(:body_class) ? yield(:body_class) : 'bg-gray-50' %>">
+  <body class="<%= content_for?(:body_class) ? yield(:body_class) : '' %>">
     <!-- Flash messages -->
     <% if notice %>
-      <div class="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
+      <div id="flash-notice" class="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flash-message">
         <%= notice %>
       </div>
+      <script>
+        setTimeout(function() {
+          const flash = document.getElementById('flash-notice');
+          if (flash) flash.remove();
+        }, 5000);
+      </script>
     <% end %>
 
     <% if alert %>
-      <div class="fixed top-4 right-4 z-50 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg">
+      <div id="flash-alert" class="fixed top-4 right-4 z-50 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg flash-message">
         <%= alert %>
       </div>
+      <script>
+        setTimeout(function() {
+          const flash = document.getElementById('flash-alert');
+          if (flash) flash.remove();
+        }, 5000);
+      </script>
     <% end %>
 
     <!-- Main content -->
-    <main class="<%= content_for?(:main_class) ? yield(:main_class) : 'container mx-auto mt-8 px-5' %>">
-      <%= yield %>
-    </main>
+    <%= yield %>
   </body>
 </html>

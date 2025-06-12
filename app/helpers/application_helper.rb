@@ -74,4 +74,10 @@ module ApplicationHelper
       content_tag(:span, status.humanize, class: "px-2 py-1 text-xs font-medium rounded-full text-gray-800 bg-gray-100")
     end
   end
+
+  # Helper for active navigation states
+  def nav_link_active?(path)
+    current_page?(path) || (path == dashboard_path && current_page?(root_path))
+  end
+
 end
