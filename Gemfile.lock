@@ -121,8 +121,6 @@ GEM
     concurrent-ruby (1.3.5)
     connection_pool (2.5.3)
     crass (1.0.6)
-    cssbundling-rails (1.4.3)
-      railties (>= 6.0.0)
     csv (3.3.5)
     database_cleaner-active_record (2.2.1)
       activerecord (>= 5.a)
@@ -192,8 +190,6 @@ GEM
       actionview (>= 5.0.0)
       activesupport (>= 5.0.0)
     jmespath (1.6.2)
-    jsbundling-rails (1.3.1)
-      railties (>= 6.0.0)
     jsonapi-serializer (2.2.0)
       activesupport (>= 4.2)
     kaminari (1.2.2)
@@ -445,7 +441,6 @@ DEPENDENCIES
   bootsnap (>= 1.16.0)
   cancancan (~> 3.5)
   capybara
-  cssbundling-rails
   database_cleaner-active_record (~> 2.1)
   debug
   devise (~> 4.9)
@@ -458,7 +453,6 @@ DEPENDENCIES
   image_processing (~> 1.2)
   importmap-rails
   jbuilder (~> 2.7)
-  jsbundling-rails
   jsonapi-serializer (~> 2.2)
   kaminari (~> 1.2)
   money-rails (~> 1.15)

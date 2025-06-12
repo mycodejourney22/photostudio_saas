@@ -1,7 +1,7 @@
 class Tenant < ApplicationRecord
-  extend FriendlyId
+  # extend FriendlyId
 
-  friendly_id :subdomain, use: :slugged
+  # friendly_id :subdomain, use: :slugged
 
   has_many :tenant_users, dependent: :destroy
   has_many :users, through: :tenant_users
@@ -20,7 +20,7 @@ class Tenant < ApplicationRecord
 
   before_validation :normalize_subdomain
   after_create :create_default_branding
-  after_create :setup_tenant_schema
+  # after_create :setup_tenant_schema
 
   scope :active, -> { where(status: 'active') }
   scope :by_plan, ->(plan) { where(plan_type: plan) }
@@ -55,9 +55,9 @@ class Tenant < ApplicationRecord
     ).save!
   end
 
-  def setup_tenant_schema
-    TenantSetupJob.perform_async(id)
-  end
+  # def setup_tenant_schema
+  #   TenantSetupJob.perform_async(id)
+  # end
 
   def current_usage(resource_type)
     case resource_type

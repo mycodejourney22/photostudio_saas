@@ -24,7 +24,7 @@ class TenantRegistrationController < ApplicationController
         )
 
         # Send verification email
-        TenantMailer.verification_email(@tenant).deliver_now
+        # TenantMailer.verification_email(@tenant).deliver_now
 
         redirect_to tenant_registration_success_path(token: @tenant.verification_token),
                     notice: 'Studio created! Check your email to verify your account.'

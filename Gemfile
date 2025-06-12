@@ -72,5 +72,5 @@ end
 
 gem 'ostruct'  # Fix the Ruby 3.3.5 warning
 gem 'sprockets-rails'  # Required for assets:precompile
-gem 'cssbundling-rails'  # For CSS bundling
-gem 'jsbundling-rails'
+# gem 'cssbundling-rails'  # For CSS bundling
+# gem 'jsbundling-rails'

@@ -1,5 +1,5 @@
 class ApplicationJob < ActiveJob::Base
-  include Sidekiq::Job
+  # include Sidekiq::Job
 
   retry_on StandardError, wait: :exponentially_longer, attempts: 3
 

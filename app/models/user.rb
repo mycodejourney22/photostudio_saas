@@ -19,7 +19,7 @@ class User < ApplicationRecord
 
   # Callbacks
   before_validation :normalize_phone
-  after_create :send_welcome_email
+  # after_create :send_welcome_email
 
   # Scopes
   scope :active, -> { where(active: true) }

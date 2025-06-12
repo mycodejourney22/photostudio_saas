@@ -1,153 +1,146 @@
-    <!-- Registration Form -->
-    <div class="bg-white rounded-2xl shadow-xl p-8">
-      <%= form_with model: @tenant, url: tenant_registration_path, local: true, class: "space-y-6", data: { controller: "tenant-registration" } do |form| %>
+<!-- Header -->
+<div class="text-center mb-8">
+  <div class="inline-flex items-center justify-center w-16 h-16 bg-white bg-opacity-20 rounded-2xl mb-4">
+    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+    </svg>
+  </div>
+  <h1 class="text-4xl font-bold text-white mb-2">Create Your Photography Studio</h1>
+  <p class="text-white text-opacity-90 text-lg">Join thousands of photographers managing their business with PhotoStudio Pro</p>
+</div>
 
-        <!-- Error Messages -->
-        <% if defined?(@errors) && @errors.any? %>
-          <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div class="flex">
-              <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-              </svg>
-              <div class="ml-3">
-                <h3 class="text-sm font-medium text-red-800">Please fix the following errors:</h3>
-                <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
-                  <% @errors.each do |error| %>
-                    <li><%= error %></li>
-                  <% end %>
-                </ul>
-              </div>
+<!-- Main Form -->
+<div class="max-w-xl mx-auto">
+  <div class="bg-white bg-opacity-95 backdrop-blur-lg rounded-3xl shadow-2xl p-8">
+    <%= form_with model: @tenant, url: tenant_registration_path, local: true, class: "space-y-6", data: { controller: "tenant-registration" } do |form| %>
+
+      <!-- Error Messages -->
+      <% if defined?(@errors) && @errors.any? %>
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div class="flex">
+            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-red-800">Please fix the following errors:</h3>
+              <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+                <% @errors.each do |error| %>
+                  <li><%= error %></li>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Studio Name -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Studio Name</label>
+        <%= form.text_field :name,
+              placeholder: "Sunset Studios",
+              class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
+              required: true %>
+      </div>
+
+      <!-- Subdomain -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Choose Your URL</label>
+        <%= form.text_field :subdomain,
+              placeholder: "sunset-studios",
+              class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
+              required: true,
+              pattern: "[a-z0-9-]+",
+              data: {
+                "tenant-registration-target": "subdomain",
+                action: "input->tenant-registration#updatePreview"
+              } %>
+        <div class="mt-2 p-3 bg-blue-50 rounded-lg">
+          <p class="text-sm text-gray-600">
+            Your studio will be available at:
+            <span class="font-semibold text-blue-600" data-tenant-registration-target="preview">
+              your-studio.photostudio.com
+            </span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Contact Email -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Contact Email</label>
+        <%= form.email_field :email,
+              placeholder: "info@sunsetstudios.com",
+              class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
+              required: true %>
+      </div>
+
+      <!-- Owner Information -->
+      <div class="border-t pt-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Owner Information</h3>
+
+        <%= fields_for :user, @user do |user_form| %>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+              <%= user_form.text_field :first_name,
+                    class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
+                    required: true %>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+              <%= user_form.text_field :last_name,
+                    class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
+                    required: true %>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+            <%= user_form.email_field :email,
+                  class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
+                  required: true %>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <%= user_form.password_field :password,
+                    class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
+                    required: true,
+                    minlength: 8 %>
+              <p class="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+              <%= user_form.password_field :password_confirmation,
+                    class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
+                    required: true %>
             </div>
           </div>
         <% end %>
+      </div>
 
-        <!-- Studio Name -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Studio Name</label>
-          <%= form.text_field :name,
-                placeholder: "Sunset Studios",
-                class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-                required: true %>
-        </div>
+      <!-- Submit Button -->
+      <div>
+        <%= form.submit "Create Studio Account",
+              class: "w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
+              data: { disable_with: "Creating Studio..." } %>
+      </div>
 
-        <!-- Subdomain -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Choose Your URL</label>
-          <%= form.text_field :subdomain,
-                placeholder: "sunset-studios",
-                class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-                required: true,
-                pattern: "[a-z0-9-]+",
-                data: {
-                  "tenant-registration-target": "subdomain",
-                  action: "input->tenant-registration#updatePreview"
-                } %>
-          <div class="mt-2 text-sm text-gray-500">
-            Your studio will be available at:
-            <span class="font-medium text-blue-600" data-tenant-registration-target="preview">
-              your-studio.photostudio.com
-            </span>
-          </div>
-        </div>
+      <!-- Terms -->
+      <p class="text-center text-sm text-gray-600">
+        By creating an account, you agree to our
+        <a href="#" class="text-blue-600 hover:text-blue-500">Terms of Service</a> and
+        <a href="#" class="text-blue-600 hover:text-blue-500">Privacy Policy</a>
+      </p>
 
-        <!-- Contact Email -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Contact Email</label>
-          <%= form.email_field :email,
-                placeholder: "info@sunsetstudios.com",
-                class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-                required: true %>
-        </div>
-
-        <!-- Plan Selection -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-3">Choose Your Plan</label>
-          <div class="space-y-3">
-            <% [
-              { type: 'starter', name: 'Starter', price: '$29', description: 'Perfect for solo photographers' },
-              { type: 'professional', name: 'Professional', price: '$79', description: 'For growing studios', recommended: true },
-              { type: 'enterprise', name: 'Enterprise', price: '$199', description: 'For large operations' }
-            ].each do |plan| %>
-              <div class="relative">
-                <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-300 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition-all">
-                  <%= form.radio_button :plan_type, plan[:type],
-                        class: "sr-only",
-                        checked: plan[:recommended] %>
-
-                  <div class="flex-1">
-                    <div class="flex items-center justify-between">
-                      <div>
-                        <h4 class="font-medium text-gray-900"><%= plan[:name] %></h4>
-                        <p class="text-sm text-gray-500"><%= plan[:description] %></p>
-                      </div>
-                      <div class="text-right">
-                        <span class="text-2xl font-bold text-blue-600"><%= plan[:price] %></span>
-                        <p class="text-sm text-gray-500">per month</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <% if plan[:recommended] %>
-                    <span class="absolute -top-2 -right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">Recommended</span>
-                  <% end %>
-                </label>
-              </div>
-            <% end %>
-          </div>
-        </div>
-
-        <!-- Owner Information -->
-        <div class="border-t pt-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Owner Information</h3>
-
-          <%= fields_for :user, @user do |user_form| %>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                <%= user_form.text_field :first_name,
-                      class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-                      required: true %>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                <%= user_form.text_field :last_name,
-                      class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-                      required: true %>
-              </div>
-            </div>
-
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-              <%= user_form.email_field :email,
-                    class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-                    required: true %>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                <%= user_form.password_field :password,
-                      class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-                      required: true,
-                      minlength: 8 %>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
-                <%= user_form.password_field :password_confirmation,
-                      class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-                      required: true %>
-              </div>
-            </div>
-          <% end %>
-        </div>
-
-        <!-- Submit Button -->
-        <div>
-          <%= form.submit "Create Studio Account",
-                class: "w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors",
-                data: { disable_with: "Creating Studio..." } %>
-        </div>
-      <% end %>
-    </div>
+      <!-- Sign in link -->
+      <div class="text-center border-t pt-4">
+        <p class="text-gray-600">
+          Already have a studio?
+          <a href="#" class="text-blue-600 hover:text-blue-500 font-medium">Sign in here</a>
+        </p>
+      </div>
+    <% end %>
   </div>
 </div>

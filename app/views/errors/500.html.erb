@@ -1,25 +1,45 @@
-<% content_for :title, "Something Went Wrong" %>
+<% content_for :title, "Something Went Wrong - PhotoStudio Pro" %>
+<% content_for :body_class, "gradient-bg" %>
 
-<div class="flex items-center justify-center min-h-screen px-4">
-  <div class="max-w-md w-full text-center">
-    <div class="bg-white rounded-2xl shadow-xl p-8">
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full">
+    <!-- Error Card -->
+    <div class="bg-white rounded-2xl shadow-xl p-8 text-center">
+      <!-- Error Icon -->
       <div class="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-6">
         <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
       </div>
 
+      <!-- Error Content -->
       <h1 class="text-2xl font-bold text-gray-900 mb-4">Something Went Wrong</h1>
       <p class="text-gray-600 mb-6">
-        We're experiencing technical difficulties. Please try again later.
+        We're experiencing technical difficulties. Our team has been notified and we're working to fix this issue.
       </p>
 
+      <!-- Action Buttons -->
       <div class="space-y-3">
         <%= link_to "Try Again", "javascript:history.back()",
-              class: "block w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors" %>
+              class: "btn btn-primary w-full py-3 text-lg" %>
         <%= link_to "Go Home", root_path,
-              class: "block w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors" %>
+              class: "btn btn-secondary w-full py-3 text-lg" %>
       </div>
+
+      <!-- Additional Help -->
+      <div class="mt-8 pt-6 border-t border-gray-200">
+        <p class="text-sm text-gray-500">
+          Error ID: <%= SecureRandom.hex(4) %> •
+          <span class="text-blue-600 hover:text-blue-700 cursor-pointer">Contact Support</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- PhotoStudio Branding -->
+    <div class="text-center mt-6">
+      <p class="text-blue-100 text-sm">
+        Powered by <span class="font-medium">PhotoStudio Pro</span>
+      </p>
     </div>
   </div>
 </div>
