@@ -68,6 +68,9 @@ group :test do
   gem 'capybara'
   gem 'selenium-webdriver'
   gem 'shoulda-matchers', '~> 5.0'
+  gem 'database_cleaner-active_record', '~> 2.1'
+  gem 'webdrivers' # Automatically manages browser drivers
+  gem 'launchy' # For save_and_open_page debugging
 end
 
 gem 'ostruct'  # Fix the Ruby 3.3.5 warning

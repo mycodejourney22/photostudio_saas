@@ -1,0 +1,63 @@
+# bin/test (Executable test runner)
+#!/usr/bin/env ruby
+require 'fileutils'
+
+APP_ROOT = File.expand_path('..', __dir__)
+
+def system!(*args)
+  system(*args) || abort("\n== Command #{args} failed ==")
+end
+
+FileUtils.chdir APP_ROOT do
+  puts "🧪 PhotoStudio Test Suite"
+  puts "=" * 50
+
+  case ARGV[0]
+  when 'core'
+    puts "Running core feature tests (signup, login, dashboard)..."
+    system! 'bundle exec rake test:core'
+
+  when 'smoke'
+    puts "Running smoke tests..."
+    system! 'bundle exec rake test:smoke'
+
+  when 'models'
+    puts "Running model tests..."
+    system! 'bundle exec rake test:models'
+
+  when 'system'
+    puts "Running system/integration tests..."
+    system! 'bundle exec rspec spec/system/'
+
+  when 'fast'
+    puts "Running fast unit tests..."
+    system! 'bundle exec rspec spec/models/ spec/controllers/ --format progress'
+
+  when 'coverage'
+    puts "Running tests with coverage report..."
+    system! 'COVERAGE=true bundle exec rspec'
+
+  when 'debug'
+    puts "Running tests with debug output..."
+    system! 'bundle exec rspec --format documentation --backtrace'
+
+  else
+    puts <<~HELP
+      Usage: bin/test [command]
+
+      Commands:
+        core     - Run core features (signup, login, dashboard)
+        smoke    - Run essential smoke tests
+        models   - Run all model tests
+        system   - Run system/integration tests
+        fast     - Run unit tests only (faster)
+        coverage - Run with coverage report
+        debug    - Run with full debug output
+
+      Examples:
+        bin/test core
+        bin/test smoke
+        bundle exec rspec spec/system/dashboard_spec.rb
+    HELP
+  end
+end
