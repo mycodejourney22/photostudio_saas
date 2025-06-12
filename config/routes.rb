@@ -1,63 +1,74 @@
-# config/routes.rb - Fixed routing
+# config/routes.rb
 Rails.application.routes.draw do
   # Health check
   get '/health', to: 'health#check'
 
-  # Root route - tenant registration for now
-  root 'tenant_registration#new'
+  # Main site routes (no subdomain or www subdomain)
+  constraints MainSiteConstraint.new do
+    root 'tenant_registration#new'
 
-  # Tenant registration routes - FIXED
-  get 'signup', to: 'tenant_registration#new', as: :new_tenant_registration
-  post 'signup', to: 'tenant_registration#create', as: :tenant_registration
-  get 'signup/verify/:token', to: 'tenant_registration#verify', as: :tenant_registration_verify
-  get 'signup/verified', to: 'tenant_registration#verified', as: :tenant_registration_verified
-  get 'signup/success', to: 'tenant_registration#success', as: :tenant_registration_success
-  get 'check-subdomain', to: 'tenant_registration#check_subdomain'
+    # Tenant registration routes
+    get 'signup', to: 'tenant_registration#new', as: :new_tenant_registration
+    post 'signup', to: 'tenant_registration#create', as: :tenant_registration
+    get 'signup/verify/:token', to: 'tenant_registration#verify', as: :tenant_registration_verify
+    get 'signup/verified', to: 'tenant_registration#verified', as: :tenant_registration_verified
+    get 'signup/success', to: 'tenant_registration#success', as: :tenant_registration_success
+    get 'check-subdomain', to: 'tenant_registration#check_subdomain'
+  end
 
-  # Authentication routes
-  devise_for :users, controllers: {
-    registrations: 'users/registrations',
-    sessions: 'users/sessions',
-    passwords: 'users/passwords'
-  }
+  # Tenant-specific routes (subdomain required)
+  constraints TenantConstraint.new do
+    # Authentication routes for tenants
+    devise_for :users, controllers: {
+      registrations: 'users/registrations',
+      sessions: 'users/sessions',
+      passwords: 'users/passwords'
+    }
 
-  # API routes
-  namespace :api do
-    namespace :v1 do
-      resources :appointments
-      resources :customers
+    # Dashboard
+    get '/', to: 'dashboard#index'
+    get 'dashboard', to: 'dashboard#index'
+
+    # Staff dashboard
+    get 'staff', to: 'staff/dashboard#index'
+
+    # Tenant Admin
+    get 'admin', to: 'admin/branding#show'
+    get 'admin/branding', to: 'admin/branding#show'
+    patch 'admin/branding', to: 'admin/branding#update'
+    put 'admin/branding', to: 'admin/branding#update'
+
+    # Core resources
+    resources :appointments do
+      member do
+        patch :confirm
+        patch :cancel
+        patch :complete
+      end
+    end
+
+    resources :customers
+    resources :studios
+
+    # API routes
+    namespace :api do
+      namespace :v1 do
+        resources :appointments
+        resources :customers
+        resources :studios
+      end
     end
   end
 
-  # Admin routes (super admin)
-  namespace :admin do
-    root 'dashboard#index'
-    resources :tenants do
+  # Super Admin routes (admin subdomain only)
+  constraints subdomain: 'admin' do
+    get '/', to: 'admin/tenants#index'
+
+    resources :tenants, controller: 'admin/tenants' do
       member do
         patch :suspend
         patch :activate
       end
     end
   end
-
-  # Tenant-specific routes (simple routing for now)
-  # These will work when accessed via subdomain after tenant verification
-  get 'dashboard', to: 'dashboard#index'
-
-  # Staff dashboard
-  namespace :staff do
-    root 'dashboard#index'
-  end
-
-  # Core resources
-  resources :appointments do
-    member do
-      patch :confirm
-      patch :cancel
-      patch :complete
-    end
-  end
-
-  resources :customers
-  resources :studios
 end

@@ -6,7 +6,7 @@ class Mobile::CustomersController < ApplicationController
     redirect_to mobile_onboarding_path unless @customer
 
     @next_appointment = @customer.appointments.upcoming.first
-    @recent_photos = @customer.customer_photos.recent.limit(6)
+    # @recent_photos = @customer.customer_photos.recent.limit(6)
   end
 
   def appointments
@@ -21,6 +21,6 @@ class Mobile::CustomersController < ApplicationController
 
   def gallery
     @customer = current_tenant.customers.find_by(email: current_user.email)
-    @photos = @customer.customer_photos.includes(:appointment).recent
+    # @photos = @customer.customer_photos.includes(:appointment).recent
   end
 end

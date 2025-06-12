@@ -1,0 +1,75 @@
+<!-- app/views/shared/_sidebar.html.erb -->
+<div class="flex flex-col h-full">
+  <!-- Studio Header -->
+  <div class="p-6 border-b border-white border-opacity-20">
+    <div class="flex items-center">
+      <div class="w-10 h-10 bg-white bg-opacity-20 rounded-xl flex items-center justify-center mr-3">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-white font-semibold text-lg"><%= current_tenant.name %></h2>
+        <p class="text-white text-opacity-75 text-sm"><%= current_tenant.plan_type.humanize %> Plan</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Links -->
+  <nav class="flex-1 px-4 py-6 space-y-2">
+    <%= nav_link_to dashboard_path, "Dashboard", "M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" %>
+
+    <%= nav_link_to appointments_path, "Appointments", "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" %>
+
+    <%= nav_link_to customers_path, "Customers", "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" %>
+
+    <%= nav_link_to studios_path, "Studios", "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" %>
+
+    <!-- Divider -->
+    <div class="border-t border-white border-opacity-20 my-4"></div>
+
+    <%= nav_link_to "#", "Analytics", "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" %>
+
+    <% if current_user.role_in_tenant(current_tenant).in?(['admin', 'owner']) %>
+      <%= nav_link_to "/admin", "Settings", "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" %>
+
+      <%= nav_link_to "/admin/branding", "Branding", "M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" %>
+    <% end %>
+  </nav>
+
+  <!-- User Menu -->
+  <div class="p-4 border-t border-white border-opacity-20">
+    <div class="flex items-center">
+      <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3">
+        <span class="text-white font-medium text-sm">
+          <%= current_user.first_name.first %><%= current_user.last_name.first %>
+        </span>
+      </div>
+      <div class="flex-1">
+        <p class="text-white font-medium text-sm"><%= current_user.full_name %></p>
+        <p class="text-white text-opacity-75 text-xs">
+          <%= current_user.role_in_tenant(current_tenant).humanize %>
+        </p>
+      </div>
+      <div class="relative" data-controller="dropdown">
+        <button data-action="dropdown#toggle" class="text-white hover:text-opacity-75">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+          </svg>
+        </button>
+
+        <div data-dropdown-target="menu" class="hidden absolute bottom-full right-0 mb-2 w-48 bg-white rounded-lg shadow-lg py-2">
+          <%= link_to edit_user_registration_path,
+                class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
+            Profile Settings
+          <% end %>
+          <%= link_to destroy_user_session_path, method: :delete,
+                class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
+            Sign Out
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

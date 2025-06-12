@@ -2,7 +2,7 @@ class Customer < ApplicationRecord
   acts_as_tenant :tenant
 
   has_many :appointments, dependent: :destroy
-  has_many :customer_photos, dependent: :destroy
+  # has_many :customer_photos, dependent: :destroy
 
   has_one_attached :profile_image
 

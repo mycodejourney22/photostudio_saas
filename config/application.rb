@@ -16,6 +16,8 @@ module PhotostudioSaas
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w(assets tasks))
+    config.autoload_paths << Rails.root.join('lib', 'constraints')
+
 
     # Configuration for the application, engines, and railties goes here.
     #
@@ -44,6 +46,8 @@ module PhotostudioSaas
     # Domain configuration
     config.app_domain = ENV.fetch('APP_DOMAIN', 'photostudio.local')
     config.main_domain = ENV.fetch('MAIN_DOMAIN', 'www.photostudio.com')
+    config.action_controller.raise_on_open_redirects = false
+
 
 
      config.active_storage.variant_processor = :image_processing

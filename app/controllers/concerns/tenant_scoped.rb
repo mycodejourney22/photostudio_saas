@@ -17,8 +17,13 @@ module TenantScoped
       redirect_to_main_site and return
     end
 
-    unless current_user&.can_access_tenant?(@current_tenant)
-      redirect_to root_path, alert: 'Access denied'
+    unless @current_tenant.active?
+      redirect_to_tenant_suspended and return
+    end
+
+    if user_signed_in? && !current_user.can_access_tenant?(@current_tenant)
+      sign_out current_user
+      redirect_to new_user_session_path, alert: 'Access denied to this studio'
     end
   end
 
@@ -27,7 +32,15 @@ module TenantScoped
   end
 
   def redirect_to_main_site
-    redirect_to "https://#{Rails.application.config.main_domain}"
+    if Rails.env.development?
+      redirect_to "http://localhost:3000", allow_other_host: true
+    else
+      redirect_to "https://#{Rails.application.config.main_domain}", allow_other_host: true
+    end
+  end
+
+  def redirect_to_tenant_suspended
+    render 'errors/tenant_suspended', status: :service_unavailable, layout: 'public'
   end
 
   def current_tenant

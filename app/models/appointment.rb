@@ -5,8 +5,8 @@ class Appointment < ApplicationRecord
   belongs_to :user # staff member
   belongs_to :studio, optional: true
 
-  has_many :appointment_photos, dependent: :destroy
-  has_many :photos, through: :appointment_photos
+  # has_many :appointment_photos, dependent: :destroy
+  # has_many :photos, through: :appointment_photos
 
   validates :scheduled_at, presence: true
   validates :duration_minutes, presence: true, numericality: { greater_than: 0 }

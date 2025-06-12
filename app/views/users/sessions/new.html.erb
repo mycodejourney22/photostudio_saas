@@ -1,0 +1,109 @@
+<!-- app/views/users/sessions/new.html.erb -->
+<% content_for :title, "Sign In - #{current_tenant.name}" %>
+<% content_for :body_class, "bg-gradient-to-br from-blue-600 via-purple-600 to-purple-700 min-h-screen" %>
+
+<div class="flex items-center justify-center min-h-screen px-4">
+  <div class="max-w-md w-full">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <% if current_tenant.branding&.logo&.attached? %>
+        <%= image_tag current_tenant.branding.logo,
+              class: "mx-auto h-16 w-auto mb-4" %>
+      <% else %>
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-white bg-opacity-20 rounded-2xl mb-4">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+        </div>
+      <% end %>
+
+      <h1 class="text-3xl font-bold text-white mb-2"><%= current_tenant.name %></h1>
+      <p class="text-white text-opacity-90">Sign in to your studio dashboard</p>
+    </div>
+
+    <!-- Login Form -->
+    <div class="bg-white bg-opacity-95 backdrop-blur-lg rounded-3xl shadow-2xl p-8">
+      <%= form_for(resource, as: resource_name, url: session_path(resource_name),
+            local: true, class: "space-y-6") do |f| %>
+
+        <!-- Error Messages -->
+        <% if alert %>
+          <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex">
+              <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+              </svg>
+              <div class="ml-3">
+                <p class="text-sm text-red-800"><%= alert %></p>
+              </div>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- Email Field -->
+        <div>
+          <%= f.label :email, class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.email_field :email,
+                placeholder: "Enter your email address",
+                class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
+                required: true,
+                autofocus: true,
+                autocomplete: "email" %>
+        </div>
+
+        <!-- Password Field -->
+        <div>
+          <%= f.label :password, class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.password_field :password,
+                placeholder: "Enter your password",
+                class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400",
+                required: true,
+                autocomplete: "current-password" %>
+        </div>
+
+        <!-- Remember Me -->
+        <% if devise_mapping.rememberable? %>
+          <div class="flex items-center">
+            <%= f.check_box :remember_me, class: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" %>
+            <%= f.label :remember_me, class: "ml-2 block text-sm text-gray-700" do %>
+              Keep me signed in
+            <% end %>
+          </div>
+        <% end %>
+
+        <!-- Submit Button -->
+        <div>
+          <%= f.submit "Sign In",
+                class: "w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
+                data: { disable_with: "Signing In..." } %>
+        </div>
+
+        <!-- Links -->
+        <div class="text-center space-y-3">
+          <% if devise_mapping.recoverable? %>
+            <%= link_to "Forgot your password?", new_password_path(resource_name),
+                  class: "text-blue-600 hover:text-blue-500 text-sm font-medium" %>
+          <% end %>
+
+          <div class="border-t pt-4">
+            <p class="text-gray-600 text-sm">
+              Don't have access to this studio?
+              <%= link_to "Contact Support", "mailto:support@photostudio.com",
+                    class: "text-blue-600 hover:text-blue-500 font-medium" %>
+            </p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- PhotoStudio Branding -->
+    <div class="text-center mt-6">
+      <p class="text-white text-opacity-75 text-sm">
+        Powered by
+        <%= link_to "PhotoStudio Pro", root_url(subdomain: nil),
+              class: "font-medium text-white hover:text-opacity-90" %>
+      </p>
+    </div>
+  </div>
+</div>
