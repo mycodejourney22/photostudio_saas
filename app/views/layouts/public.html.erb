@@ -1,0 +1,16 @@
+<!-- app/views/layouts/public.html.erb -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for?(:title) ? yield(:title) : "PhotoStudio Pro" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="<%= content_for?(:body_class) ? yield(:body_class) : 'bg-gradient-to-br from-blue-500 via-purple-600 to-purple-700 min-h-screen' %>">
+    <%= yield %>
+  </body>
+</html>

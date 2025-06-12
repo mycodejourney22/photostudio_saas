@@ -1,0 +1,2 @@
+module TenantRegistrationHelper
+end

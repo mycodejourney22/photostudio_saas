@@ -11,7 +11,7 @@ class User < ApplicationRecord
   has_many :appointments, dependent: :destroy
 
   # File attachments
-  has_one_attached :avatar
+  # has_one_attached :avatar
 
   # Validations
   validates :first_name, :last_name, presence: true, length: { maximum: 50 }

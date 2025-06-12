@@ -1,9 +1,11 @@
+# app/controllers/concerns/tenant_scoped.rb
 module TenantScoped
   extend ActiveSupport::Concern
 
   included do
     before_action :set_current_tenant
     around_action :with_tenant_scope
+    helper_method :current_tenant
   end
 
   private
@@ -31,6 +33,4 @@ module TenantScoped
   def current_tenant
     @current_tenant
   end
-
-  helper_method :current_tenant
 end
