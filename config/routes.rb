@@ -58,6 +58,37 @@ Rails.application.routes.draw do
         resources :studios
       end
     end
+
+      scope '/book', as: 'booking' do
+    get '/', to: 'booking#index', as: ''
+
+    # Step 1: Studio Location Selection
+    get '/location/:studio_location_id', to: 'booking#packages', as: '_packages'
+
+    # Step 2: Service Package Selection
+    get '/location/:studio_location_id/packages', to: 'booking#packages', as: '_packages_alt'
+
+    # Step 3: Service Tier Selection
+    get '/location/:studio_location_id/service/:service_package_id', to: 'booking#tiers', as: '_tiers'
+
+    # Step 4: Time Slot Selection
+    get '/location/:studio_location_id/service/:service_package_id/tier/:service_tier_id/slots',
+        to: 'booking#slots', as: '_slots'
+
+    # Step 5: Customer Details & Payment
+    get '/location/:studio_location_id/service/:service_package_id/tier/:service_tier_id/details',
+        to: 'booking#details', as: '_details'
+
+    # Step 6: Create Appointment
+    post '/location/:studio_location_id/service/:service_package_id/tier/:service_tier_id/create',
+         to: 'booking#create', as: '_create'
+
+    # Payment callback
+    get '/payment/callback', to: 'booking#payment_callback', as: '_payment_callback'
+
+    # Confirmation page
+    get '/confirmation/:appointment_id', to: 'booking#confirmation', as: '_confirmation'
+  end
   end
 
   # Super Admin routes (admin subdomain only)

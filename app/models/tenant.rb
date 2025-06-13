@@ -1,3 +1,4 @@
+# app/models/tenant.rb (updated with new relationships)
 class Tenant < ApplicationRecord
   # extend FriendlyId
   # friendly_id :subdomain, use: :slugged
@@ -8,6 +9,12 @@ class Tenant < ApplicationRecord
   has_many :appointments, dependent: :destroy
   has_many :studios, dependent: :destroy
   has_many :subscriptions, as: :subscriber, dependent: :destroy
+  has_many :staff_members, dependent: :destroy
+
+  # New service package system
+  has_many :service_packages, dependent: :destroy
+  has_many :service_tiers, through: :service_packages
+  has_many :studio_locations, dependent: :destroy
 
   has_one :branding, dependent: :destroy
   has_one_attached :logo
@@ -19,7 +26,7 @@ class Tenant < ApplicationRecord
 
   before_validation :normalize_subdomain
   before_create :generate_verification_token
-  after_create :create_default_branding
+  after_create :create_default_branding, :setup_default_services
   # after_create :setup_tenant_schema
 
   scope :active, -> { where(status: 'active') }
@@ -55,6 +62,15 @@ class Tenant < ApplicationRecord
     )
   end
 
+  # Service package helpers
+  def active_service_packages
+    service_packages.active.ordered
+  end
+
+  def active_studio_locations
+    studio_locations.active.ordered
+  end
+
   private
 
   def normalize_subdomain
@@ -72,6 +88,10 @@ class Tenant < ApplicationRecord
       font_family: 'Inter',
       welcome_message: "Welcome to #{name}!"
     ).save!
+  end
+
+  def setup_default_services
+    SetupDefaultServicesJob.perform_async(id)
   end
 
   # def setup_tenant_schema

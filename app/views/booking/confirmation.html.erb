@@ -1,0 +1,171 @@
+<!-- app/views/booking/confirmation.html.erb -->
+<% content_for :title, "Booking Confirmed - #{current_tenant.name}" %>
+<% content_for :body_class, "bg-gray-50 min-h-screen" %>
+
+<div class="max-w-3xl mx-auto px-4 py-8">
+  <!-- Success Header -->
+  <div class="text-center mb-8">
+    <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+      <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+      </svg>
+    </div>
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Booking Confirmed! 🎉</h1>
+    <p class="text-lg text-gray-600">
+      Your photography session is all set. We can't wait to work with you!
+    </p>
+  </div>
+
+  <!-- Booking Details Card -->
+  <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+    <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
+      <h2 class="text-xl font-semibold text-white">Booking Details</h2>
+    </div>
+
+    <div class="p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Left Column -->
+        <div class="space-y-4">
+          <div>
+            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Booking ID</h3>
+            <p class="text-lg font-semibold text-gray-900">#<%= @appointment.id.to_s.rjust(6, '0') %></p>
+          </div>
+
+          <div>
+            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Service</h3>
+            <p class="text-lg font-semibold text-gray-900"><%= @appointment.service_package_name %></p>
+            <p class="text-sm text-gray-600"><%= @appointment.service_tier_name %></p>
+          </div>
+
+          <div>
+            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Customer</h3>
+            <p class="text-lg font-semibold text-gray-900"><%= @appointment.customer.full_name %></p>
+            <p class="text-sm text-gray-600"><%= @appointment.customer.email %></p>
+            <% if @appointment.customer.phone.present? %>
+              <p class="text-sm text-gray-600"><%= @appointment.customer.phone %></p>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="space-y-4">
+          <div>
+            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Date & Time</h3>
+            <p class="text-lg font-semibold text-gray-900">
+              <%= @appointment.scheduled_at.strftime('%A, %B %d, %Y') %>
+            </p>
+            <p class="text-sm text-gray-600">
+              <%= @appointment.scheduled_at.strftime('%I:%M %p') %> -
+              <%= @appointment.end_time.strftime('%I:%M %p') %>
+            </p>
+          </div>
+
+          <div>
+            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Location</h3>
+            <p class="text-lg font-semibold text-gray-900"><%= @appointment.location_name %></p>
+            <% if @appointment.studio_location&.full_address.present? %>
+              <p class="text-sm text-gray-600"><%= @appointment.studio_location.full_address %></p>
+            <% end %>
+          </div>
+
+          <div>
+            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Payment</h3>
+            <p class="text-lg font-semibold text-green-600">
+              <%= @appointment.payment_status.humanize %>
+            </p>
+            <p class="text-sm text-gray-600">
+              $<%= number_with_delimiter(@appointment.price.to_i) %> -
+              Paid via <%= @appointment.metadata&.dig('payment_channel')&.humanize || 'Paystack' %>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Special Requirements -->
+      <% if @appointment.special_requirements.present? %>
+        <div class="border-t pt-6 mt-6">
+          <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-2">Special Requirements</h3>
+          <p class="text-gray-700"><%= @appointment.special_requirements %></p>
+        </div>
+      <% end %>
+
+      <!-- Notes -->
+      <% if @appointment.notes.present? %>
+        <div class="border-t pt-6 mt-6">
+          <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-2">Notes</h3>
+          <p class="text-gray-700"><%= @appointment.notes %></p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- What's Next Section -->
+  <div class="bg-blue-50 rounded-xl p-6 mb-8">
+    <h3 class="text-lg font-semibold text-blue-900 mb-4">What's Next?</h3>
+    <div class="space-y-3">
+      <div class="flex items-start">
+        <div class="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center mr-3 mt-0.5">
+          <span class="text-blue-700 text-sm font-medium">1</span>
+        </div>
+        <div>
+          <p class="text-blue-800 font-medium">Check Your Email</p>
+          <p class="text-blue-700 text-sm">We've sent a confirmation email with all the details to <%= @appointment.customer.email %></p>
+        </div>
+      </div>
+
+      <div class="flex items-start">
+        <div class="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center mr-3 mt-0.5">
+          <span class="text-blue-700 text-sm font-medium">2</span>
+        </div>
+        <div>
+          <p class="text-blue-800 font-medium">Prepare for Your Session</p>
+          <p class="text-blue-700 text-sm">We'll send you a preparation guide 24 hours before your appointment</p>
+        </div>
+      </div>
+
+      <div class="flex items-start">
+        <div class="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center mr-3 mt-0.5">
+          <span class="text-blue-700 text-sm font-medium">3</span>
+        </div>
+        <div>
+          <p class="text-blue-800 font-medium">Arrive 10 Minutes Early</p>
+          <p class="text-blue-700 text-sm">This gives us time to set up and discuss your vision</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="flex flex-col sm:flex-row gap-4 justify-center">
+    <a href="mailto:<%= current_tenant.email %>?subject=Booking #<%= @appointment.id %> - Question"
+       class="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 3.26a2 2 0 001.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+      </svg>
+      Contact Studio
+    </a>
+
+    <a href="tel:<%= current_tenant.phone || '(555) 123-4567' %>"
+       class="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+      </svg>
+      Call Studio
+    </a>
+
+    <%= link_to booking_path,
+          class: "inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors" do %>
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+      </svg>
+      Book Another Session
+    <% end %>
+  </div>
+
+  <!-- Footer -->
+  <div class="text-center mt-8 text-gray-500">
+    <p class="text-sm">
+      Need to make changes? Contact us at least 24 hours before your appointment.
+    </p>
+  </div>
+</div>

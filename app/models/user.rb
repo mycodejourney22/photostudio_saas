@@ -9,6 +9,8 @@ class User < ApplicationRecord
   has_many :tenant_users, dependent: :destroy
   has_many :tenants, through: :tenant_users
   has_many :appointments, dependent: :destroy
+  has_many :staff_members, dependent: :destroy
+
 
   # File attachments
   # has_one_attached :avatar
@@ -33,12 +35,23 @@ class User < ApplicationRecord
     tenant_users.joins(:tenant).where(tenants: { status: 'active' }).first&.tenant
   end
 
+  def staff_role_in_tenant(tenant)
+    staff_members.find_by(tenant: tenant)&.role
+  end
+
   def role_in_tenant(tenant)
     tenant_users.find_by(tenant: tenant)&.role
   end
 
   def can_access_tenant?(tenant)
     tenant_users.exists?(tenant: tenant)
+  end
+
+  def can_book_appointments_in?(tenant)
+    tenant_user = tenant_users.find_by(tenant: tenant)
+    return false unless tenant_user
+
+    tenant_user.can_book_appointments?
   end
 
   private

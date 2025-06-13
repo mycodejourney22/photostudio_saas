@@ -23,7 +23,7 @@ FactoryBot.define do
         secondary_color: '#764ba2',
         font_family: 'Inter',
         welcome_message: "Welcome to #{tenant.name}!"
-      )
+      ) unless tenant.branding
     end
   end
 end

@@ -1,0 +1,138 @@
+<!-- app/views/booking/slots.html.erb -->
+<% content_for :title, "Choose Your Time - #{current_tenant.name}" %>
+<% content_for :body_class, "bg-gray-50 min-h-screen" %>
+
+<div class="max-w-6xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Choose Your Time Slot</h1>
+    <p class="text-lg text-gray-600">
+      <%= @service_tier.name %> at <%= @studio_location.name %>
+    </p>
+    <div class="text-sm text-gray-500 mt-2">
+      <%= @service_tier.duration_display %> • $<%= number_with_delimiter(@service_tier.price.to_i) %>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="mb-8">
+    <div class="flex items-center justify-center">
+      <div class="flex items-center text-sm">
+        <div class="flex items-center text-green-600">
+          <div class="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-medium">✓</div>
+          <span class="ml-2 font-medium">Location</span>
+        </div>
+        <div class="w-16 h-1 bg-green-200 mx-4"></div>
+        <div class="flex items-center text-green-600">
+          <div class="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-medium">✓</div>
+          <span class="ml-2 font-medium">Service</span>
+        </div>
+        <div class="w-16 h-1 bg-green-200 mx-4"></div>
+        <div class="flex items-center text-green-600">
+          <div class="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-medium">✓</div>
+          <span class="ml-2 font-medium">Package</span>
+        </div>
+        <div class="w-16 h-1 bg-green-200 mx-4"></div>
+        <div class="flex items-center text-blue-600">
+          <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">4</div>
+          <span class="ml-2 font-medium">Time</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-200 mx-4"></div>
+        <div class="flex items-center text-gray-400">
+          <div class="w-8 h-8 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-sm">5</div>
+          <span class="ml-2">Details</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Date Selection -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Select Date</h3>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <% @available_dates.each do |date| %>
+          <% is_selected = date == @selected_date %>
+          <%= link_to booking_slots_path(@studio_location, @service_package, @service_tier, date: date),
+                class: "p-4 rounded-lg border-2 text-center transition-all duration-200 #{is_selected ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}" do %>
+            <div class="text-sm font-medium"><%= date.strftime('%a') %></div>
+            <div class="text-lg font-semibold"><%= date.strftime('%d') %></div>
+            <div class="text-xs text-gray-500"><%= date.strftime('%b') %></div>
+          <% end %>
+        <% end %>
+      </div>
+
+      <% if @available_dates.empty? %>
+        <div class="text-center py-8">
+          <p class="text-gray-500">No available dates in the next 30 days.</p>
+          <p class="text-sm text-gray-400 mt-2">Please contact us directly to schedule.</p>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Time Slot Selection -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">
+        Available Times
+        <% if @selected_date %>
+          <span class="text-sm font-normal text-gray-500">
+            on <%= @selected_date.strftime('%A, %B %d') %>
+          </span>
+        <% end %>
+      </h3>
+
+      <% if @selected_date %>
+        <% if @time_slots.any? %>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <% @time_slots.each do |slot| %>
+              <% if slot[:available] %>
+                <%= link_to booking_details_path(@studio_location, @service_package, @service_tier,
+                      date: @selected_date, slot: slot[:display_time]),
+                      class: "p-3 rounded-lg border-2 border-gray-200 text-center hover:border-blue-500 hover:bg-blue-50 transition-all duration-200" do %>
+                  <div class="font-medium text-gray-900"><%= slot[:display_time] %></div>
+                  <div class="text-xs text-gray-500">
+                    - <%= slot[:end_time].strftime('%I:%M %p') %>
+                  </div>
+                <% end %>
+              <% else %>
+                <div class="p-3 rounded-lg border-2 border-gray-100 bg-gray-50 text-center opacity-50">
+                  <div class="font-medium text-gray-400"><%= slot[:display_time] %></div>
+                  <div class="text-xs text-gray-400">Unavailable</div>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="text-center py-8">
+            <p class="text-gray-500">No available time slots for this date.</p>
+            <p class="text-sm text-gray-400 mt-2">Please select a different date.</p>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="text-center py-8">
+          <p class="text-gray-500">Please select a date to see available time slots.</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Back Button -->
+  <div class="text-center mt-8">
+    <%= link_to booking_tiers_path(@studio_location, @service_package),
+          class: "inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors" do %>
+      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      Back to Packages
+    <% end %>
+  </div>
+</div>
+
+<style>
+  /* Add some custom styles for the date/time picker */
+  .date-slot:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+</style>

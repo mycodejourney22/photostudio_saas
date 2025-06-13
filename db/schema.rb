@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_12_150157) do
+ActiveRecord::Schema[7.1].define(version: 2025_06_13_075708) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -57,9 +57,15 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_12_150157) do
     t.json "metadata", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "service_tier_id", null: false
+    t.bigint "service_package_id", null: false
+    t.bigint "studio_location_id", null: false
     t.index ["customer_id", "status"], name: "index_appointments_on_customer_id_and_status"
     t.index ["customer_id"], name: "index_appointments_on_customer_id"
+    t.index ["service_package_id"], name: "index_appointments_on_service_package_id"
+    t.index ["service_tier_id"], name: "index_appointments_on_service_tier_id"
     t.index ["studio_id"], name: "index_appointments_on_studio_id"
+    t.index ["studio_location_id"], name: "index_appointments_on_studio_location_id"
     t.index ["tenant_id", "scheduled_at"], name: "index_appointments_on_tenant_id_and_scheduled_at"
     t.index ["tenant_id"], name: "index_appointments_on_tenant_id"
     t.index ["user_id", "scheduled_at"], name: "index_appointments_on_user_id_and_scheduled_at"
@@ -99,6 +105,93 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_12_150157) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["tenant_id"], name: "index_customers_on_tenant_id"
+  end
+
+  create_table "service_package_studio_locations", force: :cascade do |t|
+    t.bigint "service_package_id", null: false
+    t.bigint "studio_location_id", null: false
+    t.boolean "active", default: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["service_package_id", "studio_location_id"], name: "index_package_locations_on_package_and_location", unique: true
+    t.index ["service_package_id"], name: "index_service_package_studio_locations_on_service_package_id"
+    t.index ["studio_location_id"], name: "index_service_package_studio_locations_on_studio_location_id"
+  end
+
+  create_table "service_packages", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.text "description"
+    t.string "category"
+    t.boolean "active", default: true
+    t.integer "sort_order", default: 0
+    t.json "metadata", default: {}
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id", "active", "sort_order"], name: "index_service_packages_on_tenant_id_and_active_and_sort_order"
+    t.index ["tenant_id", "category"], name: "index_service_packages_on_tenant_id_and_category"
+    t.index ["tenant_id", "slug"], name: "index_service_packages_on_tenant_id_and_slug", unique: true
+    t.index ["tenant_id"], name: "index_service_packages_on_tenant_id"
+  end
+
+  create_table "service_tiers", force: :cascade do |t|
+    t.bigint "service_package_id", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.decimal "price", precision: 10, scale: 2, null: false
+    t.integer "duration_minutes", null: false
+    t.boolean "active", default: true
+    t.integer "sort_order", default: 0
+    t.json "features", default: []
+    t.json "metadata", default: {}
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["service_package_id", "active", "sort_order"], name: "idx_on_service_package_id_active_sort_order_7cf2a40263"
+    t.index ["service_package_id"], name: "index_service_tiers_on_service_package_id"
+  end
+
+  create_table "staff_members", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.bigint "user_id"
+    t.string "first_name", null: false
+    t.string "last_name", null: false
+    t.string "email"
+    t.string "phone"
+    t.string "role", null: false
+    t.boolean "active", default: true
+    t.boolean "has_login", default: false
+    t.decimal "hourly_rate", precision: 8, scale: 2
+    t.date "hire_date"
+    t.text "notes"
+    t.json "skills", default: []
+    t.json "metadata", default: {}
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id", "role", "active"], name: "index_staff_members_on_tenant_id_and_role_and_active"
+    t.index ["tenant_id", "user_id"], name: "index_staff_members_on_tenant_id_and_user_id", unique: true, where: "(user_id IS NOT NULL)"
+    t.index ["tenant_id"], name: "index_staff_members_on_tenant_id"
+    t.index ["user_id"], name: "index_staff_members_on_user_id"
+  end
+
+  create_table "studio_locations", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.string "name", null: false
+    t.text "address"
+    t.string "city"
+    t.string "state"
+    t.string "postal_code"
+    t.text "description"
+    t.boolean "active", default: true
+    t.integer "sort_order", default: 0
+    t.integer "default_slot_duration", default: 60
+    t.json "operating_hours", default: {}
+    t.json "booking_settings", default: {}
+    t.json "metadata", default: {}
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id", "active", "sort_order"], name: "index_studio_locations_on_tenant_id_and_active_and_sort_order"
+    t.index ["tenant_id"], name: "index_studio_locations_on_tenant_id"
   end
 
   create_table "studios", force: :cascade do |t|
@@ -190,10 +283,20 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_12_150157) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "appointments", "customers"
+  add_foreign_key "appointments", "service_packages"
+  add_foreign_key "appointments", "service_tiers"
+  add_foreign_key "appointments", "studio_locations"
   add_foreign_key "appointments", "tenants"
   add_foreign_key "appointments", "users"
   add_foreign_key "brandings", "tenants"
   add_foreign_key "customers", "tenants"
+  add_foreign_key "service_package_studio_locations", "service_packages"
+  add_foreign_key "service_package_studio_locations", "studio_locations"
+  add_foreign_key "service_packages", "tenants"
+  add_foreign_key "service_tiers", "service_packages"
+  add_foreign_key "staff_members", "tenants"
+  add_foreign_key "staff_members", "users"
+  add_foreign_key "studio_locations", "tenants"
   add_foreign_key "studios", "tenants"
   add_foreign_key "tenant_users", "tenants"
   add_foreign_key "tenant_users", "users"

@@ -1,0 +1,104 @@
+<!-- app/views/booking/index.html.erb -->
+<% content_for :title, "Book Your Session - #{current_tenant.name}" %>
+<% content_for :body_class, "bg-gray-50 min-h-screen" %>
+
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <% if current_tenant.branding&.logo&.attached? %>
+      <%= image_tag current_tenant.branding.logo, class: "mx-auto h-16 w-auto mb-4" %>
+    <% end %>
+    <h1 class="text-3xl font-bold text-gray-900 mb-2"><%= current_tenant.name %></h1>
+    <p class="text-lg text-gray-600">Choose your studio location to get started</p>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="mb-8">
+    <div class="flex items-center justify-center">
+      <div class="flex items-center text-sm">
+        <div class="flex items-center text-blue-600">
+          <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">1</div>
+          <span class="ml-2 font-medium">Location</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-200 mx-4"></div>
+        <div class="flex items-center text-gray-400">
+          <div class="w-8 h-8 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-sm">2</div>
+          <span class="ml-2">Service</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-200 mx-4"></div>
+        <div class="flex items-center text-gray-400">
+          <div class="w-8 h-8 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-sm">3</div>
+          <span class="ml-2">Package</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-200 mx-4"></div>
+        <div class="flex items-center text-gray-400">
+          <div class="w-8 h-8 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-sm">4</div>
+          <span class="ml-2">Time</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-200 mx-4"></div>
+        <div class="flex items-center text-gray-400">
+          <div class="w-8 h-8 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-sm">5</div>
+          <span class="ml-2">Details</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Studio Locations -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <% @studio_locations.each do |location| %>
+      <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+        <div class="p-6">
+          <h3 class="text-xl font-semibold text-gray-900 mb-2"><%= location.name %></h3>
+
+          <% if location.description.present? %>
+            <p class="text-gray-600 mb-4"><%= location.description %></p>
+          <% end %>
+
+          <% if location.full_address.present? %>
+            <div class="flex items-start text-sm text-gray-500 mb-4">
+              <svg class="w-4 h-4 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              <span><%= location.full_address %></span>
+            </div>
+          <% end %>
+
+          <!-- Operating Hours Preview -->
+          <div class="text-sm text-gray-500 mb-4">
+            <div class="flex items-center">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <% today_hours = location.operating_hours_for_day(Date.current.strftime('%A').downcase) %>
+              <% if today_hours['start'].present? %>
+                Today: <%= today_hours['start'] %> - <%= today_hours['end'] %>
+              <% else %>
+                Closed today
+              <% end %>
+            </div>
+          </div>
+
+          <%= link_to booking_packages_path(location),
+                class: "w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors text-center block" do %>
+            Select This Location
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @studio_locations.empty? %>
+    <div class="text-center py-12">
+      <div class="mx-auto h-12 w-12 text-gray-400 mb-4">
+        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">No Locations Available</h3>
+      <p class="text-gray-600">Please check back later or contact us directly.</p>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,251 @@
+<!-- app/views/booking/details.html.erb -->
+<% content_for :title, "Complete Your Booking - #{current_tenant.name}" %>
+<% content_for :body_class, "bg-gray-50 min-h-screen" %>
+
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Complete Your Booking</h1>
+    <p class="text-lg text-gray-600">You're almost done!</p>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="mb-8">
+    <div class="flex items-center justify-center">
+      <div class="flex items-center text-sm">
+        <div class="flex items-center text-green-600">
+          <div class="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-medium">✓</div>
+          <span class="ml-2 font-medium">Location</span>
+        </div>
+        <div class="w-16 h-1 bg-green-200 mx-4"></div>
+        <div class="flex items-center text-green-600">
+          <div class="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-medium">✓</div>
+          <span class="ml-2 font-medium">Service</span>
+        </div>
+        <div class="w-16 h-1 bg-green-200 mx-4"></div>
+        <div class="flex items-center text-green-600">
+          <div class="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-medium">✓</div>
+          <span class="ml-2 font-medium">Package</span>
+        </div>
+        <div class="w-16 h-1 bg-green-200 mx-4"></div>
+        <div class="flex items-center text-green-600">
+          <div class="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-medium">✓</div>
+          <span class="ml-2 font-medium">Time</span>
+        </div>
+        <div class="w-16 h-1 bg-green-200 mx-4"></div>
+        <div class="flex items-center text-blue-600">
+          <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">5</div>
+          <span class="ml-2 font-medium">Details</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Booking Form -->
+    <div class="lg:col-span-2">
+      <div class="bg-white rounded-xl shadow-lg p-8">
+        <h3 class="text-xl font-semibold text-gray-900 mb-6">Your Information</h3>
+
+        <%= form_with url: booking_create_path(@studio_location, @service_package, @service_tier),
+              method: :post, local: true, class: "space-y-6" do |form| %>
+
+          <!-- Hidden fields for booking data -->
+          <%= hidden_field_tag :date, params[:date] %>
+          <%= hidden_field_tag :slot, params[:slot] %>
+
+          <!-- Customer Information -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <%= form.label "customer[first_name]", "First Name", class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= form.text_field "customer[first_name]",
+                    class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200",
+                    required: true %>
+            </div>
+
+            <div>
+              <%= form.label "customer[last_name]", "Last Name", class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= form.text_field "customer[last_name]",
+                    class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200",
+                    required: true %>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <%= form.label "customer[email]", "Email Address", class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= form.email_field "customer[email]",
+                    class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200",
+                    required: true %>
+            </div>
+
+            <div>
+              <%= form.label "customer[phone]", "Phone Number", class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= form.tel_field "customer[phone]",
+                    class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200",
+                    required: true %>
+            </div>
+          </div>
+
+          <!-- Address (Optional) -->
+          <div>
+            <%= form.label "customer[address]", "Address (Optional)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= form.text_area "customer[address]", rows: 2,
+                  class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" %>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <%= form.label "customer[city]", "City", class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= form.text_field "customer[city]",
+                    class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" %>
+            </div>
+
+            <div>
+              <%= form.label "customer[state]", "State", class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= form.text_field "customer[state]",
+                    class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" %>
+            </div>
+
+            <div>
+              <%= form.label "customer[zip_code]", "Zip Code", class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= form.text_field "customer[zip_code]",
+                    class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" %>
+            </div>
+          </div>
+
+          <!-- Special Requirements -->
+          <div>
+            <%= form.label "appointment[special_requirements]", "Special Requirements (Optional)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= form.text_area "appointment[special_requirements]", rows: 3,
+                  placeholder: "Any special requests, props needed, styling preferences, etc.",
+                  class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" %>
+          </div>
+
+          <!-- Notes -->
+          <div>
+            <%= form.label "appointment[notes]", "Additional Notes (Optional)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= form.text_area "appointment[notes]", rows: 3,
+                  placeholder: "Anything else you'd like us to know...",
+                  class: "w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" %>
+          </div>
+
+          <!-- Terms and Conditions -->
+          <div class="border-t pt-6">
+            <div class="flex items-start">
+              <input type="checkbox" id="terms" name="terms" required
+                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1">
+              <label for="terms" class="ml-3 text-sm text-gray-700">
+                I agree to the
+                <a href="#" class="text-blue-600 hover:text-blue-500">terms and conditions</a>
+                and
+                <a href="#" class="text-blue-600 hover:text-blue-500">cancellation policy</a>.
+              </label>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="pt-6">
+            <%= form.submit "Proceed to Payment",
+                  class: "w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
+                  data: { disable_with: "Processing..." } %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Booking Summary -->
+    <div class="lg:col-span-1">
+      <div class="bg-white rounded-xl shadow-lg p-6 sticky top-8">
+        <h3 class="text-xl font-semibold text-gray-900 mb-6">Booking Summary</h3>
+
+        <!-- Service Details -->
+        <div class="space-y-4 mb-6">
+          <div class="flex justify-between items-start">
+            <div>
+              <div class="font-medium text-gray-900"><%= @service_package.name %></div>
+              <div class="text-sm text-gray-500"><%= @service_tier.name %></div>
+            </div>
+            <div class="text-right">
+              <div class="font-semibold text-gray-900">$<%= number_with_delimiter(@service_tier.price.to_i) %></div>
+            </div>
+          </div>
+
+          <!-- Location -->
+          <div class="flex items-center text-sm text-gray-600">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span><%= @studio_location.name %></span>
+          </div>
+
+          <!-- Date & Time -->
+          <div class="flex items-center text-sm text-gray-600">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span>
+              <%= Date.parse(params[:date]).strftime('%A, %B %d, %Y') %>
+              at <%= @selected_slot %>
+            </span>
+          </div>
+
+          <!-- Duration -->
+          <div class="flex items-center text-sm text-gray-600">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span><%= @service_tier.duration_display %> session</span>
+          </div>
+        </div>
+
+        <!-- Features -->
+        <% if @service_tier.features_list.any? %>
+          <div class="border-t pt-4 mb-6">
+            <h4 class="font-medium text-gray-900 mb-3">What's Included:</h4>
+            <ul class="space-y-2">
+              <% @service_tier.features_list.each do |feature| %>
+                <li class="flex items-start text-sm">
+                  <svg class="w-4 h-4 text-green-500 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  <span class="text-gray-700"><%= feature %></span>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <!-- Total -->
+        <div class="border-t pt-4">
+          <div class="flex justify-between items-center">
+            <div class="text-lg font-semibold text-gray-900">Total</div>
+            <div class="text-2xl font-bold text-gray-900">$<%= number_with_delimiter(@total_price.to_i) %></div>
+          </div>
+          <div class="text-sm text-gray-500 mt-1">Payment secured by Paystack</div>
+        </div>
+
+        <!-- Cancellation Policy -->
+        <div class="border-t pt-4 mt-6">
+          <h4 class="font-medium text-gray-900 mb-2">Cancellation Policy</h4>
+          <p class="text-sm text-gray-600">
+            Free cancellation up to 24 hours before your appointment.
+            <a href="#" class="text-blue-600 hover:text-blue-500">Learn more</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Back Button -->
+  <div class="text-center mt-8">
+    <%= link_to booking_slots_path(@studio_location, @service_package, @service_tier),
+          class: "inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors" do %>
+      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      Back to Time Selection
+    <% end %>
+  </div>
+</div>

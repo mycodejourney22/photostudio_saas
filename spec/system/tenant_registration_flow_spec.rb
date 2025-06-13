@@ -13,14 +13,14 @@ RSpec.describe "Tenant Registration Flow", type: :system do
       expect(page).to have_content("Create Your Photography Studio")
 
       # Fill out registration form
-      fill_in "tenant[name]", with: "Test Photography Studio"
-      fill_in "tenant[subdomain]", with: "test-studio"
-      fill_in "tenant[email]", with: "studio@test.com"
+      fill_in "tenant[name]", with: "Test Photography Studioss"
+      fill_in "tenant[subdomain]", with: "test-studioss"
+      fill_in "tenant[email]", with: "studioss@test.com"
 
       # Owner information
       fill_in "user[first_name]", with: "John"
       fill_in "user[last_name]", with: "Doe"
-      fill_in "user[email]", with: "john@teststudio.com"
+      fill_in "user[email]", with: "johns@teststudio.com"
       fill_in "user[password]", with: "password123"
       fill_in "user[password_confirmation]", with: "password123"
 
@@ -28,10 +28,10 @@ RSpec.describe "Tenant Registration Flow", type: :system do
 
       # Should show success page
       expect(page).to have_content("Studio Created Successfully!")
-      expect(page).to have_content("test-studio.photostudio.com")
+      expect(page).to have_content("test-studioss.photostudio.com")
 
       # Verify tenant was created
-      tenant = Tenant.find_by(subdomain: "test-studio")
+      tenant = Tenant.find_by(subdomain: "test-studioss")
       expect(tenant).to be_present
       expect(tenant.status).to eq("pending")
       expect(tenant.verification_token).to be_present
