@@ -2,7 +2,7 @@
 <% content_for :title, "Choose Your Time - #{current_tenant.name}" %>
 <% content_for :body_class, "bg-gray-50 min-h-screen" %>
 
-<div class="max-w-6xl mx-auto px-4 py-8">
+<div class="max-w-4xl mx-auto px-4 py-8">
   <!-- Header -->
   <div class="text-center mb-8">
     <h1 class="text-3xl font-bold text-gray-900 mb-2">Choose Your Time Slot</h1>
@@ -46,93 +46,98 @@
     </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-    <!-- Date Selection -->
-    <div class="bg-white rounded-xl shadow-lg p-6">
-      <h3 class="text-xl font-semibold text-gray-900 mb-4">Select Date</h3>
+  <!-- Main Content with Stimulus Controller -->
+  <div class="bg-white rounded-2xl shadow-xl overflow-hidden booking-calendar"
+       data-controller="booking-calendar"
+       data-booking-calendar-available-dates-value="<%= @available_dates.map(&:to_s).to_json %>"
+       data-booking-calendar-time-slots-by-date-value="<%= @time_slots_by_date.to_json %>"
+       data-booking-calendar-studio-location-id-value="<%= @studio_location.id %>"
+       data-booking-calendar-service-package-id-value="<%= @service_package.slug %>"
+       data-booking-calendar-service-tier-id-value="<%= @service_tier.id %>">
 
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <% @available_dates.each do |date| %>
-          <% is_selected = date == @selected_date %>
-          <%= link_to booking__slots_path(@studio_location, @service_package, @service_tier, date: date),
-                class: "p-4 rounded-lg border-2 text-center transition-all duration-200 #{is_selected ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}" do %>
-            <div class="text-sm font-medium"><%= date.strftime('%a') %></div>
-            <div class="text-lg font-semibold"><%= date.strftime('%d') %></div>
-            <div class="text-xs text-gray-500"><%= date.strftime('%b') %></div>
-          <% end %>
-        <% end %>
+    <!-- Calendar Header -->
+    <div class="calendar-header text-white p-6">
+      <div class="flex items-center justify-between">
+        <button class="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                data-action="click->booking-calendar#previousMonth">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        <h2 data-booking-calendar-target="monthHeader" class="text-xl font-semibold">
+          <%= Date.current.strftime('%B %Y') %>
+        </h2>
+        <button class="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                data-action="click->booking-calendar#nextMonth">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </button>
       </div>
-
-      <% if @available_dates.empty? %>
-        <div class="text-center py-8">
-          <p class="text-gray-500">No available dates in the next 30 days.</p>
-          <p class="text-sm text-gray-400 mt-2">Please contact us directly to schedule.</p>
-        </div>
-      <% end %>
     </div>
 
-    <!-- Time Slot Selection -->
-    <div class="bg-white rounded-xl shadow-lg p-6">
-      <h3 class="text-xl font-semibold text-gray-900 mb-4">
-        Available Times
-        <% if @selected_date %>
-          <span class="text-sm font-normal text-gray-500">
-            on <%= @selected_date.strftime('%A, %B %d') %>
-          </span>
-        <% end %>
-      </h3>
-
-      <% if @selected_date %>
-        <% if @time_slots.any? %>
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <% @time_slots.each do |slot| %>
-              <% if slot[:available] %>
-                <%= link_to booking__details_path(@studio_location, @service_package, @service_tier,
-                      date: @selected_date, slot: slot[:display_time]),
-                      class: "p-3 rounded-lg border-2 border-gray-200 text-center hover:border-blue-500 hover:bg-blue-50 transition-all duration-200" do %>
-                  <div class="font-medium text-gray-900"><%= slot[:display_time] %></div>
-                  <div class="text-xs text-gray-500">
-                    - <%= slot[:end_time].strftime('%I:%M %p') %>
-                  </div>
-                <% end %>
-              <% else %>
-                <div class="p-3 rounded-lg border-2 border-gray-100 bg-gray-50 text-center opacity-50">
-                  <div class="font-medium text-gray-400"><%= slot[:display_time] %></div>
-                  <div class="text-xs text-gray-400">Unavailable</div>
-                </div>
-              <% end %>
-            <% end %>
-          </div>
-        <% else %>
-          <div class="text-center py-8">
-            <p class="text-gray-500">No available time slots for this date.</p>
-            <p class="text-sm text-gray-400 mt-2">Please select a different date.</p>
-          </div>
-        <% end %>
-      <% else %>
-        <div class="text-center py-8">
-          <p class="text-gray-500">Please select a date to see available time slots.</p>
+    <div class="p-6">
+      <!-- Calendar Grid -->
+      <div class="mb-8">
+        <div class="grid grid-cols-7 gap-2 mb-4">
+          <div class="text-center text-sm font-medium text-gray-500 py-2">Sun</div>
+          <div class="text-center text-sm font-medium text-gray-500 py-2">Mon</div>
+          <div class="text-center text-sm font-medium text-gray-500 py-2">Tue</div>
+          <div class="text-center text-sm font-medium text-gray-500 py-2">Wed</div>
+          <div class="text-center text-sm font-medium text-gray-500 py-2">Thu</div>
+          <div class="text-center text-sm font-medium text-gray-500 py-2">Fri</div>
+          <div class="text-center text-sm font-medium text-gray-500 py-2">Sat</div>
         </div>
-      <% end %>
+
+        <div data-booking-calendar-target="calendarGrid" class="grid grid-cols-7 gap-2 calendar-grid">
+          <!-- Calendar will be populated by Stimulus controller -->
+        </div>
+      </div>
+
+      <!-- Selected Date Display -->
+      <div data-booking-calendar-target="selectedDateDisplay" class="mb-6 text-center hidden">
+        <div class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          <span data-booking-calendar-target="selectedDateText">Select a date to see available times</span>
+        </div>
+      </div>
+
+      <!-- Available Time Slots -->
+      <div data-booking-calendar-target="timeSlotsContainer" class="hidden">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Available Times</h3>
+        <div data-booking-calendar-target="timeSlots" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <!-- Time slots will be populated by Stimulus controller -->
+        </div>
+
+        <!-- Continue Button -->
+        <div class="mt-8 flex justify-center">
+          <button data-booking-calendar-target="continueBtn"
+                  data-action="click->booking-calendar#continue"
+                  class="hidden continue-btn text-white px-8 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transform transition-all duration-200 hover:scale-105">
+            Continue to Details
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div data-booking-calendar-target="emptyState" class="text-center py-8">
+        <div class="text-gray-400 mb-4">
+          <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+        </div>
+        <p class="text-gray-500 text-lg">Select a date to see available time slots</p>
+      </div>
     </div>
   </div>
 
   <!-- Back Button -->
-  <div class="text-center mt-8">
+  <div class="mt-8 text-center">
     <%= link_to booking__tiers_path(@studio_location, @service_package),
-          class: "inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors" do %>
-      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-      </svg>
-      Back to Packages
+          class: "text-gray-600 hover:text-gray-800 font-medium" do %>
+      ← Back to Packages
     <% end %>
   </div>
 </div>
-
-<style>
-  /* Add some custom styles for the date/time picker */
-  .date-slot:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-</style>

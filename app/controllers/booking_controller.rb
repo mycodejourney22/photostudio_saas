@@ -54,17 +54,39 @@ class BookingController < ApplicationController
   end
 
   # Step 4: Select Time Slot
+  # def slots
+  #   @selected_date = params[:date]&.to_date || Date.current + 1.day
+  #   @available_dates = calculate_available_dates
+  #   @time_slots = calculate_time_slots(@selected_date)
+
+  #   # Store tier selection in session
+  #   @booking_session[:service_tier_id] = @service_tier.id
+  #   @booking_session[:price] = @service_tier.price
+  #   @booking_session[:duration] = @service_tier.duration_minutes
+  # end
+
   def slots
     @selected_date = params[:date]&.to_date || Date.current + 1.day
     @available_dates = calculate_available_dates
     @time_slots = calculate_time_slots(@selected_date)
+
+    # Prepare time slots for all available dates for JavaScript
+    @time_slots_by_date = {}
+    @available_dates.each do |date|
+      slots = calculate_time_slots(date)
+      @time_slots_by_date[date.to_s] = slots.map do |slot|
+        {
+          time: slot[:display_time],
+          available: slot[:available]
+        }
+      end
+    end
 
     # Store tier selection in session
     @booking_session[:service_tier_id] = @service_tier.id
     @booking_session[:price] = @service_tier.price
     @booking_session[:duration] = @service_tier.duration_minutes
   end
-
   # Step 5: Customer Details & Payment
   def details
     @selected_slot = params[:slot]

@@ -1,0 +1,51 @@
+/* app/assets/stylesheets/components/booking_calendar.css */
+
+.booking-calendar {
+  /* Calendar specific styles */
+}
+
+.calendar-header {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+}
+
+.calendar-grid {
+  min-height: 240px;
+}
+
+.date-btn {
+  transition: all 0.2s ease-in-out;
+}
+
+.date-btn:hover {
+  transform: translateY(-1px);
+}
+
+.selected-date {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%) !important;
+  color: white !important;
+}
+
+.time-slot {
+  transition: all 0.2s ease-in-out;
+}
+
+.time-slot:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.available-time {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%) !important;
+  color: white !important;
+  border-color: #3b82f6 !important;
+}
+
+.continue-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  transition: all 0.2s ease-in-out;
+}
+
+.continue-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  transform: scale(1.05);
+}

@@ -2,16 +2,16 @@
 import "@hotwired/turbo-rails"
 import "controllers"
 
-import * as ActiveStorage from "@rails/activestorage"
-import "channels"
+// import * as ActiveStorage from "@rails/activestorage"
+// import "channels"
 
-import "./controllers"
-import "./utils/api"
-import "./utils/notifications"
+// import "./controllers"
+// import "./utils/api"
+// import "./utils/notifications"
 
-Rails.start()
-Turbo.start()
-ActiveStorage.start()
+// Rails.start()
+// Turbo.start()
+// ActiveStorage.start()
 
 // Global error handling
 window.addEventListener('error', (event) => {

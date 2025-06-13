@@ -6,6 +6,9 @@
  */
 
 /* ===== BASE STYLES ===== */
+
+@import "components/booking_calendar";
+
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
