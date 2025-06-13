@@ -20,6 +20,7 @@ class Appointment < ApplicationRecord
   validates :payment_status, inclusion: { in: %w[unpaid partial_paid paid refunded] }
   validates :booking_source, inclusion: { in: %w[customer staff walk_in online] }
 
+
   scope :upcoming, -> { where(scheduled_at: Time.current..) }
   scope :today, -> { where(scheduled_at: Date.current.all_day) }
   scope :this_week, -> { where(scheduled_at: Date.current.beginning_of_week..Date.current.end_of_week) }
@@ -27,8 +28,8 @@ class Appointment < ApplicationRecord
 
   enum status: { pending: 0, confirmed: 1, in_progress: 2, completed: 3, cancelled: 4 }
   enum session_type: { portrait: 0, wedding: 1, family: 2, event: 3, commercial: 4 }
-  # enum payment_status: { unpaid: 0, partial_paid: 1, paid: 2, refunded: 3 }
-  # enum booking_source: { customer: 0, staff: 1, walk_in: 2, online: 3 }
+  enum payment_status: { unpaid: 0, partial_paid: 1, paid: 2, refunded: 3 }
+  enum booking_source: { customer: 0, staff: 1, walk_in: 2, online: 3 }
 
   before_save :calculate_end_time, :sync_service_tier_data
   after_update :send_status_notification, if: :saved_change_to_status?

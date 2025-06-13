@@ -2,8 +2,8 @@
 class StudioLocation < ApplicationRecord
   acts_as_tenant :tenant
 
-  # has_many :service_package_studio_locations, dependent: :destroy
-  # has_many :service_packages, through: :service_package_studio_locations
+  has_many :service_package_studio_locations, dependent: :destroy
+  has_many :service_packages, through: :service_package_studio_locations
   has_many :appointments, dependent: :restrict_with_error
 
   validates :name, presence: true, length: { maximum: 100 }

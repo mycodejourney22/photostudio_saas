@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_13_075708) do
+ActiveRecord::Schema[7.1].define(version: 2025_06_13_173643) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -60,13 +60,25 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_13_075708) do
     t.bigint "service_tier_id", null: false
     t.bigint "service_package_id", null: false
     t.bigint "studio_location_id", null: false
+    t.integer "payment_status", default: 0, null: false
+    t.integer "booking_source", default: 0, null: false
+    t.decimal "paid_amount", precision: 10, scale: 2, default: "0.0"
+    t.decimal "deposit_amount", precision: 10, scale: 2
+    t.string "payment_reference"
+    t.string "payment_method"
+    t.datetime "payment_received_at"
     t.index ["customer_id", "status"], name: "index_appointments_on_customer_id_and_status"
     t.index ["customer_id"], name: "index_appointments_on_customer_id"
+    t.index ["payment_reference"], name: "idx_appointments_payment_reference", unique: true, where: "(payment_reference IS NOT NULL)"
+    t.index ["payment_status", "scheduled_at"], name: "idx_appointments_payment_scheduled"
     t.index ["service_package_id"], name: "index_appointments_on_service_package_id"
     t.index ["service_tier_id"], name: "index_appointments_on_service_tier_id"
     t.index ["studio_id"], name: "index_appointments_on_studio_id"
     t.index ["studio_location_id"], name: "index_appointments_on_studio_location_id"
+    t.index ["tenant_id", "booking_source"], name: "idx_appointments_tenant_booking_source"
+    t.index ["tenant_id", "payment_status"], name: "idx_appointments_tenant_payment_status"
     t.index ["tenant_id", "scheduled_at"], name: "index_appointments_on_tenant_id_and_scheduled_at"
+    t.index ["tenant_id", "status", "payment_status"], name: "idx_appointments_tenant_status_payment"
     t.index ["tenant_id"], name: "index_appointments_on_tenant_id"
     t.index ["user_id", "scheduled_at"], name: "index_appointments_on_user_id_and_scheduled_at"
     t.index ["user_id"], name: "index_appointments_on_user_id"
@@ -190,6 +202,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_13_075708) do
     t.json "metadata", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "phone"
     t.index ["tenant_id", "active", "sort_order"], name: "index_studio_locations_on_tenant_id_and_active_and_sort_order"
     t.index ["tenant_id"], name: "index_studio_locations_on_tenant_id"
   end

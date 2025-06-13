@@ -54,7 +54,7 @@
       <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <% @available_dates.each do |date| %>
           <% is_selected = date == @selected_date %>
-          <%= link_to booking_slots_path(@studio_location, @service_package, @service_tier, date: date),
+          <%= link_to booking__slots_path(@studio_location, @service_package, @service_tier, date: date),
                 class: "p-4 rounded-lg border-2 text-center transition-all duration-200 #{is_selected ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}" do %>
             <div class="text-sm font-medium"><%= date.strftime('%a') %></div>
             <div class="text-lg font-semibold"><%= date.strftime('%d') %></div>
@@ -87,7 +87,7 @@
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <% @time_slots.each do |slot| %>
               <% if slot[:available] %>
-                <%= link_to booking_details_path(@studio_location, @service_package, @service_tier,
+                <%= link_to booking__details_path(@studio_location, @service_package, @service_tier,
                       date: @selected_date, slot: slot[:display_time]),
                       class: "p-3 rounded-lg border-2 border-gray-200 text-center hover:border-blue-500 hover:bg-blue-50 transition-all duration-200" do %>
                   <div class="font-medium text-gray-900"><%= slot[:display_time] %></div>
@@ -119,7 +119,7 @@
 
   <!-- Back Button -->
   <div class="text-center mt-8">
-    <%= link_to booking_tiers_path(@studio_location, @service_package),
+    <%= link_to booking__tiers_path(@studio_location, @service_package),
           class: "inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors" do %>
       <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>

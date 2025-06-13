@@ -5,6 +5,9 @@ class ServicePackage < ApplicationRecord
   has_many :service_tiers, dependent: :destroy
   has_many :appointments, dependent: :restrict_with_error
 
+  has_many :service_package_studio_locations, dependent: :destroy
+  has_many :studio_locations, through: :service_package_studio_locations
+
   validates :name, presence: true, length: { maximum: 100 }
   validates :slug, presence: true, uniqueness: { scope: :tenant_id }
   # validates :category, inclusion: {
