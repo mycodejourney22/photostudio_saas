@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_13_173643) do
+ActiveRecord::Schema[7.1].define(version: 2025_06_14_061723) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -67,12 +67,23 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_13_173643) do
     t.string "payment_reference"
     t.string "payment_method"
     t.datetime "payment_received_at"
+    t.bigint "assigned_photographer_id"
+    t.bigint "assigned_editor_id"
+    t.datetime "shoot_completed_at"
+    t.datetime "editing_completed_at"
+    t.date "delivery_date"
+    t.text "equipment_used"
+    t.text "production_notes"
+    t.index ["assigned_editor_id"], name: "index_appointments_on_assigned_editor_id"
+    t.index ["assigned_photographer_id"], name: "index_appointments_on_assigned_photographer_id"
     t.index ["customer_id", "status"], name: "index_appointments_on_customer_id_and_status"
     t.index ["customer_id"], name: "index_appointments_on_customer_id"
+    t.index ["editing_completed_at"], name: "index_appointments_on_editing_completed_at"
     t.index ["payment_reference"], name: "idx_appointments_payment_reference", unique: true, where: "(payment_reference IS NOT NULL)"
     t.index ["payment_status", "scheduled_at"], name: "idx_appointments_payment_scheduled"
     t.index ["service_package_id"], name: "index_appointments_on_service_package_id"
     t.index ["service_tier_id"], name: "index_appointments_on_service_tier_id"
+    t.index ["shoot_completed_at"], name: "index_appointments_on_shoot_completed_at"
     t.index ["studio_id"], name: "index_appointments_on_studio_id"
     t.index ["studio_location_id"], name: "index_appointments_on_studio_location_id"
     t.index ["tenant_id", "booking_source"], name: "idx_appointments_tenant_booking_source"
@@ -117,6 +128,69 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_13_173643) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["tenant_id"], name: "index_customers_on_tenant_id"
+  end
+
+  create_table "sale_items", force: :cascade do |t|
+    t.bigint "sale_id", null: false
+    t.bigint "tenant_id", null: false
+    t.string "item_type", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.string "sku"
+    t.integer "quantity", default: 1, null: false
+    t.decimal "unit_price", precision: 10, scale: 2, null: false
+    t.decimal "total_price", precision: 10, scale: 2, null: false
+    t.decimal "discount_amount", precision: 10, scale: 2, default: "0.0"
+    t.integer "duration_minutes"
+    t.bigint "service_tier_id"
+    t.string "product_category"
+    t.json "product_specifications", default: {}
+    t.json "metadata", default: {}
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["sale_id", "item_type"], name: "index_sale_items_on_sale_id_and_item_type"
+    t.index ["sale_id"], name: "index_sale_items_on_sale_id"
+    t.index ["service_tier_id"], name: "index_sale_items_on_service_tier_id"
+    t.index ["tenant_id", "product_category"], name: "index_sale_items_on_tenant_id_and_product_category"
+    t.index ["tenant_id"], name: "index_sale_items_on_tenant_id"
+  end
+
+  create_table "sales", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.bigint "appointment_id"
+    t.bigint "customer_id", null: false
+    t.bigint "staff_member_id", null: false
+    t.string "sale_number", null: false
+    t.decimal "total_amount", precision: 10, scale: 2, null: false
+    t.decimal "tax_amount", precision: 10, scale: 2, default: "0.0"
+    t.decimal "discount_amount", precision: 10, scale: 2, default: "0.0"
+    t.decimal "paid_amount", precision: 10, scale: 2, default: "0.0"
+    t.string "customer_name", null: false
+    t.string "customer_email"
+    t.string "customer_phone"
+    t.integer "sale_type", default: 0, null: false
+    t.integer "payment_status", default: 0, null: false
+    t.integer "sale_status", default: 0, null: false
+    t.string "payment_method"
+    t.string "payment_reference"
+    t.datetime "sale_date", null: false
+    t.datetime "payment_received_at"
+    t.text "notes"
+    t.text "special_instructions"
+    t.json "metadata", default: {}
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["appointment_id"], name: "index_sales_on_appointment_id"
+    t.index ["customer_email", "customer_phone"], name: "index_sales_on_customer_email_and_customer_phone"
+    t.index ["customer_id"], name: "index_sales_on_customer_id"
+    t.index ["sale_number"], name: "index_sales_on_sale_number", unique: true
+    t.index ["staff_member_id"], name: "index_sales_on_staff_member_id"
+    t.index ["tenant_id", "customer_id"], name: "index_sales_on_tenant_id_and_customer_id"
+    t.index ["tenant_id", "payment_status"], name: "index_sales_on_tenant_id_and_payment_status"
+    t.index ["tenant_id", "sale_date"], name: "index_sales_on_tenant_id_and_sale_date"
+    t.index ["tenant_id", "sale_status"], name: "index_sales_on_tenant_id_and_sale_status"
+    t.index ["tenant_id", "staff_member_id"], name: "index_sales_on_tenant_id_and_staff_member_id"
+    t.index ["tenant_id"], name: "index_sales_on_tenant_id"
   end
 
   create_table "service_package_studio_locations", force: :cascade do |t|
@@ -298,11 +372,20 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_13_173643) do
   add_foreign_key "appointments", "customers"
   add_foreign_key "appointments", "service_packages"
   add_foreign_key "appointments", "service_tiers"
+  add_foreign_key "appointments", "staff_members", column: "assigned_editor_id"
+  add_foreign_key "appointments", "staff_members", column: "assigned_photographer_id"
   add_foreign_key "appointments", "studio_locations"
   add_foreign_key "appointments", "tenants"
   add_foreign_key "appointments", "users"
   add_foreign_key "brandings", "tenants"
   add_foreign_key "customers", "tenants"
+  add_foreign_key "sale_items", "sales"
+  add_foreign_key "sale_items", "service_tiers"
+  add_foreign_key "sale_items", "tenants"
+  add_foreign_key "sales", "appointments"
+  add_foreign_key "sales", "customers"
+  add_foreign_key "sales", "staff_members"
+  add_foreign_key "sales", "tenants"
   add_foreign_key "service_package_studio_locations", "service_packages"
   add_foreign_key "service_package_studio_locations", "studio_locations"
   add_foreign_key "service_packages", "tenants"

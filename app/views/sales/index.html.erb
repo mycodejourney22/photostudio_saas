@@ -1,0 +1,594 @@
+<!-- app/views/sales/index.html.erb -->
+<% content_for :title, "Sales - #{current_tenant.name}" %>
+
+<div class="min-h-screen bg-gray-50 flex">
+  <!-- Sidebar - Desktop -->
+  <div class="hidden lg:flex lg:flex-shrink-0">
+    <div class="flex flex-col w-64">
+      <div class="flex-1 flex flex-col min-h-0 bg-gradient-to-b from-blue-600 to-purple-700">
+        <%= render 'shared/sidebar' %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile sidebar overlay -->
+  <div class="lg:hidden" data-controller="mobile-navigation">
+    <!-- Mobile menu button -->
+    <div class="fixed top-4 left-4 z-50">
+      <button data-action="mobile-navigation#toggleMenu"
+              class="bg-white p-2 rounded-lg shadow-lg text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile backdrop -->
+    <div data-mobile-navigation-target="backdrop"
+         data-action="click->mobile-navigation#closeOnBackdrop"
+         class="hidden fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+
+    <!-- Mobile sidebar -->
+    <div data-mobile-navigation-target="menu"
+         class="fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-blue-600 to-purple-700 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out">
+      <%= render 'shared/sidebar' %>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
+      <div class="px-4 lg:px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 min-w-0 ml-12 lg:ml-0">
+            <h1 class="text-xl lg:text-2xl font-bold text-gray-900 truncate">
+              Sales Management
+            </h1>
+            <p class="text-gray-600 text-sm mt-1">Track sales, payments, and revenue</p>
+          </div>
+          <div class="flex space-x-3">
+            <%= link_to new_sale_path(sale_type: 'walk_in'),
+                  class: "inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors" do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+              </svg>
+              Quick Sale
+            <% end %>
+            <%= link_to new_sale_path,
+                  class: "inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all" do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              New Sale
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-4 lg:p-6">
+      <div class="max-w-7xl mx-auto space-y-6">
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <!-- Today's Sales -->
+          <div class="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg p-6 shadow-lg">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <svg class="w-8 h-8 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-2xl font-bold">$<%= number_with_precision(@stats[:today][:revenue], precision: 0) %></p>
+                <p class="text-green-200 text-sm">Today's Revenue</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- This Week -->
+          <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg p-6 shadow-lg">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <svg class="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-2xl font-bold">$<%= number_with_precision(@stats[:week][:revenue], precision: 0) %></p>
+                <p class="text-blue-200 text-sm">This Week</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- This Month -->
+          <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg p-6 shadow-lg">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <svg class="w-8 h-8 text-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-2xl font-bold">$<%= number_with_precision(@stats[:month][:revenue], precision: 0) %></p>
+                <p class="text-purple-200 text-sm">This Month</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pending Payments -->
+          <div class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg p-6 shadow-lg">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <svg class="w-8 h-8 text-yellow-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-2xl font-bold">$<%= number_with_precision(@stats[:pending_payment], precision: 0) %></p>
+                <p class="text-yellow-200 text-sm">Pending Payment</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div class="p-6">
+            <%= form_with url: sales_path, method: :get, local: true, class: "space-y-4" do |form| %>
+              <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <!-- Search -->
+                <div class="md:col-span-2">
+                  <%= form.text_field :search, placeholder: "Search by sale number, customer...",
+                        value: params[:search],
+                        class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" %>
+                </div>
+
+                <!-- Sale Type Filter -->
+                <div>
+                  <%= form.select :sale_type,
+                        options_for_select([['All Types', '']] + @sale_types.map {|type| [type.humanize, type]}, params[:sale_type]),
+                        {},
+                        class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" %>
+                </div>
+
+                <!-- Payment Status Filter -->
+                <div>
+                  <%= form.select :payment_status,
+                        options_for_select([['All Payments', '']] + @payment_statuses.map {|status| [status.humanize, status]}, params[:payment_status]),
+                        {},
+                        class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" %>
+                </div>
+
+                <!-- Staff Filter -->
+                <div>
+                  <%= form.select :staff_id,
+                        options_for_select([['All Staff', '']] + @staff_members.map {|staff| [staff.full_name, staff.id]}, params[:staff_id]),
+                        {},
+                        class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" %>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Date Range -->
+                <div>
+                  <%= form.date_field :start_date,
+                        value: params[:start_date],
+                        placeholder: "Start date",
+                        class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" %>
+                </div>
+                <div>
+                  <%= form.date_field :end_date,
+                        value: params[:end_date],
+                        placeholder: "End date",
+                        class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" %>
+                </div>
+
+                <!-- Filter Actions -->
+                <div class="flex space-x-2">
+                  <%= form.submit "Filter", class: "flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors" %>
+                  <%= link_to "Clear", sales_path, class: "flex-1 px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-400 transition-colors text-center" %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Quick Sale Buttons -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Quick Sales</h2>
+          </div>
+          <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <!-- Passport Photos -->
+              <button onclick="openQuickSale('passport')"
+                      class="flex items-center justify-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <div class="text-center">
+                  <svg class="w-8 h-8 mx-auto text-blue-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                  <p class="text-sm font-medium text-gray-900">Passport Photos</p>
+                  <p class="text-xs text-gray-500">$25.00</p>
+                </div>
+              </button>
+
+              <!-- ID Photos -->
+              <button onclick="openQuickSale('id_photos')"
+                      class="flex items-center justify-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <div class="text-center">
+                  <svg class="w-8 h-8 mx-auto text-green-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                  </svg>
+                  <p class="text-sm font-medium text-gray-900">ID Photos</p>
+                  <p class="text-xs text-gray-500">$15.00</p>
+                </div>
+              </button>
+
+              <!-- Print Orders -->
+              <button onclick="openQuickSale('prints')"
+                      class="flex items-center justify-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <div class="text-center">
+                  <svg class="w-8 h-8 mx-auto text-purple-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                  </svg>
+                  <p class="text-sm font-medium text-gray-900">Print Orders</p>
+                  <p class="text-xs text-gray-500">Various</p>
+                </div>
+              </button>
+
+              <!-- Digital Products -->
+              <button onclick="openQuickSale('digital')"
+                      class="flex items-center justify-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <div class="text-center">
+                  <svg class="w-8 h-8 mx-auto text-indigo-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+                  </svg>
+                  <p class="text-sm font-medium text-gray-900">Digital Gallery</p>
+                  <p class="text-xs text-gray-500">$50.00</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sales Table -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Recent Sales</h2>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sale</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Staff</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <% @sales.each do |sale| %>
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <p class="text-sm font-medium text-gray-900"><%= sale.sale_number %></p>
+                        <% if sale.appointment %>
+                          <p class="text-xs text-gray-500">Appointment #<%= sale.appointment.id %></p>
+                        <% end %>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <p class="text-sm font-medium text-gray-900"><%= sale.customer_name %></p>
+                        <p class="text-xs text-gray-500"><%= sale.customer_email %></p>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
+                        <%= case sale.sale_type
+                            when 'appointment' then 'bg-blue-100 text-blue-800'
+                            when 'walk_in' then 'bg-green-100 text-green-800'
+                            when 'online' then 'bg-purple-100 text-purple-800'
+                            when 'phone' then 'bg-yellow-100 text-yellow-800'
+                            end %>">
+                        <%= sale.sale_type.humanize %>
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <p class="text-sm font-medium text-gray-900">$<%= number_with_precision(sale.total_amount, precision: 2) %></p>
+                      <% if sale.remaining_balance > 0 %>
+                        <p class="text-xs text-red-600">$<%= number_with_precision(sale.remaining_balance, precision: 2) %> due</p>
+                      <% end %>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
+                        <%= case sale.payment_status
+                            when 'paid' then 'bg-green-100 text-green-800'
+                            when 'partial' then 'bg-yellow-100 text-yellow-800'
+                            when 'unpaid' then 'bg-red-100 text-red-800'
+                            when 'refunded' then 'bg-gray-100 text-gray-800'
+                            end %>">
+                        <%= sale.payment_status.humanize %>
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <%= sale.staff_name %>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <%= sale.sale_date.strftime("%m/%d/%Y") %>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                      <%= link_to sale, class: "text-blue-600 hover:text-blue-900" do %>
+                        View
+                      <% end %>
+                      <%= link_to edit_sale_path(sale), class: "text-gray-600 hover:text-gray-900" do %>
+                        Edit
+                      <% end %>
+                      <% if sale.remaining_balance > 0 %>
+                        <button onclick="openPaymentModal(<%= sale.id %>, <%= sale.remaining_balance %>)"
+                                class="text-green-600 hover:text-green-900">
+                          Add Payment
+                        </button>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <% if @sales.respond_to?(:current_page) %>
+            <div class="px-6 py-3 border-t border-gray-200">
+              <%= paginate @sales if respond_to?(:paginate) %>
+            </div>
+          <% end %>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Quick Sale Modal -->
+<div id="quickSaleModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+  <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+    <div class="mt-3">
+      <h3 class="text-lg font-medium text-gray-900" id="quickSaleTitle">Quick Sale</h3>
+      <div class="mt-4 space-y-4">
+        <!-- Customer Selection -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Customer</label>
+          <select id="quickSaleCustomer" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            <option value="">Select customer...</option>
+            <% current_tenant.customers.active.each do |customer| %>
+              <option value="<%= customer.id %>"><%= customer.full_name %></option>
+            <% end %>
+          </select>
+        </div>
+
+        <!-- Quantity -->
+        <div id="quantityField">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+          <input type="number" id="quickSaleQuantity" value="1" min="1" max="10"
+                 class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+        </div>
+
+        <!-- Price -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Price</label>
+          <input type="number" id="quickSalePrice" step="0.01"
+                 class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+        </div>
+      </div>
+
+      <div class="flex justify-end space-x-3 mt-6">
+        <button onclick="closeQuickSaleModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+          Cancel
+        </button>
+        <button onclick="processQuickSale()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+          Create Sale
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Modal -->
+<div id="paymentModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+  <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+    <div class="mt-3">
+      <h3 class="text-lg font-medium text-gray-900">Add Payment</h3>
+      <div class="mt-4 space-y-4">
+        <!-- Amount -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Payment Amount</label>
+          <input type="number" id="paymentAmount" step="0.01"
+                 class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+          <p class="text-xs text-gray-500 mt-1">Remaining balance: $<span id="remainingBalance">0.00</span></p>
+        </div>
+
+        <!-- Payment Method -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+          <select id="paymentMethod" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            <option value="cash">Cash</option>
+            <option value="card">Credit/Debit Card</option>
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="check">Check</option>
+            <option value="paypal">PayPal</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <!-- Reference -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Reference (Optional)</label>
+          <input type="text" id="paymentReference" placeholder="Transaction ID, check number, etc."
+                 class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+        </div>
+      </div>
+
+      <div class="flex justify-end space-x-3 mt-6">
+        <button onclick="closePaymentModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+          Cancel
+        </button>
+        <button onclick="processPayment()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+          Add Payment
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentQuickSaleType = '';
+let currentSaleId = null;
+
+// Quick Sale Functions
+function openQuickSale(type) {
+  currentQuickSaleType = type;
+  const modal = document.getElementById('quickSaleModal');
+  const title = document.getElementById('quickSaleTitle');
+  const priceField = document.getElementById('quickSalePrice');
+  const quantityField = document.getElementById('quantityField');
+
+  // Configure modal based on sale type
+  switch(type) {
+    case 'passport':
+      title.textContent = 'Passport Photos - Quick Sale';
+      priceField.value = '25.00';
+      quantityField.style.display = 'block';
+      break;
+    case 'id_photos':
+      title.textContent = 'ID Photos - Quick Sale';
+      priceField.value = '15.00';
+      quantityField.style.display = 'block';
+      break;
+    case 'prints':
+      title.textContent = 'Print Order - Quick Sale';
+      priceField.value = '20.00';
+      quantityField.style.display = 'block';
+      break;
+    case 'digital':
+      title.textContent = 'Digital Gallery - Quick Sale';
+      priceField.value = '50.00';
+      quantityField.style.display = 'none';
+      document.getElementById('quickSaleQuantity').value = 1;
+      break;
+  }
+
+  modal.classList.remove('hidden');
+}
+
+function closeQuickSaleModal() {
+  document.getElementById('quickSaleModal').classList.add('hidden');
+  currentQuickSaleType = '';
+}
+
+function processQuickSale() {
+  const customerId = document.getElementById('quickSaleCustomer').value;
+  const quantity = document.getElementById('quickSaleQuantity').value;
+  const price = document.getElementById('quickSalePrice').value;
+
+  if (!customerId) {
+    alert('Please select a customer');
+    return;
+  }
+
+  if (!price || price <= 0) {
+    alert('Please enter a valid price');
+    return;
+  }
+
+  // Redirect to new sale form with pre-filled data
+  const params = new URLSearchParams({
+    sale_type: 'walk_in',
+    customer_id: customerId,
+    quick_sale_type: currentQuickSaleType,
+    quantity: quantity,
+    price: price
+  });
+
+  window.location.href = `/sales/new?${params.toString()}`;
+}
+
+// Payment Functions
+function openPaymentModal(saleId, remainingBalance) {
+  currentSaleId = saleId;
+  const modal = document.getElementById('paymentModal');
+  const amountField = document.getElementById('paymentAmount');
+  const balanceSpan = document.getElementById('remainingBalance');
+
+  amountField.value = remainingBalance.toFixed(2);
+  balanceSpan.textContent = remainingBalance.toFixed(2);
+
+  modal.classList.remove('hidden');
+}
+
+function closePaymentModal() {
+  document.getElementById('paymentModal').classList.add('hidden');
+  currentSaleId = null;
+}
+
+function processPayment() {
+  const amount = parseFloat(document.getElementById('paymentAmount').value);
+  const method = document.getElementById('paymentMethod').value;
+  const reference = document.getElementById('paymentReference').value;
+
+  if (!amount || amount <= 0) {
+    alert('Please enter a valid payment amount');
+    return;
+  }
+
+  fetch(`/sales/${currentSaleId}/add_payment`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+    },
+    body: JSON.stringify({
+      amount: amount,
+      payment_method: method,
+      reference: reference
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      location.reload(); // Refresh page to show updated payment status
+    } else {
+      alert(data.message || 'Error processing payment');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Error processing payment');
+  });
+}
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+  const quickSaleModal = document.getElementById('quickSaleModal');
+  const paymentModal = document.getElementById('paymentModal');
+
+  if (event.target === quickSaleModal) {
+    closeQuickSaleModal();
+  }
+  if (event.target === paymentModal) {
+    closePaymentModal();
+  }
+}
+
+// Auto-refresh stats every 30 seconds
+setInterval(function() {
+  // You could implement AJAX stats refresh here
+}, 30000);
+</script>

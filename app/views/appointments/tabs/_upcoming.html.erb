@@ -76,11 +76,12 @@
         <div class="text-right">
           <p class="text-sm text-gray-600">Booking Types</p>
           <div class="flex flex-wrap gap-1 mt-1">
-            <% appointments.group(:session_type).count.each do |type, count| %>
-              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                <%= count %> <%= type.humanize %>
-              </span>
-            <% end %>
+            <% appointment_types = appointments.group_by(&:session_type).transform_values(&:count) %>
+              <% appointment_types.each do |type, count| %>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <%= count %> <%= type.humanize %>
+                </span>
+              <% end %>
           </div>
         </div>
       </div>

@@ -25,81 +25,136 @@ Rails.application.routes.draw do
       passwords: 'users/passwords'
     }
 
-    # Dashboard
+    # Dashboard routes
     get '/', to: 'dashboard#index'
     get 'dashboard', to: 'dashboard#index'
 
     # Staff dashboard
     get 'staff', to: 'staff/dashboard#index'
 
-    # Tenant Admin
+    # Tenant Admin routes
     get 'admin', to: 'admin/branding#show'
     get 'admin/branding', to: 'admin/branding#show'
     patch 'admin/branding', to: 'admin/branding#update'
     put 'admin/branding', to: 'admin/branding#update'
 
-    resources :appointments do
-      member do
-        patch :confirm
-        patch :cancel
-        patch :complete
-      end
-      collection do
-        patch :bulk_update
-      end
-    end
-
-    # Core resources
-    resources :appointments do
-      member do
-        patch :confirm
-        patch :cancel
-        patch :complete
-      end
-    end
-
+    # Core resource routes
     resources :customers
     resources :studios
 
-    # API routes
-    namespace :api do
-      namespace :v1 do
-        resources :appointments
-        resources :customers
-        resources :studios
+    # Staff Members routes
+    resources :staff_members do
+      member do
+        patch :toggle_active
       end
     end
 
-      scope '/book', as: 'booking' do
-    get '/', to: 'booking#index', as: ''
+    # Enhanced Appointments routes
+    resources :appointments do
+      member do
+        patch :confirm             # For confirming appointments
+        patch :cancel              # For cancelling appointments
+        patch :complete            # For completing appointments
+        post :assign_staff         # AJAX endpoint for staff assignment
+        post :update_production    # AJAX endpoint for production updates
+        post :create_sale         # Create sale from appointment
+      end
 
-    # Step 1: Studio Location Selection
-    get '/location/:studio_location_id', to: 'booking#packages', as: '_packages'
+      collection do
+        patch :bulk_update        # For bulk actions like confirm_all_pending
+      end
+    end
 
-    # Step 2: Service Package Selection
-    get '/location/:studio_location_id/packages', to: 'booking#packages', as: '_packages_alt'
+    # Sales management routes
+    resources :sales do
+      member do
+        post :add_payment          # AJAX endpoint for adding payments
+        post :add_item            # AJAX endpoint for adding items
+        delete :remove_item       # AJAX endpoint for removing items
+      end
 
-    # Step 3: Service Tier Selection
-    get '/location/:studio_location_id/service/:service_package_id', to: 'booking#tiers', as: '_tiers'
+      collection do
+        post :passport_photos     # Quick passport photo sale
+      end
+    end
 
-    # Step 4: Time Slot Selection
-    get '/location/:studio_location_id/service/:service_package_id/tier/:service_tier_id/slots',
-        to: 'booking#slots', as: '_slots'
+    # Sale Items routes (nested under sales)
+    resources :sales do
+      resources :sale_items, only: [:create, :update, :destroy]
+    end
 
-    # Step 5: Customer Details & Payment
-    get '/location/:studio_location_id/service/:service_package_id/tier/:service_tier_id/details',
-        to: 'booking#details', as: '_details'
+    # Public booking flow
+    scope '/book', as: 'booking' do
+      get '/', to: 'booking#index', as: ''
 
-    # Step 6: Create Appointment
-    post '/location/:studio_location_id/service/:service_package_id/tier/:service_tier_id/create',
-         to: 'booking#create', as: '_create'
+      # Step 1: Studio Location Selection
+      get '/location/:studio_location_id', to: 'booking#packages', as: '_packages'
 
-    # Payment callback
-    get '/payment/callback', to: 'booking#payment_callback', as: '_payment_callback'
+      # Step 2: Service Package Selection
+      get '/location/:studio_location_id/packages', to: 'booking#packages', as: '_packages_alt'
 
-    # Confirmation page
-    get '/confirmation/:appointment_id', to: 'booking#confirmation', as: '_confirmation'
-  end
+      # Step 3: Service Tier Selection
+      get '/location/:studio_location_id/service/:service_package_id', to: 'booking#tiers', as: '_tiers'
+
+      # Step 4: Time Slot Selection
+      get '/location/:studio_location_id/service/:service_package_id/tier/:service_tier_id/slots',
+          to: 'booking#slots', as: '_slots'
+
+      # Step 5: Customer Details & Payment
+      get '/location/:studio_location_id/service/:service_package_id/tier/:service_tier_id/details',
+          to: 'booking#details', as: '_details'
+
+      # Step 6: Create Appointment
+      post '/location/:studio_location_id/service/:service_package_id/tier/:service_tier_id/create',
+           to: 'booking#create', as: '_create'
+
+      # Payment callback
+      get '/payment/callback', to: 'booking#payment_callback', as: '_payment_callback'
+
+      # Confirmation page
+      get '/confirmation/:appointment_id', to: 'booking#confirmation', as: '_confirmation'
+    end
+
+    # API routes for AJAX calls
+    namespace :api do
+      namespace :v1 do
+        # Appointment API endpoints
+        resources :appointments, only: [] do
+          member do
+            patch :assign_photographer
+            patch :assign_editor
+            patch :mark_shoot_completed
+            patch :mark_editing_completed
+            patch :update_delivery_date
+            post :add_production_note
+          end
+        end
+
+        # Sales API endpoints
+        resources :sales, only: [] do
+          member do
+            post :add_payment
+            post :process_payment
+          end
+        end
+
+        # Sale Items API endpoints
+        resources :sale_items, only: [:create, :destroy]
+
+        # Staff Members API endpoints
+        resources :staff_members, only: [:index] do
+          collection do
+            get :photographers
+            get :editors
+            get :customer_service
+          end
+        end
+
+        # General API endpoints
+        resources :customers, only: [:index, :show]
+        resources :studios, only: [:index, :show]
+      end
+    end
   end
 
   # Super Admin routes (admin subdomain only)

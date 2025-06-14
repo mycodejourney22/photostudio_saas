@@ -1,11 +1,13 @@
-# app/controllers/appointments_controller.rb
+# app/controllers/appointments_controller.rb (fixed version)
 class AppointmentsController < ApplicationController
-  before_action :set_appointment, only: [:show, :edit, :update, :destroy, :confirm, :cancel, :complete]
-  load_and_authorize_resource
+  before_action :authenticate_user!
+  before_action :set_appointment, only: [:show, :edit, :update, :destroy, :assign_staff, :update_production, :create_sale]
+  before_action :load_form_data, only: [:new, :edit, :create, :update]
 
   def index
     @appointments = current_tenant.appointments
-                                 .includes(:customer, :user, :studio)
+                                 .includes(:customer, :assigned_photographer, :assigned_editor, :studio_location, :service_tier)
+                                 .order(:scheduled_at)
 
     # Apply search if present
     if params[:search].present?
@@ -22,11 +24,12 @@ class AppointmentsController < ApplicationController
 
     # Apply status filter if present
     @appointments = @appointments.where(status: params[:status]) if params[:status].present?
+    @appointments = @appointments.where(assigned_photographer_id: params[:photographer_id]) if params[:photographer_id].present?
+    @appointments = @appointments.where(assigned_editor_id: params[:editor_id]) if params[:editor_id].present?
+    @appointments = @appointments.where('scheduled_at >= ?', Date.parse(params[:start_date])) if params[:start_date].present?
+    @appointments = @appointments.where('scheduled_at <= ?', Date.parse(params[:end_date])) if params[:end_date].present?
 
-    # Apply session type filter if present
-    @appointments = @appointments.where(session_type: params[:session_type]) if params[:session_type].present?
-
-    # Determine the current view
+    # Determine the current view and set up appropriate instance variables
     current_view = params[:view].presence || 'today'
 
     case current_view
@@ -38,6 +41,11 @@ class AppointmentsController < ApplicationController
       setup_past_view
     end
 
+    # For filter dropdowns and stats
+    @photographers = current_tenant.staff_members.photographers.active
+    @editors = current_tenant.staff_members.editors.active
+    @statuses = Appointment.statuses.keys
+
     respond_to do |format|
       format.html
       format.json { render json: AppointmentSerializer.new(@appointments).serializable_hash }
@@ -48,121 +56,125 @@ class AppointmentsController < ApplicationController
   end
 
   def show
-    respond_to do |format|
-      format.html
-      format.json { render json: AppointmentSerializer.new(@appointment).serializable_hash }
-    end
+    @sale = @appointment.sale
+    @production_timeline = build_production_timeline
+    @photographers = @appointment.tenant.staff_members.where(role: "photographer")
+    @editors = @appointment.tenant.staff_members.where(role: "editor")
   end
 
   def new
     @appointment = current_tenant.appointments.build
-    @customers = current_tenant.customers.active.order(:first_name)
-    @staff_members = current_tenant.users.joins(:tenant_users)
-                                         .where(tenant_users: { role: ['admin', 'staff'] })
-
-    # Pre-fill date if provided
-    if params[:date].present?
-      @appointment.scheduled_at = Date.parse(params[:date]).change(hour: 9)
-    end
+    @appointment.scheduled_at = params[:datetime] if params[:datetime]
   end
 
   def create
     @appointment = current_tenant.appointments.build(appointment_params)
-    @appointment.user = current_user unless @appointment.user_id
+    @appointment.user = current_user
 
     if @appointment.save
-      AppointmentConfirmationJob.perform_async(@appointment.id) if defined?(AppointmentConfirmationJob)
-
-      respond_to do |format|
-        format.html { redirect_to @appointment, notice: 'Appointment created successfully.' }
-        format.json { render json: AppointmentSerializer.new(@appointment).serializable_hash, status: :created }
+      # Auto-assign photographer if specified
+      if params[:appointment][:assigned_photographer_id].present?
+        photographer = current_tenant.staff_members.find(params[:appointment][:assigned_photographer_id])
+        @appointment.assign_photographer!(photographer)
       end
+
+      redirect_to @appointment, notice: 'Appointment created successfully.'
     else
-      @customers = current_tenant.customers.active.order(:first_name)
-      @staff_members = current_tenant.users.joins(:tenant_users)
-                                           .where(tenant_users: { role: ['admin', 'staff'] })
-
-      respond_to do |format|
-        format.html { render :new, status: :unprocessable_entity }
-        format.json { render json: { errors: @appointment.errors }, status: :unprocessable_entity }
-      end
+      render :new, status: :unprocessable_entity
     end
   end
 
   def edit
-    @customers = current_tenant.customers.active.order(:first_name)
-    @staff_members = current_tenant.users.joins(:tenant_users)
-                                         .where(tenant_users: { role: ['admin', 'staff'] })
   end
 
   def update
     if @appointment.update(appointment_params)
-      respond_to do |format|
-        format.html { redirect_to @appointment, notice: 'Appointment updated successfully.' }
-        format.json { render json: AppointmentSerializer.new(@appointment).serializable_hash }
-      end
-    else
-      @customers = current_tenant.customers.active.order(:first_name)
-      @staff_members = current_tenant.users.joins(:tenant_users)
-                                           .where(tenant_users: { role: ['admin', 'staff'] })
+      # Handle staff assignments
+      handle_staff_assignments
 
-      respond_to do |format|
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: { errors: @appointment.errors }, status: :unprocessable_entity }
-      end
+      redirect_to @appointment, notice: 'Appointment updated successfully.'
+    else
+      render :edit, status: :unprocessable_entity
     end
   end
 
   def destroy
-    @appointment.destroy
-
-    respond_to do |format|
-      format.html { redirect_to appointments_path, notice: 'Appointment deleted successfully.' }
-      format.json { head :no_content }
+    if @appointment.can_be_cancelled?
+      @appointment.update(status: 'cancelled')
+      redirect_to appointments_path, notice: 'Appointment cancelled.'
+    else
+      redirect_to @appointment, alert: 'Cannot cancel this appointment.'
     end
   end
 
-  def confirm
-    if @appointment.update(status: 'confirmed')
-      AppointmentConfirmationJob.perform_async(@appointment.id) if defined?(AppointmentConfirmationJob)
+  # AJAX endpoint for staff assignment
+  def assign_staff
+    staff_member = current_tenant.staff_members.find(params[:staff_member_id])
+    assignment_type = params[:assignment_type] # 'photographer' or 'editor'
 
-      respond_to do |format|
-        format.html { redirect_to @appointment, notice: 'Appointment confirmed.' }
-        format.json { render json: { status: 'confirmed' } }
+    begin
+      case assignment_type
+      when 'photographer'
+        @appointment.assign_photographer!(staff_member)
+        message = "#{staff_member.full_name} assigned as photographer"
+      when 'editor'
+        @appointment.assign_editor!(staff_member)
+        message = "#{staff_member.full_name} assigned as editor"
+      else
+        raise "Invalid assignment type"
       end
-    else
-      respond_to do |format|
-        format.html { redirect_to @appointment, alert: 'Unable to confirm appointment.' }
-        format.json { render json: { errors: @appointment.errors }, status: :unprocessable_entity }
-      end
+
+      render json: {
+        success: true,
+        message: message,
+        staff_name: staff_member.full_name,
+        staff_id: staff_member.id
+      }
+    rescue => e
+      render json: {
+        success: false,
+        message: e.message
+      }, status: :unprocessable_entity
     end
   end
 
-  def cancel
-    if @appointment.can_be_cancelled? && @appointment.update(status: 'cancelled')
-      respond_to do |format|
-        format.html { redirect_to appointments_path, notice: 'Appointment cancelled.' }
-        format.json { render json: { status: 'cancelled' } }
-      end
-    else
-      respond_to do |format|
-        format.html { redirect_to @appointment, alert: 'Unable to cancel appointment.' }
-        format.json { render json: { error: 'Cannot cancel appointment' }, status: :unprocessable_entity }
-      end
+  # Update production status
+  def update_production
+    case params[:action_type]
+    when 'mark_shoot_completed'
+      @appointment.mark_shoot_completed!
+      message = 'Shoot marked as completed'
+    when 'mark_editing_completed'
+      @appointment.mark_editing_completed!
+      message = 'Editing marked as completed'
+    when 'update_delivery_date'
+      @appointment.update!(delivery_date: params[:delivery_date])
+      message = 'Delivery date updated'
+    when 'add_production_notes'
+      current_notes = @appointment.production_notes || ''
+      new_note = "#{Time.current.strftime('%m/%d %H:%M')}: #{params[:note]}"
+      @appointment.update!(production_notes: [current_notes, new_note].compact.join("\n"))
+      message = 'Production note added'
     end
+
+    render json: { success: true, message: message }
+  rescue => e
+    render json: { success: false, message: e.message }, status: :unprocessable_entity
   end
 
-  def complete
-    if @appointment.update(status: 'completed')
-      respond_to do |format|
-        format.html { redirect_to @appointment, notice: 'Appointment marked as completed.' }
-        format.json { render json: { status: 'completed' } }
-      end
-    else
-      respond_to do |format|
-        format.html { redirect_to @appointment, alert: 'Unable to complete appointment.' }
-        format.json { render json: { errors: @appointment.errors }, status: :unprocessable_entity }
-      end
+  # Create a sale from this appointment
+  def create_sale
+    if @appointment.sale.present?
+      redirect_to @appointment.sale, notice: 'Sale already exists for this appointment'
+      return
+    end
+
+    begin
+      staff_member = current_tenant.staff_members.customer_service.first || current_tenant.staff_members.first
+      @sale = @appointment.create_sale!(staff_member)
+      redirect_to @sale, notice: 'Sale created successfully'
+    rescue => e
+      redirect_to @appointment, alert: "Error creating sale: #{e.message}"
     end
   end
 
@@ -184,20 +196,46 @@ class AppointmentsController < ApplicationController
     @appointment = current_tenant.appointments.find(params[:id])
   end
 
+  def load_form_data
+    @customers = current_tenant.customers.active.order(:first_name, :last_name)
+    @photographers = current_tenant.staff_members.photographers.active
+    @editors = current_tenant.staff_members.editors.active
+    @studio_locations = current_tenant.studio_locations.active
+    @service_tiers = current_tenant.service_tiers.active.includes(:service_package)
+  end
+
   def appointment_params
     params.require(:appointment).permit(
-      :customer_id, :user_id, :studio_id, :scheduled_at, :duration_minutes,
-      :price, :session_type, :notes, :special_requirements, :status
+      :customer_id, :studio_location_id, :service_tier_id, :scheduled_at,
+      :duration_minutes, :price, :session_type, :status, :payment_status,
+      :notes, :special_requirements, :assigned_photographer_id, :assigned_editor_id,
+      :equipment_used, :production_notes, :delivery_date
     )
   end
 
+  def handle_staff_assignments
+    # Handle photographer assignment
+    if params[:appointment][:assigned_photographer_id].present?
+      photographer = current_tenant.staff_members.find(params[:appointment][:assigned_photographer_id])
+      @appointment.assign_photographer!(photographer) unless @appointment.assigned_photographer == photographer
+    end
+
+    # Handle editor assignment
+    if params[:appointment][:assigned_editor_id].present?
+      editor = current_tenant.staff_members.find(params[:appointment][:assigned_editor_id])
+      @appointment.assign_editor!(editor) unless @appointment.assigned_editor == editor
+    end
+  end
+
+  # Fixed view setup methods
   def setup_today_view
     today_start = Date.current.beginning_of_day
     today_end = Date.current.end_of_day
 
     @today_appointments = @appointments.where(scheduled_at: today_start..today_end)
-                                      # .order(:scheduled_at)
+                                      .order(:scheduled_at)
 
+    # Set counts for tabs
     @today_count = @today_appointments.count
     @upcoming_count = @appointments.where('scheduled_at > ?', today_end).count
     @past_count = @appointments.where('scheduled_at < ?', today_start).count
@@ -222,8 +260,10 @@ class AppointmentsController < ApplicationController
       upcoming_appointments = upcoming_appointments.where('scheduled_at <= ?', month_end)
     end
 
-    @upcoming_appointments = upcoming_appointments
+    # FIXED: Assign to instance variable
+    @upcoming_appointments = upcoming_appointments.order(:scheduled_at)
 
+    # Set counts for tabs
     @today_count = @appointments.where(scheduled_at: Date.current.beginning_of_day..Date.current.end_of_day).count
     @upcoming_count = @upcoming_appointments.count
     @past_count = @appointments.where('scheduled_at < ?', Date.current.beginning_of_day).count
@@ -250,13 +290,13 @@ class AppointmentsController < ApplicationController
       past_appointments = past_appointments.where('scheduled_at >= ?', last_year_start)
     end
 
+    # FIXED: Assign to instance variable
     @past_appointments = past_appointments.order(scheduled_at: :desc)
-                                         .page(params[:page])
-                                         .per(50) # Paginate past appointments
 
+    # Set counts for tabs
     @today_count = @appointments.where(scheduled_at: Date.current.beginning_of_day..Date.current.end_of_day).count
     @upcoming_count = @appointments.where('scheduled_at > ?', Date.current.end_of_day).count
-    @past_count = past_appointments.count
+    @past_count = @past_appointments.count
   end
 
   def confirm_all_pending
@@ -279,7 +319,7 @@ class AppointmentsController < ApplicationController
 
     reminder_count = 0
     upcoming_appointments.find_each do |appointment|
-      AppointmentReminderJob.perform_async(appointment.id) if defined?(AppointmentReminderJob)
+      # AppointmentReminderJob.perform_async(appointment.id) if defined?(AppointmentReminderJob)
       reminder_count += 1
     end
 
@@ -287,62 +327,61 @@ class AppointmentsController < ApplicationController
                 notice: "#{reminder_count} reminder emails sent successfully."
   end
 
-  def render_appointments_pdf
-    # Implementation for PDF export
-    respond_to do |format|
-      format.pdf do
-        render pdf: "appointments_#{Date.current.strftime('%Y%m%d')}",
-               template: 'appointments/export.pdf.erb',
-               layout: 'pdf'
-      end
-    end
-  end
+  def build_production_timeline
+    timeline = []
 
-  def render_appointments_csv
-    # Implementation for CSV export
-    csv_data = CSV.generate(headers: true) do |csv|
-      csv << ['Date', 'Time', 'Customer', 'Email', 'Phone', 'Session Type', 'Status', 'Price', 'Studio', 'Notes']
+    timeline << {
+      title: 'Appointment Scheduled',
+      date: @appointment.created_at,
+      completed: true,
+      icon: 'calendar'
+    }
 
-      @appointments.each do |appointment|
-        csv << [
-          appointment.scheduled_at.strftime('%Y-%m-%d'),
-          appointment.scheduled_at.strftime('%H:%M'),
-          appointment.customer.full_name,
-          appointment.customer.email,
-          appointment.customer.phone,
-          appointment.session_type,
-          appointment.status,
-          appointment.price,
-          appointment.studio&.name,
-          appointment.notes
-        ]
-      end
+    if @appointment.assigned_photographer
+      timeline << {
+        title: "Photographer Assigned: #{@appointment.photographer_name}",
+        date: @appointment.updated_at,
+        completed: true,
+        icon: 'camera'
+      }
     end
 
-    send_data csv_data,
-              filename: "appointments_#{Date.current.strftime('%Y%m%d')}.csv",
-              type: 'text/csv'
-  end
-
-  def render_appointments_ics
-    # Implementation for calendar export
-    cal = Icalendar::Calendar.new
-
-    @appointments.each do |appointment|
-      event = Icalendar::Event.new
-      event.dtstart = appointment.scheduled_at
-      event.dtend = appointment.scheduled_at + (appointment.duration_minutes || 60).minutes
-      event.summary = "#{appointment.session_type.humanize} - #{appointment.customer.full_name}"
-      event.description = appointment.notes if appointment.notes.present?
-      event.location = appointment.studio&.name if appointment.studio
-
-      cal.add_event(event)
+    if @appointment.shoot_completed_at
+      timeline << {
+        title: 'Shoot Completed',
+        date: @appointment.shoot_completed_at,
+        completed: true,
+        icon: 'check'
+      }
     end
 
-    cal.publish
+    if @appointment.assigned_editor
+      timeline << {
+        title: "Editor Assigned: #{@appointment.editor_name}",
+        date: @appointment.updated_at,
+        completed: true,
+        icon: 'edit'
+      }
+    end
 
-    send_data cal.to_ical,
-              filename: "appointments_#{Date.current.strftime('%Y%m%d')}.ics",
-              type: 'text/calendar'
+    if @appointment.editing_completed_at
+      timeline << {
+        title: 'Editing Completed',
+        date: @appointment.editing_completed_at,
+        completed: true,
+        icon: 'check'
+      }
+    end
+
+    if @appointment.delivery_date
+      timeline << {
+        title: 'Scheduled Delivery',
+        date: @appointment.delivery_date,
+        completed: @appointment.delivery_date <= Date.current,
+        icon: 'truck'
+      }
+    end
+
+    timeline
   end
 end

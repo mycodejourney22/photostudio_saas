@@ -5,7 +5,7 @@
       <h3 class="text-lg font-medium text-gray-900">Today's Schedule</h3>
       <p class="text-sm text-gray-500 mt-1">
         <%= Date.current.strftime("%A, %B %d, %Y") %>
-        <% if appointments.any? %>
+        <% if appointments.present? %>
           • <%= pluralize(appointments.count, 'appointment') %>
         <% end %>
       </p>
@@ -30,7 +30,7 @@
     </div>
   </div>
 
-  <% if appointments.any? %>
+  <% if appointments.present? %>
     <!-- Today's Revenue Summary -->
     <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200">
       <div class="flex items-center justify-between">
@@ -49,16 +49,16 @@
         <div class="text-right">
           <p class="text-sm text-gray-600">Status Breakdown</p>
           <div class="flex space-x-2 mt-1">
-            <% appointments.group(:status).count.each do |status, count| %>
+            <% appointments.group(:status, :scheduled_at).count.each do |status,scheduled_at, count| %>
               <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                          <%= case status
+                          <%= case status[0]
                                 when 'confirmed' then 'bg-green-100 text-green-800'
                                 when 'pending' then 'bg-yellow-100 text-yellow-800'
                                 when 'cancelled' then 'bg-red-100 text-red-800'
                                 when 'completed' then 'bg-purple-100 text-purple-800'
                                 else 'bg-gray-100 text-gray-800'
                               end %>">
-                <%= count %> <%= status %>
+                <%= count %> <%= status[0] %>
               </span>
             <% end %>
           </div>
