@@ -110,9 +110,9 @@
               <% end %>
             </div>
 
-            <% if @today_appointments&.any? %>
+            <% if @recent_appointments&.any? %>
               <div class="space-y-4">
-                <% @today_appointments.each do |appointment| %>
+                <% @recent_appointments.each do |appointment| %>
                   <div class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <!-- Status indicator -->
                     <div class="w-1 h-12 rounded-full mr-4 <%= appointment_status_color(appointment.status) %>"></div>

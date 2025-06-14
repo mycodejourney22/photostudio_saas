@@ -1,0 +1,273 @@
+<!-- app/views/appointments/tabs/_past.html.erb -->
+<div class="space-y-4">
+  <div class="flex items-center justify-between">
+    <div>
+      <h3 class="text-lg font-medium text-gray-900">Past Appointments</h3>
+      <p class="text-sm text-gray-500 mt-1">
+        Historical bookings and completed sessions
+        <% if appointments.any? %>
+          • <%= pluralize(appointments.count, 'appointment') %>
+        <% end %>
+      </p>
+    </div>
+
+    <div class="flex items-center space-x-3">
+      <%= link_to appointments_path(view: 'past', format: :csv),
+            class: "inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" do %>
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        Export CSV
+      <% end %>
+
+      <div class="relative" data-controller="dropdown">
+        <button data-action="click->dropdown#toggle"
+                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+          </svg>
+          Time Period
+          <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+
+        <div data-dropdown-target="menu"
+             class="hidden absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+          <div class="py-1">
+            <%= link_to appointments_path(view: 'past'),
+                  class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 #{'bg-blue-50 text-blue-700' if params[:period].blank?}" do %>
+              All Time
+            <% end %>
+            <%= link_to appointments_path(view: 'past', period: 'last_week'),
+                  class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 #{'bg-blue-50 text-blue-700' if params[:period] == 'last_week'}" do %>
+              Last Week
+            <% end %>
+            <%= link_to appointments_path(view: 'past', period: 'last_month'),
+                  class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 #{'bg-blue-50 text-blue-700' if params[:period] == 'last_month'}" do %>
+              Last Month
+            <% end %>
+            <%= link_to appointments_path(view: 'past', period: 'last_quarter'),
+                  class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 #{'bg-blue-50 text-blue-700' if params[:period] == 'last_quarter'}" do %>
+              Last Quarter
+            <% end %>
+            <%= link_to appointments_path(view: 'past', period: 'last_year'),
+                  class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 #{'bg-blue-50 text-blue-700' if params[:period] == 'last_year'}" do %>
+              Last Year
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <% if appointments.any? %>
+    <!-- Past Performance Summary -->
+    <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Total Revenue</p>
+          <p class="text-2xl font-bold text-gray-900">
+            $<%= appointments.sum(:price) %>
+          </p>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-600">Avg per Session</p>
+          <p class="text-xl font-semibold text-gray-800">
+            $<%= (appointments.sum(:price) / appointments.count.to_f).round(2) %>
+          </p>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-600">Completion Rate</p>
+          <p class="text-xl font-semibold text-gray-800">
+            <%= ((appointments.where(status: 'completed').count.to_f / appointments.count) * 100).round(1) %>%
+          </p>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-600">Customer Retention</p>
+          <p class="text-xl font-semibold text-gray-800">
+            <%= ((appointments.joins(:customer).group('customers.id').having('COUNT(*) > 1').count.count.to_f / appointments.joins(:customer).distinct.count('customers.id')) * 100).round(1) %>%
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <%= form_with url: appointments_path, method: :get, local: true, class: "flex flex-wrap items-center gap-4" do |form| %>
+        <%= form.hidden_field :view, value: 'past' %>
+        <%= form.hidden_field :period, value: params[:period] if params[:period].present? %>
+
+        <div class="flex-1 min-w-0">
+          <%= form.search_field :search,
+                placeholder: "Search by customer name, email, or session type...",
+                value: params[:search],
+                class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" %>
+        </div>
+
+        <div>
+          <%= form.select :status,
+                options_for_select([
+                  ['All Statuses', ''],
+                  ['Completed', 'completed'],
+                  ['Cancelled', 'cancelled'],
+                  ['No-Show', 'no_show']
+                ], params[:status]),
+                { include_blank: false },
+                { class: "px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" } %>
+        </div>
+
+        <div>
+          <%= form.select :session_type,
+                options_for_select([
+                  ['All Types', ''],
+                  ['Portrait', 'portrait'],
+                  ['Wedding', 'wedding'],
+                  ['Family', 'family'],
+                  ['Corporate', 'corporate'],
+                  ['Event', 'event']
+                ], params[:session_type]),
+                { include_blank: false },
+                { class: "px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" } %>
+        </div>
+
+        <%= form.submit "Search",
+              class: "inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
+
+        <% if params[:search].present? || params[:status].present? || params[:session_type].present? %>
+          <%= link_to appointments_path(view: 'past', period: params[:period]),
+                class: "inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" do %>
+            Clear
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+
+    <!-- Grouped by Month -->
+    <div class="space-y-6">
+      <% appointments.order(scheduled_at: :desc).group_by { |a| a.scheduled_at.beginning_of_month }.each do |month, monthly_appointments| %>
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <!-- Month Header -->
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="text-lg font-medium text-gray-900">
+                  <%= month.strftime("%B %Y") %>
+                </h4>
+                <p class="text-sm text-gray-600">
+                  <%= pluralize(monthly_appointments.count, 'appointment') %> •
+                  $<%= monthly_appointments.sum(&:price) %> revenue •
+                  <%= monthly_appointments.count { |a| a.status == 'completed' } %> completed
+                </p>
+              </div>
+              <div class="flex items-center space-x-4">
+                <div class="text-right">
+                  <p class="text-sm text-gray-500">Avg per appointment</p>
+                  <p class="font-semibold text-gray-900">
+                    $<%= (monthly_appointments.sum(&:price) / monthly_appointments.count.to_f).round(2) %>
+                  </p>
+                </div>
+                <div class="flex space-x-1">
+                  <% monthly_appointments.group_by(&:status).each do |status, status_appointments| %>
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                <%= case status
+                                      when 'completed' then 'bg-green-100 text-green-800'
+                                      when 'cancelled' then 'bg-red-100 text-red-800'
+                                      when 'no_show' then 'bg-gray-100 text-gray-800'
+                                      else 'bg-blue-100 text-blue-800'
+                                    end %>">
+                      <%= status_appointments.count %> <%= status.humanize %>
+                    </span>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Monthly appointments -->
+          <div class="divide-y divide-gray-200">
+            <% monthly_appointments.sort_by(&:scheduled_at).reverse.each do |appointment| %>
+              <div class="p-4">
+                <%= render 'appointments/appointment_card', appointment: appointment %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Pagination -->
+    <% if respond_to?(:paginate) && appointments.respond_to?(:current_page) %>
+      <div class="flex items-center justify-center mt-8">
+        <%= paginate appointments, theme: 'twitter_bootstrap_4' %>
+      </div>
+    <% end %>
+
+    <!-- Analytics Insights -->
+    <div class="mt-8 bg-blue-50 rounded-lg p-6 border border-blue-200">
+      <h4 class="text-lg font-medium text-gray-900 mb-4">📊 Business Insights</h4>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+        <div>
+          <p class="font-medium text-gray-700">Most Popular Session Type</p>
+          <p class="text-gray-600">
+            <% popular_type = appointments.group(:session_type).count.max_by(&:last) %>
+            <% if popular_type %>
+              <%= popular_type.first.humanize %> (<%= popular_type.last %> bookings)
+            <% else %>
+              No data available
+            <% end %>
+          </p>
+        </div>
+        <div>
+          <p class="font-medium text-gray-700">Best Month</p>
+          <p class="text-gray-600">
+            <% best_month = appointments.group_by { |a| a.scheduled_at.strftime("%B %Y") }.max_by { |_, apps| apps.sum(&:price) } %>
+            <% if best_month %>
+              <%= best_month.first %> ($<%= best_month.last.sum(&:price) %>)
+            <% else %>
+              No data available
+            <% end %>
+          </p>
+        </div>
+        <div>
+          <p class="font-medium text-gray-700">Top Customer</p>
+          <p class="text-gray-600">
+            <% top_customer = appointments.group_by(&:customer).max_by { |_, apps| apps.count } %>
+            <% if top_customer %>
+              <%= top_customer.first.full_name %> (<%= top_customer.last.count %> bookings)
+            <% else %>
+              No data available
+            <% end %>
+          </p>
+        </div>
+      </div>
+    </div>
+  <% else %>
+    <!-- Empty State for Past -->
+    <div class="text-center py-12">
+      <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+      </svg>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">No past appointments</h3>
+      <p class="text-gray-600 mb-6">Your appointment history will appear here once you complete some sessions.</p>
+
+      <div class="flex justify-center space-x-3">
+        <%= link_to new_appointment_path,
+              class: "inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors" do %>
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+          </svg>
+          Schedule First Appointment
+        <% end %>
+
+        <%= link_to appointments_path(view: 'today'),
+              class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors" do %>
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          View Today's Schedule
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

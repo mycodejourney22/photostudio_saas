@@ -59,6 +59,8 @@ group :development, :test do
   gem 'database_cleaner-active_record', '~> 2.1'
 end
 
+gem 'icalendar'
+
 group :development do
   gem 'web-console'
   gem 'error_highlight', '>= 0.4.0', platforms: [:ruby]

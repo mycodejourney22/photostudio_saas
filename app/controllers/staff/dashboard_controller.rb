@@ -4,9 +4,8 @@ class Staff::DashboardController < ApplicationController
   def index
     @today_appointments = current_user.appointments
                                      .includes(:customer, :studio)
-                                     .today
+                                    .today
                                      .order(:scheduled_at)
-
     @stats = {
       today_sessions: @today_appointments.count,
       today_revenue: @today_appointments.sum(:price),

@@ -38,6 +38,17 @@ Rails.application.routes.draw do
     patch 'admin/branding', to: 'admin/branding#update'
     put 'admin/branding', to: 'admin/branding#update'
 
+    resources :appointments do
+      member do
+        patch :confirm
+        patch :cancel
+        patch :complete
+      end
+      collection do
+        patch :bulk_update
+      end
+    end
+
     # Core resources
     resources :appointments do
       member do
