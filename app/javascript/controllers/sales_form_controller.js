@@ -138,7 +138,7 @@ export default class extends Controller {
   }
 
   updatePaymentStatus() {
-    const totalAmount = parseFloat(this.totalAmountTarget.textContent.replace(', '')) || 0
+    const totalAmount = parseFloat(this.totalAmountTarget.textContent.replace(/,/g, '')) || 0
     const paidAmount = parseFloat(this.paidAmountTarget.value) || 0
     const balanceLeft = Math.max(0, totalAmount - paidAmount)
 

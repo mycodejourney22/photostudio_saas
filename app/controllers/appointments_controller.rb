@@ -1,7 +1,7 @@
 # app/controllers/appointments_controller.rb (fixed version)
 class AppointmentsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_appointment, only: [:show, :edit, :update, :destroy, :assign_staff, :update_production, :create_sale]
+  before_action :set_appointment, only: [:show, :edit, :update, :destroy, :assign_staff, :update_production, :create_sale, :mark_shoot_completed, :mark_editing_completed]
   before_action :load_form_data, only: [:new, :edit, :create, :update]
 
   def index
@@ -56,7 +56,7 @@ class AppointmentsController < ApplicationController
   end
 
   def show
-    @sale = @appointment.sale
+    @sales = @appointment.sales
     @production_timeline = build_production_timeline
     @photographers = @appointment.tenant.staff_members.where(role: "photographer")
     @editors = @appointment.tenant.staff_members.where(role: "editor")
@@ -157,36 +157,109 @@ class AppointmentsController < ApplicationController
     end
   end
 
+  def confirm
+    if @appointment.update(status: 'confirmed')
+      redirect_to @appointment, notice: 'Appointment confirmed successfully.'
+    else
+      redirect_to @appointment, alert: 'Unable to confirm appointment.'
+    end
+  end
+
+  def cancel
+    if @appointment.can_be_cancelled?
+      @appointment.update(status: 'cancelled')
+      redirect_to @appointment, notice: 'Appointment cancelled successfully.'
+    else
+      redirect_to @appointment, alert: 'Cannot cancel this appointment.'
+    end
+  end
+
+  def mark_shoot_completed
+    binding.pry
+    begin
+      @appointment.mark_shoot_completed!
+      redirect_to @appointment, notice: 'Shoot marked as completed successfully.'
+    rescue => e
+      redirect_to @appointment, alert: "Error marking shoot complete: #{e.message}"
+    end
+  end
+
+  def mark_editing_completed
+    begin
+      @appointment.mark_editing_completed!
+      redirect_to @appointment, notice: 'Editing marked as completed successfully.'
+    rescue => e
+      redirect_to @appointment, alert: "Error marking editing complete: #{e.message}"
+    end
+  end
+
+
   # AJAX endpoint for staff assignment
   def assign_staff
-    staff_member = current_tenant.staff_members.find(params[:staff_member_id])
+    staff_member_id = params[:staff_member_id]
     assignment_type = params[:assignment_type] # 'photographer' or 'editor'
 
     begin
-      case assignment_type
-      when 'photographer'
-        @appointment.assign_photographer!(staff_member)
-        message = "#{staff_member.full_name} assigned as photographer"
-      when 'editor'
-        @appointment.assign_editor!(staff_member)
-        message = "#{staff_member.full_name} assigned as editor"
+      if staff_member_id.present?
+        staff_member = current_tenant.staff_members.find(staff_member_id)
+
+        case assignment_type
+        when 'photographer'
+          @appointment.assign_photographer!(staff_member)
+          message = "#{staff_member.full_name} assigned as photographer"
+        when 'editor'
+          @appointment.assign_editor!(staff_member)
+          message = "#{staff_member.full_name} assigned as editor"
+        else
+          raise "Invalid assignment type"
+        end
+
+        staff_name = staff_member.full_name
       else
-        raise "Invalid assignment type"
+        # Remove assignment
+        case assignment_type
+        when 'photographer'
+          @appointment.update!(assigned_photographer: nil)
+          message = "Photographer assignment removed"
+        when 'editor'
+          @appointment.update!(assigned_editor: nil)
+          message = "Editor assignment removed"
+        else
+          raise "Invalid assignment type"
+        end
+
+        staff_name = nil
       end
 
-      render json: {
-        success: true,
-        message: message,
-        staff_name: staff_member.full_name,
-        staff_id: staff_member.id
-      }
+      # Handle both AJAX and regular requests
+      respond_to do |format|
+        format.json do
+          render json: {
+            success: true,
+            message: message,
+            staff_name: staff_name,
+            staff_id: staff_member_id
+          }
+        end
+        format.html do
+          redirect_to @appointment, notice: message
+        end
+      end
     rescue => e
-      render json: {
-        success: false,
-        message: e.message
-      }, status: :unprocessable_entity
+      respond_to do |format|
+        format.json do
+          render json: {
+            success: false,
+            message: e.message
+          }, status: :unprocessable_entity
+        end
+        format.html do
+          redirect_to @appointment, alert: e.message
+        end
+      end
     end
   end
+
 
   # Update production status
   def update_production

@@ -12,6 +12,14 @@ class ApplicationController < ActionController::Base
   before_action :set_current_tenant
   before_action :configure_permitted_parameters, if: :devise_controller?
 
+  def handle_routing_error
+    # Handle the error - you can customize this based on your needs
+    render file: Rails.public_path.join('404.html'), status: :not_found, layout: false
+  rescue ActionController::MissingTemplate
+    # Fallback if 404.html doesn't exist
+    render plain: "404 Not Found", status: :not_found
+  end
+
   private
 
   def configure_permitted_parameters

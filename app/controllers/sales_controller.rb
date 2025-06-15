@@ -37,10 +37,42 @@ class SalesController < ApplicationController
     @payment_statuses = Sale.payment_statuses.keys
   end
 
-  def show
-    @sale_items = @sale.sale_items.includes(:service_tier)
-    @payment_history = build_payment_history
-  end
+  # def show
+  #   @sale_items = @sale.sale_items.includes(:service_tier)
+  #   @payment_history = build_payment_history
+  # end
+
+  # def new
+  #   @sale = current_tenant.sales.build
+  #   @sale.sale_date = Time.current
+  #   @sale.sale_type = params[:sale_type] || 'walk_in'
+
+  #   # Pre-fill from appointment if specified
+  #   if params[:appointment_id].present?
+  #     @appointment = current_tenant.appointments.find(params[:appointment_id])
+  #     @sale.appointment = @appointment
+  #     @sale.customer = @appointment.customer
+  #     @sale.customer_name = @appointment.customer.full_name
+  #     @sale.customer_email = @appointment.customer.email
+  #     @sale.customer_phone = @appointment.customer.phone
+  #     @sale.sale_type = 'appointment'
+
+  #     # Add appointment service as first item
+  #     @sale.sale_items.build(
+  #       item_type: 'service',
+  #       name: @appointment.service_package_name,
+  #       description: "#{@appointment.session_type.humanize} session",
+  #       quantity: 1,
+  #       unit_price: @appointment.price,
+  #       total_price: @appointment.price,
+  #       duration_minutes: @appointment.duration_minutes,
+  #       service_tier: @appointment.service_tier
+  #     )
+  #   else
+  #     # Start with one empty sale item for non-appointment sales
+  #     @sale.sale_items.build
+  #   end
+  # end
 
   def new
     @sale = current_tenant.sales.build
@@ -50,28 +82,27 @@ class SalesController < ApplicationController
     # Pre-fill from appointment if specified
     if params[:appointment_id].present?
       @appointment = current_tenant.appointments.find(params[:appointment_id])
-      @sale.appointment = @appointment
-      @sale.customer = @appointment.customer
-      @sale.customer_name = @appointment.customer.full_name
-      @sale.customer_email = @appointment.customer.email
-      @sale.customer_phone = @appointment.customer.phone
-      @sale.sale_type = 'appointment'
 
-      # Add appointment service as first item
-      @sale.sale_items.build(
-        item_type: 'service',
-        name: @appointment.service_package_name,
-        description: "#{@appointment.session_type.humanize} session",
-        quantity: 1,
-        unit_price: @appointment.price,
-        total_price: @appointment.price,
-        duration_minutes: @appointment.duration_minutes,
-        service_tier: @appointment.service_tier
-      )
+      # Check if this is for the main sale or additional sale
+      if params[:additional] == 'true' || @appointment.has_main_sale?
+        setup_additional_sale
+      else
+        setup_main_sale
+      end
     else
       # Start with one empty sale item for non-appointment sales
       @sale.sale_items.build
     end
+  end
+
+  def new_additional
+    @appointment = current_tenant.appointments.find(params[:appointment_id])
+    @sale = current_tenant.sales.build
+    @sale.sale_date = Time.current
+    @sale.sale_type = 'walk_in' # Additional sales are typically walk-in
+
+    setup_additional_sale
+    render :new
   end
 
   # def create
@@ -103,39 +134,90 @@ class SalesController < ApplicationController
   #   end
   # end
 
-def create
-  @sale = current_tenant.sales.build(sale_params)
+  # def create
+  #   @sale = current_tenant.sales.build(sale_params)
 
-  # CRITICAL FIX: Set flag to indicate user provided payment information
-  if sale_params[:paid_amount].present?
-    @sale.user_provided_payment = true
+  #   # CRITICAL FIX: Set flag to indicate user provided payment information
+  #   if sale_params[:paid_amount].present?
+  #     @sale.user_provided_payment = true
+  #   end
+
+  #   # Only set staff member automatically if none was provided in the form
+  #   unless @sale.staff_member_id.present?
+  #     @sale.staff_member = current_user.staff_members.find_by(tenant: current_tenant) ||
+  #                         current_tenant.staff_members.customer_service.first
+  #   end
+
+  #   # Set payment status based on what user actually entered
+  #   if sale_params[:paid_amount].present? && sale_params[:paid_amount].to_f > 0
+  #     @sale.payment_status = determine_payment_status(sale_params[:paid_amount].to_f, @sale.total_amount || 0)
+  #     @sale.payment_received_at = Time.current if @sale.payment_status.in?(['paid', 'partial'])
+  #   else
+  #     @sale.payment_status = 'unpaid'
+  #     @sale.paid_amount = 0
+  #   end
+
+  #   # Set sales status to confirmed when creating a sale
+  #   @sale.sale_status = 'confirmed'
+
+  #   if @sale.save
+  #     redirect_to @sale, notice: 'Sale created successfully.'
+  #   else
+  #     load_form_data
+  #     render :new, status: :unprocessable_entity
+  #   end
+  # end
+
+    def create
+      @sale = current_tenant.sales.build(sale_params)
+
+      # Set flag if user provided payment information
+      if sale_params[:paid_amount].present?
+        @sale.user_provided_payment = true
+      end
+
+      # Set staff member automatically if none provided
+      unless @sale.staff_member_id.present?
+        @sale.staff_member = current_user.staff_members.find_by(tenant: current_tenant) ||
+                            current_tenant.staff_members.customer_service.first
+      end
+      binding.pry
+    # Set payment status based on user input
+      if sale_params[:paid_amount].present? && sale_params[:paid_amount].to_f > 0
+        @sale.payment_status = determine_payment_status(sale_params[:paid_amount].to_f, @sale.total_amount || 0)
+        @sale.payment_received_at = Time.current if @sale.payment_status.in?(['paid', 'partial'])
+      else
+        @sale.payment_status = 'unpaid'
+        @sale.paid_amount = 0
+      end
+
+      @sale.sale_status = 'confirmed'
+
+      if @sale.save
+        # Update appointment payment status if this sale is linked to one
+        if @sale.appointment_id.present?
+          @sale.appointment.update_payment_status!
+        end
+
+        redirect_to @sale, notice: 'Sale created successfully.'
+      else
+        load_form_data
+        render :new, status: :unprocessable_entity
+      end
+    end
+
+  # Enhanced show to display all sales for appointment if viewing appointment sale
+  def show
+    @sale_items = @sale.sale_items.includes(:service_tier)
+    @payment_history = build_payment_history
+
+    # If this sale belongs to an appointment, show related sales
+    if @sale.appointment.present?
+      @appointment = @sale.appointment
+      @related_sales = @appointment.sales.where.not(id: @sale.id)
+    end
   end
 
-  # Only set staff member automatically if none was provided in the form
-  unless @sale.staff_member_id.present?
-    @sale.staff_member = current_user.staff_members.find_by(tenant: current_tenant) ||
-                        current_tenant.staff_members.customer_service.first
-  end
-
-  # Set payment status based on what user actually entered
-  if sale_params[:paid_amount].present? && sale_params[:paid_amount].to_f > 0
-    @sale.payment_status = determine_payment_status(sale_params[:paid_amount].to_f, @sale.total_amount || 0)
-    @sale.payment_received_at = Time.current if @sale.payment_status.in?(['paid', 'partial'])
-  else
-    @sale.payment_status = 'unpaid'
-    @sale.paid_amount = 0
-  end
-
-  # Set sales status to confirmed when creating a sale
-  @sale.sale_status = 'confirmed'
-
-  if @sale.save
-    redirect_to @sale, notice: 'Sale created successfully.'
-  else
-    load_form_data
-    render :new, status: :unprocessable_entity
-  end
-end
 
 
   def update
@@ -223,11 +305,30 @@ end
   end
 
   # Create sale from appointment (enhanced)
+  # def create_from_appointment
+  #   @appointment = current_tenant.appointments.find(params[:appointment_id])
+
+  #   if @appointment.sale.present?
+  #     redirect_to @appointment.sale, notice: 'Sale already exists for this appointment'
+  #     return
+  #   end
+
+  #   begin
+  #     staff_member = current_user.staff_members.find_by(tenant: current_tenant) ||
+  #                   current_tenant.staff_members.customer_service.first
+
+  #     @sale = create_sale_from_appointment(@appointment, staff_member)
+  #     redirect_to edit_sale_path(@sale), notice: 'Sale created from appointment. Please review and add any additional items.'
+  #   rescue => e
+  #     redirect_to @appointment, alert: "Error creating sale: #{e.message}"
+  #   end
+  # end
+
   def create_from_appointment
     @appointment = current_tenant.appointments.find(params[:appointment_id])
 
-    if @appointment.sale.present?
-      redirect_to @appointment.sale, notice: 'Sale already exists for this appointment'
+    if @appointment.has_main_sale?
+      redirect_to @appointment.main_sale, notice: 'Main sale already exists for this appointment'
       return
     end
 
@@ -235,8 +336,8 @@ end
       staff_member = current_user.staff_members.find_by(tenant: current_tenant) ||
                     current_tenant.staff_members.customer_service.first
 
-      @sale = create_sale_from_appointment(@appointment, staff_member)
-      redirect_to edit_sale_path(@sale), notice: 'Sale created from appointment. Please review and add any additional items.'
+      @sale = @appointment.create_main_sale!(staff_member)
+      redirect_to edit_sale_path(@sale), notice: 'Main sale created from appointment.'
     rescue => e
       redirect_to @appointment, alert: "Error creating sale: #{e.message}"
     end
@@ -265,23 +366,72 @@ end
     end
   end
 
+  def add_frame
+    @appointment = current_tenant.appointments.find(params[:appointment_id])
+    staff_member = current_user.staff_members.find_by(tenant: current_tenant)
+
+    @sale = @appointment.add_frame_sale!(
+      staff_member,
+      frame_type: params[:frame_type] || 'Standard Frame',
+      price: params[:price]&.to_f || 25.00,
+      quantity: params[:quantity]&.to_i || 1
+    )
+
+    redirect_to @sale, notice: 'Frame sale added successfully!'
+  rescue => e
+    redirect_to @appointment, alert: "Error adding frame sale: #{e.message}"
+  end
+
+  def add_prints
+    @appointment = current_tenant.appointments.find(params[:appointment_id])
+    staff_member = current_user.staff_members.find_by(tenant: current_tenant)
+
+    @sale = @appointment.add_prints_sale!(
+      staff_member,
+      print_type: params[:print_type] || '4x6 Prints',
+      price: params[:price]&.to_f || 1.50,
+      quantity: params[:quantity]&.to_i || 10
+    )
+
+    redirect_to @sale, notice: 'Prints sale added successfully!'
+  rescue => e
+    redirect_to @appointment, alert: "Error adding prints sale: #{e.message}"
+  end
+
+  def add_photobook
+    @appointment = current_tenant.appointments.find(params[:appointment_id])
+    staff_member = current_user.staff_members.find_by(tenant: current_tenant)
+
+    @sale = @appointment.add_photobook_sale!(
+      staff_member,
+      book_type: params[:book_type] || 'Premium Photobook',
+      price: params[:price]&.to_f || 75.00,
+      pages: params[:pages]&.to_i
+    )
+
+    redirect_to @sale, notice: 'Photobook sale added successfully!'
+  rescue => e
+    redirect_to @appointment, alert: "Error adding photobook sale: #{e.message}"
+  end
+
+
   private
 
   def set_sale
     @sale = current_tenant.sales.find(params[:id])
   end
 
-  def load_form_data
-    @customers = current_tenant.customers.active.order(:first_name, :last_name)
-    @staff_members = current_tenant.staff_members.active.order(:first_name, :last_name)
-    @service_tiers = current_tenant.service_tiers.active.includes(:service_package)
-    # Fix: Find appointments that don't have a sale yet
-    @appointments = current_tenant.appointments
-                                 .left_joins(:sale)
-                                 .where(sales: { id: nil })
-                                 .includes(:customer)
-                                 .order(:scheduled_at)
-  end
+  # def load_form_data
+  #   @customers = current_tenant.customers.active.order(:first_name, :last_name)
+  #   @staff_members = current_tenant.staff_members.active.order(:first_name, :last_name)
+  #   @service_tiers = current_tenant.service_tiers.active.includes(:service_package)
+  #   # Fix: Find appointments that don't have a sale yet
+  #   @appointments = current_tenant.appointments
+  #                                .left_joins(:sale)
+  #                                .where(sales: { id: nil })
+  #                                .includes(:customer)
+  #                                .order(:scheduled_at)
+  # end
 
   # def sale_params
   #   params.require(:sale).permit(
@@ -305,6 +455,51 @@ end
       ]
     )
   end
+
+  def setup_main_sale
+    @sale.appointment = @appointment
+    @sale.customer = @appointment.customer
+    @sale.customer_name = @appointment.customer.full_name
+    @sale.customer_email = @appointment.customer.email
+    @sale.customer_phone = @appointment.customer.phone
+    @sale.sale_type = 'appointment'
+
+    # Add appointment service as first item
+    @sale.sale_items.build(
+      item_type: 'service',
+      name: @appointment.service_package_name,
+      description: "#{@appointment.session_type.humanize} session",
+      quantity: 1,
+      unit_price: @appointment.price,
+      total_price: @appointment.price,
+      duration_minutes: @appointment.duration_minutes,
+      service_tier: @appointment.service_tier
+    )
+  end
+
+  def setup_additional_sale
+    @sale.appointment = @appointment
+    @sale.customer = @appointment.customer
+    @sale.customer_name = @appointment.customer.full_name
+    @sale.customer_email = @appointment.customer.email
+    @sale.customer_phone = @appointment.customer.phone
+    @sale.sale_type = 'walk_in'  # Additional sales are typically walk-in type
+
+    # Start with empty sale items for additional products/services
+    @sale.sale_items.build
+  end
+
+  def load_form_data
+    @customers = current_tenant.customers.active.order(:first_name, :last_name)
+    @staff_members = current_tenant.staff_members.active.order(:first_name, :last_name)
+    @service_tiers = current_tenant.service_tiers.active.includes(:service_package)
+
+    # For appointment selection, show all appointments (since we can now have multiple sales per appointment)
+    @appointments = current_tenant.appointments
+                                  .includes(:customer, :sales)
+                                  .order(:scheduled_at)
+  end
+
 
   def determine_payment_status(paid_amount, total_amount)
     paid_amount = paid_amount.to_f

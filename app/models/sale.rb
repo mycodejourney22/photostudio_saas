@@ -210,7 +210,7 @@ class Sale < ApplicationRecord
       customer_name: appointment.customer.full_name,
       customer_email: appointment.customer.email,
       customer_phone: appointment.customer.phone,
-      sale_type: 'appointment',
+      # sale_type: 'appointment',
       sale_date: Time.current,
       sale_status: 'confirmed'
     )
@@ -322,7 +322,7 @@ class Sale < ApplicationRecord
       self.customer_name = appointment.customer.full_name
       self.customer_email = appointment.customer.email
       self.customer_phone = appointment.customer.phone
-      self.sale_type = 'appointment'
+      # self.sale_type = 'appointment'
     end
   end
 

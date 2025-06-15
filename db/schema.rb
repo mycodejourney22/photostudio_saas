@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_14_061723) do
+ActiveRecord::Schema[7.1].define(version: 2025_06_15_201122) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -180,6 +180,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_14_061723) do
     t.json "metadata", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["appointment_id", "sale_type", "created_at"], name: "index_sales_on_appointment_id_and_sale_type_and_created_at"
+    t.index ["appointment_id", "sale_type"], name: "index_sales_on_appointment_id_and_sale_type"
     t.index ["appointment_id"], name: "index_sales_on_appointment_id"
     t.index ["customer_email", "customer_phone"], name: "index_sales_on_customer_email_and_customer_phone"
     t.index ["customer_id"], name: "index_sales_on_customer_id"

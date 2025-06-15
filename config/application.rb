@@ -40,6 +40,9 @@ module PhotostudioSaas
     # Active Job configuration
     config.active_job.queue_adapter = :sidekiq
 
+    config.default_host = ENV.fetch('DEFAULT_HOST', 'localhost:3000')
+
+
     # Time zone
     config.time_zone = 'UTC'
 

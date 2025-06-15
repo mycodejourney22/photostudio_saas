@@ -52,7 +52,13 @@ Rails.application.routes.draw do
         get :receipt
         get :duplicate
         patch :reschedule
+        post 'add_frame', to: 'sales#add_frame'
+        post 'add_prints', to: 'sales#add_prints'
+        post 'add_photobook', to: 'sales#add_photobook'
       end
+
+      resources :sales, except: [:index], controller: 'appointment_sales'
+
 
       collection do
         patch :bulk_update
@@ -99,6 +105,7 @@ Rails.application.routes.draw do
         post :bulk_send_receipts
         get :outstanding
         get :recent
+        get :new_additional
       end
     end
 
@@ -225,6 +232,7 @@ Rails.application.routes.draw do
         get :calendar_events
         get :daily_schedule
         get :staff_availability
+        get :appointment_sales
       end
     end
 
@@ -280,6 +288,10 @@ Rails.application.routes.draw do
     # Customer quick actions
     post 'customers/create_from_sale', to: 'customers#create_from_sale'
     post 'customers/create_from_appointment', to: 'customers#create_from_appointment'
+
+    post 'sales/add_frame/:appointment_id', to: 'sales#add_frame', as: :add_frame
+    post 'sales/add_prints/:appointment_id', to: 'sales#add_prints', as: :add_prints
+    post 'sales/add_photobook/:appointment_id', to: 'sales#add_photobook', as: :add_photobook
   end
 
   # Reports and analytics

@@ -28,7 +28,7 @@ class Appointment < ApplicationRecord
   end
 
   # Sale relationship (optional - appointment may generate a sale)
-  has_one :sale, dependent: :nullify
+  has_many :sales, dependent: :nullify
 
   validates :scheduled_at, presence: true
   validates :duration_minutes, presence: true, numericality: { greater_than: 0 }
@@ -110,6 +110,35 @@ class Appointment < ApplicationRecord
     service_tier&.name || 'Custom'
   end
 
+    def main_sale
+      sales.where(sale_type: 'appointment').first
+    end
+
+  def additional_sales
+    sales.where.not(sale_type: 'appointment')
+  end
+
+  def total_sales_amount
+    sales.sum(:total_amount)
+  end
+
+  def has_main_sale?
+    main_sale.present?
+  end
+
+  def has_additional_sales?
+    additional_sales.any?
+  end
+
+  def sales_summary
+    {
+      main_sale: main_sale,
+      additional_sales: additional_sales,
+      total_amount: total_sales_amount,
+      count: sales.count
+    }
+  end
+
   def location_name
     studio_location&.name || studio&.name || 'TBD'
   end
@@ -162,45 +191,52 @@ class Appointment < ApplicationRecord
 
   def mark_shoot_completed!(completed_at = Time.current)
     if respond_to?(:shoot_completed_at=)
-      update!(shoot_completed_at: completed_at)
+      update!(shoot_completed_at: completed_at, status: 'in_progress')
     else
       raise "shoot_completed_at column not available"
+      update!(status: 'in_progress')
+
     end
   end
 
   def mark_editing_completed!(completed_at = Time.current)
     if respond_to?(:editing_completed_at=)
-      update!(editing_completed_at: completed_at)
+      update!(editing_completed_at: completed_at, status: 'completed')
     else
       raise "editing_completed_at column not available"
+      update!(status: 'completed')
+
     end
   end
-
 
   def assign_photographer!(photographer)
     raise "Photographer must belong to the same tenant" unless photographer.tenant_id == tenant_id
     raise "Staff member is not a photographer" unless photographer.photographer?
 
-    update!(assigned_photographer: photographer)
+    if respond_to?(:assigned_photographer_id=)
+      update!(assigned_photographer: photographer)
+    elsif respond_to?(:photographer_id=)
+      update!(photographer: photographer)
+    else
+      raise "No photographer assignment column available"
+    end
 
-    # Log the assignment
     Rails.logger.info "Photographer #{photographer.full_name} assigned to appointment #{id}"
-
-    # You could add notification logic here
-    # NotificationService.notify_photographer_assignment(self, photographer)
   end
 
   def assign_editor!(editor)
     raise "Editor must belong to the same tenant" unless editor.tenant_id == tenant_id
     raise "Staff member is not an editor" unless editor.editor?
 
-    update!(assigned_editor: editor)
+    if respond_to?(:assigned_editor_id=)
+      update!(assigned_editor: editor)
+    elsif respond_to?(:editor_id=)
+      update!(editor: editor)
+    else
+      raise "No editor assignment column available"
+    end
 
-    # Log the assignment
     Rails.logger.info "Editor #{editor.full_name} assigned to appointment #{id}"
-
-    # You could add notification logic here
-    # NotificationService.notify_editor_assignment(self, editor)
   end
 
   def unassign_photographer!
@@ -226,6 +262,31 @@ class Appointment < ApplicationRecord
     editor.tenant_id == tenant_id &&
     editor.editor? &&
     editor.active?
+  end
+
+  def assigned_photographer
+    if respond_to?(:assigned_photographer_id) && assigned_photographer_id.present?
+      super
+    elsif respond_to?(:photographer_id) && photographer_id.present?
+      photographer
+    end
+  end
+
+  def assigned_editor
+    if respond_to?(:assigned_editor_id) && assigned_editor_id.present?
+      super
+    elsif respond_to?(:editor_id) && editor_id.present?
+      editor
+    end
+  end
+
+  # Helper methods for the view
+  def photographer_name
+    assigned_photographer&.full_name
+  end
+
+  def editor_name
+    assigned_editor&.full_name
   end
 
   # Generate a sale for this appointment
@@ -261,6 +322,123 @@ class Appointment < ApplicationRecord
         }
       ] + additional_items
     )
+  end
+
+  def create_main_sale!(staff_member, additional_items: [])
+    return main_sale if has_main_sale?
+
+    Sale.create!(
+      tenant: tenant,
+      appointment: self,
+      customer: customer,
+      staff_member: staff_member,
+      customer_name: customer.full_name,
+      customer_email: customer.email,
+      customer_phone: customer.phone,
+      total_amount: price,
+      sale_type: 'appointment',
+      sale_date: Time.current,
+      sale_status: 'confirmed',
+      payment_status: payment_status == 'paid' ? 'paid' : 'unpaid',
+      paid_amount: paid_amount || 0,
+      notes: "Main sale for appointment ##{id}",
+      sale_items_attributes: [
+        {
+          tenant: tenant,
+          item_type: 'service',
+          name: service_package_name,
+          description: "#{session_type.humanize} session - #{duration_minutes} minutes",
+          quantity: 1,
+          unit_price: price,
+          total_price: price,
+          duration_minutes: duration_minutes,
+          service_tier: service_tier
+        }
+      ] + additional_items
+    )
+  end
+
+  def add_additional_sale!(staff_member, items: [], sale_type: 'walk_in', notes: nil)
+    Sale.create!(
+      tenant: tenant,
+      appointment: self,
+      customer: customer,
+      staff_member: staff_member,
+      customer_name: customer.full_name,
+      customer_email: customer.email,
+      customer_phone: customer.phone,
+      sale_type: sale_type,
+      sale_date: Time.current,
+      sale_status: 'confirmed',
+      payment_status: 'unpaid',
+      notes: notes || "Additional sale for appointment ##{id}",
+      sale_items_attributes: items.map do |item|
+        item.merge(tenant: tenant)
+      end
+    )
+  end
+
+  def add_frame_sale!(staff_member, frame_type:, price:, quantity: 1)
+    add_additional_sale!(
+      staff_member,
+      items: [{
+        item_type: 'product',
+        name: frame_type,
+        description: "Picture frame",
+        quantity: quantity,
+        unit_price: price,
+        total_price: price * quantity,
+        product_category: 'frames'
+      }],
+      notes: "Frame purchase for appointment ##{id}"
+    )
+  end
+
+  def add_prints_sale!(staff_member, print_type:, price:, quantity:)
+    add_additional_sale!(
+      staff_member,
+      items: [{
+        item_type: 'product',
+        name: print_type,
+        description: "Photo prints",
+        quantity: quantity,
+        unit_price: price,
+        total_price: price * quantity,
+        product_category: 'prints'
+      }],
+      notes: "Additional prints for appointment ##{id}"
+    )
+  end
+
+  def add_photobook_sale!(staff_member, book_type:, price:, pages: nil)
+    add_additional_sale!(
+      staff_member,
+      items: [{
+        item_type: 'product',
+        name: book_type,
+        description: pages ? "#{pages}-page photobook" : "Photobook",
+        quantity: 1,
+        unit_price: price,
+        total_price: price,
+        product_category: 'photobooks'
+      }],
+      notes: "Photobook purchase for appointment ##{id}"
+    )
+  end
+
+  def update_payment_status!
+    total_expected = total_sales_amount
+    total_paid = sales.sum(:paid_amount)
+
+    new_status = if total_paid >= total_expected
+                  'paid'
+                elsif total_paid > 0
+                  'partial_paid'
+                else
+                  'unpaid'
+                end
+
+    update!(payment_status: new_status, paid_amount: total_paid)
   end
 
   private
