@@ -86,7 +86,7 @@
         <div>
           <p class="text-sm font-medium text-gray-600">Customer Retention</p>
           <p class="text-xl font-semibold text-gray-800">
-            <%= ((appointments.joins(:customer).group('customers.id').having('COUNT(*) > 1').count.count.to_f / appointments.joins(:customer).distinct.count('customers.id')) * 100).round(1) %>%
+            <%= ((appointments.joins(:customer).group('customers.id', 'id').having('COUNT(*) > 1').count.count.to_f / appointments.joins(:customer).distinct.count('customers.id')) * 100).round(1) %>%
           </p>
         </div>
       </div>
@@ -210,9 +210,9 @@
         <div>
           <p class="font-medium text-gray-700">Most Popular Session Type</p>
           <p class="text-gray-600">
-            <% popular_type = appointments.group(:session_type).count.max_by(&:last) %>
+            <% popular_type = appointments.group(:session_type, :scheduled_at).count.max_by(&:last) %>
             <% if popular_type %>
-              <%= popular_type.first.humanize %> (<%= popular_type.last %> bookings)
+              <%= popular_type.first[0].humanize %> (<%= popular_type.last %> bookings)
             <% else %>
               No data available
             <% end %>

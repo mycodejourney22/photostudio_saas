@@ -1,0 +1,224 @@
+<!-- app/views/sales/_form.html.erb -->
+<%= form_with model: @sale, local: true,
+      data: {
+        controller: "sales-form",
+        "sales-form-appointments-value": (@appointments&.to_json(only: [:id, :customer_name, :customer_email, :customer_phone, :service_name, :session_type, :price, :duration_minutes]) || "[]"),
+        "sales-form-customers-value": (@customers&.to_json(only: [:id, :first_name, :last_name, :email, :phone]) || "[]"),
+        "sales-form-service-tiers-value": (@service_tiers&.to_json(only: [:id, :name, :description, :base_price, :duration_minutes]) || "[]")
+      },
+      class: "space-y-6" do |form| %>
+
+  <!-- Error Messages -->
+  <% if @sale.errors.any? %>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">Please fix the following errors:</h3>
+          <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+            <% @sale.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Sale Type and Basic Info -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Sale Information</h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Sale Type -->
+      <div>
+        <%= form.label :sale_type, "Sale Type", class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <%= form.select :sale_type,
+              options_for_select([
+                ['Walk-in Customer', 'walk_in'],
+                ['Phone Order', 'phone'],
+                ['Online Order', 'online'],
+                ['From Appointment', 'appointment']
+              ], @sale.sale_type),
+              {},
+              {
+                class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                data: {
+                  "sales-form-target": "saleType",
+                  action: "change->sales-form#saleTypeChanged"
+                }
+              } %>
+      </div>
+
+      <!-- Sale Date -->
+      <div>
+        <%= form.label :sale_date, "Sale Date", class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <%= form.datetime_local_field :sale_date,
+              value: @sale.sale_date&.strftime("%Y-%m-%dT%H:%M"),
+              class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+      </div>
+
+      <!-- Staff Member -->
+      <div>
+        <%= form.label :staff_member_id, "Processed By", class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <%= form.select :staff_member_id,
+              options_for_select(@staff_members.select {|s| s.can_process_sales? }.map {|s| [s.full_name, s.id]}, @sale.staff_member_id),
+              { include_blank: "Select Staff Member" },
+              { class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" } %>
+      </div>
+    </div>
+
+    <!-- Appointment Display (if from appointment) -->
+    <% if params[:appointment_id].present? || @sale.appointment_id.present? %>
+      <div class="mt-4">
+        <%= form.label :appointment_id, "Related Appointment", class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <div class="block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm text-gray-800">
+          <% if @sale.appointment.present? %>
+            <%= @sale.appointment.customer.full_name %> - <%= @sale.appointment.scheduled_at.strftime('%m/%d/%Y %I:%M %p') %>
+            (<%= @sale.appointment.service_package_name %>)
+          <% elsif params[:appointment_id].present? %>
+            <% appointment = current_tenant.appointments.find(params[:appointment_id]) %>
+            <%= appointment.customer.full_name %> - <%= appointment.scheduled_at.strftime('%m/%d/%Y %I:%M %p') %>
+            (<%= appointment.service_package_name %>)
+          <% end %>
+        </div>
+        <%= form.hidden_field :appointment_id %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Customer Information -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Customer Information</h3>
+
+    <!-- Customer Details -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <%= form.label :customer_name, "Customer Name", class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <%= form.text_field :customer_name,
+              class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent #{(params[:appointment_id].present? || @sale.appointment_id.present?) ? 'bg-gray-100' : ''}",
+              placeholder: "Enter customer name",
+              readonly: params[:appointment_id].present? || @sale.appointment_id.present?,
+              data: { "sales-form-target": "customerName" } %>
+      </div>
+
+      <div>
+        <%= form.label :customer_email, "Email", class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <%= form.email_field :customer_email,
+              class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent #{(params[:appointment_id].present? || @sale.appointment_id.present?) ? 'bg-gray-100' : ''}",
+              placeholder: "customer@example.com",
+              readonly: params[:appointment_id].present? || @sale.appointment_id.present?,
+              data: { "sales-form-target": "customerEmail" } %>
+      </div>
+
+      <div>
+        <%= form.label :customer_phone, "Phone", class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <%= form.telephone_field :customer_phone,
+              class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent #{(params[:appointment_id].present? || @sale.appointment_id.present?) ? 'bg-gray-100' : ''}",
+              placeholder: "(555) 123-4567",
+              readonly: params[:appointment_id].present? || @sale.appointment_id.present?,
+              data: { "sales-form-target": "customerPhone" } %>
+      </div>
+    </div>
+
+    <!-- Customer Selection for non-appointment sales -->
+    <% unless params[:appointment_id].present? || @sale.appointment_id.present? %>
+      <div class="mt-4">
+        <%= form.label :customer_id, "Or select existing customer", class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <%= form.select :customer_id,
+              options_for_select([['Type new customer info above or select existing', '']] + @customers.map {|c| [c.full_name, c.id]}, @sale.customer_id),
+              {},
+              {
+                class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                data: {
+                  "sales-form-target": "customerSelect",
+                  action: "change->sales-form#customerChanged"
+                }
+              } %>
+      </div>
+    <% end %>
+
+    <!-- Appointment info display -->
+    <% if params[:appointment_id].present? || @sale.appointment_id.present? %>
+      <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+        <div class="flex">
+          <svg class="w-5 h-5 text-blue-400 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <div>
+            <p class="text-sm text-blue-700 font-medium">Appointment Sale</p>
+            <p class="text-xs text-blue-600 mt-1">
+              Customer information is automatically populated from the selected appointment.
+              <% if @sale.appointment.present? %>
+                Service: <%= @sale.appointment.service_package_name %> •
+                Date: <%= @sale.appointment.scheduled_at.strftime("%m/%d/%Y %I:%M %p") %>
+              <% end %>
+            </p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Sale Items -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-medium text-gray-900">Sale Items</h3>
+      <button type="button"
+              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              data-action="click->sales-form#addSaleItem"
+              data-sales-form-target="addItemButton">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+        </svg>
+        Add Item
+      </button>
+    </div>
+
+    <!-- Sale Items Container -->
+    <div data-sales-form-target="saleItemsContainer" class="space-y-4">
+      <%= form.fields_for :sale_items do |item_form| %>
+        <%= render 'sale_item_fields', form: item_form %>
+      <% end %>
+    </div>
+
+    <!-- Total Display -->
+    <div class="mt-6 pt-4 border-t border-gray-200">
+      <div class="flex justify-end">
+        <div class="text-right">
+          <div class="text-sm text-gray-500">Total Amount</div>
+          <div class="text-2xl font-bold text-gray-900" data-sales-form-target="totalAmount">
+            $0.00
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Actions -->
+  <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+    <div class="flex space-x-3">
+      <%= link_to "Cancel", sales_path,
+            class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors" %>
+    </div>
+
+    <div class="flex space-x-3">
+      <%= form.submit "Save as Draft",
+            name: "commit", value: "draft",
+            class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors" %>
+
+      <%= form.submit @sale.persisted? ? "Update Sale" : "Create Sale",
+            class: "inline-flex items-center px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-sm" %>
+    </div>
+  </div>
+
+<% end %>
+
+<!-- Sale Item Template (hidden) -->
+<template data-sales-form-target="itemTemplate">
+  <%= render 'sale_item_fields', form: nil, template: true %>
+</template>

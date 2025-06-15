@@ -57,6 +57,9 @@ group :development, :test do
   gem 'factory_bot_rails', '~> 6.4'
   gem 'faker', '~> 3.2'
   gem 'database_cleaner-active_record', '~> 2.1'
+  gem 'pry'
+  gem 'pry-rails'  # Optional but recommended for Rails
+  gem 'pry-byebug' # Optional but gives you step debugging
 end
 
 gem 'icalendar'

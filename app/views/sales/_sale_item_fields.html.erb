@@ -1,0 +1,217 @@
+<!-- app/views/sales/_sale_item_fields.html.erb -->
+<%
+  # Handle both regular form fields and template rendering
+  if defined?(template) && template
+    # This is for the JavaScript template
+    item_form = nil
+    field_prefix = "sale[sale_items_attributes][NEW_RECORD]"
+    item_index = "NEW_RECORD"
+  elsif form
+    # This is a regular form field
+    item_form = form
+    field_prefix = form.try(:object_name) ? "#{form.object_name}" : "sale[sale_items_attributes][0]"
+    item_index = form.try(:index) || 0
+  else
+    # Fallback
+    field_prefix = "sale[sale_items_attributes][0]"
+    item_index = 0
+  end
+%>
+
+<div class="sale-item-row bg-gray-50 rounded-lg border border-gray-200 p-4">
+  <!-- Hidden fields for Rails -->
+  <% if item_form %>
+    <%= item_form.hidden_field :id if item_form.object.persisted? %>
+    <%= item_form.hidden_field :_destroy, value: "0" %>
+  <% else %>
+    <input type="hidden" name="<%= field_prefix %>[id]" value="">
+    <input type="hidden" name="<%= field_prefix %>[_destroy]" value="0">
+  <% end %>
+
+  <div class="flex items-start space-x-4">
+    <!-- Item Type -->
+    <div class="w-32">
+      <label class="block text-xs font-medium text-gray-700 mb-1">Type</label>
+      <% if item_form %>
+        <%= item_form.select :item_type,
+              options_for_select([
+                ['Service', 'service'],
+                ['Product', 'product'],
+                ['Package', 'package'],
+                ['Discount', 'discount']
+              ], item_form.object.item_type),
+              {},
+              {
+                class: "block w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500",
+                data: { action: "change->sales-form#itemChanged" }
+              } %>
+      <% else %>
+        <select name="<%= field_prefix %>[item_type]"
+                class="block w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                data-action="change->sales-form#itemChanged">
+          <option value="service">Service</option>
+          <option value="product">Product</option>
+          <option value="package">Package</option>
+          <option value="discount">Discount</option>
+        </select>
+      <% end %>
+    </div>
+
+    <!-- Item Name -->
+    <div class="flex-1">
+      <label class="block text-xs font-medium text-gray-700 mb-1">Item Name</label>
+      <% if item_form %>
+        <%= item_form.text_field :name,
+              class: "block w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500",
+              placeholder: "Enter item name",
+              data: { action: "change->sales-form#itemChanged" } %>
+      <% else %>
+        <input type="text"
+               name="<%= field_prefix %>[name]"
+               class="block w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+               placeholder="Enter item name"
+               data-action="change->sales-form#itemChanged">
+      <% end %>
+    </div>
+
+    <!-- Quantity -->
+    <div class="w-20">
+      <label class="block text-xs font-medium text-gray-700 mb-1">Qty</label>
+      <% if item_form %>
+        <%= item_form.number_field :quantity,
+              min: 1, value: item_form.object.quantity || 1,
+              class: "block w-full px-2 py-2 text-sm text-center border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500",
+              data: { action: "change->sales-form#itemChanged" } %>
+      <% else %>
+        <input type="number"
+               name="<%= field_prefix %>[quantity]"
+               value="1"
+               min="1"
+               class="block w-full px-2 py-2 text-sm text-center border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+               data-action="change->sales-form#itemChanged">
+      <% end %>
+    </div>
+
+    <!-- Unit Price -->
+    <div class="w-24">
+      <label class="block text-xs font-medium text-gray-700 mb-1">Price</label>
+      <% if item_form %>
+        <%= item_form.number_field :unit_price,
+              step: 0.01, min: 0,
+              class: "block w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500",
+              placeholder: "0.00",
+              data: { action: "change->sales-form#itemChanged" } %>
+      <% else %>
+        <input type="number"
+               name="<%= field_prefix %>[unit_price]"
+               step="0.01"
+               min="0"
+               class="block w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+               placeholder="0.00"
+               data-action="change->sales-form#itemChanged">
+      <% end %>
+    </div>
+
+    <!-- Total Price -->
+    <div class="w-24">
+      <label class="block text-xs font-medium text-gray-700 mb-1">Total</label>
+      <% if item_form %>
+        <%= item_form.number_field :total_price,
+              step: 0.01, readonly: true,
+              class: "block w-full px-2 py-2 text-sm bg-gray-100 border border-gray-300 rounded text-right font-medium" %>
+      <% else %>
+        <input type="number"
+               name="<%= field_prefix %>[total_price]"
+               step="0.01"
+               readonly
+               class="block w-full px-2 py-2 text-sm bg-gray-100 border border-gray-300 rounded text-right font-medium">
+      <% end %>
+    </div>
+
+    <!-- Remove Button -->
+    <div class="w-10 pt-6">
+      <button type="button"
+              class="text-red-400 hover:text-red-600 transition-colors"
+              data-action="click->sales-form#removeSaleItem"
+              title="Remove Item">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Expandable Details Row -->
+  <div class="mt-3 pt-3 border-t border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-3">
+    <!-- Description -->
+    <div>
+      <label class="block text-xs font-medium text-gray-700 mb-1">Description</label>
+      <% if item_form %>
+        <%= item_form.text_area :description, rows: 2,
+              class: "block w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500",
+              placeholder: "Item description..." %>
+      <% else %>
+        <textarea name="<%= field_prefix %>[description]"
+                  rows="2"
+                  class="block w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="Item description..."></textarea>
+      <% end %>
+    </div>
+
+    <!-- SKU / Product Code -->
+    <div>
+      <label class="block text-xs font-medium text-gray-700 mb-1">SKU / Code</label>
+      <% if item_form %>
+        <%= item_form.text_field :sku,
+              class: "block w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500",
+              placeholder: "Product code" %>
+      <% else %>
+        <input type="text"
+               name="<%= field_prefix %>[sku]"
+               class="block w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+               placeholder="Product code">
+      <% end %>
+    </div>
+
+    <!-- Duration (for services) -->
+    <div>
+      <label class="block text-xs font-medium text-gray-700 mb-1">Duration (min)</label>
+      <% if item_form %>
+        <%= item_form.number_field :duration_minutes,
+              min: 0,
+              class: "block w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500",
+              placeholder: "Minutes" %>
+      <% else %>
+        <input type="number"
+               name="<%= field_prefix %>[duration_minutes]"
+               min="0"
+               class="block w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+               placeholder="Minutes">
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Hidden Additional Fields -->
+  <div class="hidden">
+    <!-- Service Tier ID (for services) -->
+    <% if item_form %>
+      <%= item_form.number_field :service_tier_id %>
+    <% else %>
+      <input type="hidden" name="<%= field_prefix %>[service_tier_id]" value="">
+    <% end %>
+
+    <!-- Product Category -->
+    <% if item_form %>
+      <%= item_form.text_field :product_category %>
+    <% else %>
+      <input type="hidden" name="<%= field_prefix %>[product_category]" value="">
+    <% end %>
+
+    <!-- Discount Amount -->
+    <% if item_form %>
+      <%= item_form.number_field :discount_amount, step: 0.01, value: item_form.object.discount_amount || 0 %>
+    <% else %>
+      <input type="hidden" name="<%= field_prefix %>[discount_amount]" value="0" step="0.01">
+    <% end %>
+  </div>
+</div>

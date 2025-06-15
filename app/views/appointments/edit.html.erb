@@ -1,0 +1,277 @@
+<!-- app/views/appointments/edit.html.erb -->
+<% content_for :title, "Edit Appointment ##{@appointment.id} - #{current_tenant.name}" %>
+
+<div class="min-h-screen bg-gray-50 flex">
+  <!-- Sidebar - Desktop -->
+  <div class="hidden lg:flex lg:flex-shrink-0">
+    <div class="flex flex-col w-64">
+      <div class="flex-1 flex flex-col min-h-0 bg-gradient-to-b from-blue-600 to-purple-700">
+        <%= render 'shared/sidebar' %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile sidebar overlay -->
+  <div class="lg:hidden" data-controller="mobile-navigation">
+    <!-- Mobile menu button -->
+    <div class="fixed top-4 left-4 z-50">
+      <button data-action="mobile-navigation#toggleMenu"
+              class="bg-white p-2 rounded-lg shadow-lg text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile backdrop -->
+    <div data-mobile-navigation-target="backdrop"
+         data-action="click->mobile-navigation#closeOnBackdrop"
+         class="hidden fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+
+    <!-- Mobile sidebar -->
+    <div data-mobile-navigation-target="menu"
+         class="fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-blue-600 to-purple-700 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out">
+      <%= render 'shared/sidebar' %>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
+      <div class="px-4 lg:px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4 ml-12 lg:ml-0">
+            <%= link_to @appointment, class: "text-gray-500 hover:text-gray-700" do %>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+              </svg>
+            <% end %>
+            <div>
+              <h1 class="text-xl lg:text-2xl font-bold text-gray-900">
+                Edit Appointment #<%= @appointment.id %>
+              </h1>
+              <p class="text-gray-600 text-sm mt-1">
+                <%= @appointment.customer.full_name %> • <%= @appointment.scheduled_at.strftime("%B %d, %Y at %I:%M %p") %>
+              </p>
+            </div>
+          </div>
+
+          <div class="flex space-x-3">
+            <%= link_to @appointment,
+                  class: "inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors" do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+              Cancel
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-4 lg:p-6">
+      <div class="max-w-4xl mx-auto">
+
+        <%= form_with model: @appointment, local: true, class: "space-y-6" do |form| %>
+
+          <!-- Error Messages -->
+          <% if @appointment.errors.any? %>
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <h3 class="text-sm font-medium text-red-800">Please fix the following errors:</h3>
+                  <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+                    <% @appointment.errors.full_messages.each do |message| %>
+                      <li><%= message %></li>
+                    <% end %>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          <% end %>
+
+          <!-- Appointment Details -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Appointment Details</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Customer -->
+              <div>
+                <%= form.label :customer_id, "Customer", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.select :customer_id,
+                      options_for_select(@customers.map {|c| [c.full_name, c.id]}, @appointment.customer_id),
+                      { include_blank: "Select a customer" },
+                      { class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" } %>
+              </div>
+
+              <!-- Service Tier -->
+              <div>
+                <%= form.label :service_tier_id, "Service Package", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.select :service_tier_id,
+                      grouped_options_for_select(@service_tiers.group_by(&:service_package).map {|package, tiers| [package.name, tiers.map {|tier| [tier.name, tier.id]}]}, @appointment.service_tier_id),
+                      { include_blank: "Select a service" },
+                      { class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" } %>
+              </div>
+
+              <!-- Scheduled Date & Time -->
+              <div>
+                <%= form.label :scheduled_at, "Date & Time", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.datetime_local_field :scheduled_at,
+                      value: @appointment.scheduled_at&.strftime("%Y-%m-%dT%H:%M"),
+                      class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+              </div>
+
+              <!-- Duration -->
+              <div>
+                <%= form.label :duration_minutes, "Duration (minutes)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.number_field :duration_minutes,
+                      min: 15, step: 15,
+                      class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+              </div>
+
+              <!-- Studio Location -->
+              <div>
+                <%= form.label :studio_location_id, "Location", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.select :studio_location_id,
+                      options_for_select([['Not specified', '']] + @studio_locations.map {|l| [l.name, l.id]}, @appointment.studio_location_id),
+                      {},
+                      { class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" } %>
+              </div>
+
+              <!-- Price -->
+              <div>
+                <%= form.label :price, "Price", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.number_field :price,
+                      step: 0.01, min: 0,
+                      class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+              </div>
+
+              <!-- Session Type -->
+              <div>
+                <%= form.label :session_type, "Session Type", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.select :session_type,
+                      options_for_select([
+                        ['Portrait', 'portrait'],
+                        ['Family', 'family'],
+                        ['Wedding', 'wedding'],
+                        ['Event', 'event'],
+                        ['Product', 'product'],
+                        ['Corporate', 'corporate'],
+                        ['Other', 'other']
+                      ], @appointment.session_type),
+                      { include_blank: "Select session type" },
+                      { class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" } %>
+              </div>
+
+              <!-- Status -->
+              <div>
+                <%= form.label :status, "Status", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.select :status,
+                      options_for_select([
+                        ['Pending', 'pending'],
+                        ['Confirmed', 'confirmed'],
+                        ['In Progress', 'in_progress'],
+                        ['Completed', 'completed'],
+                        ['Cancelled', 'cancelled']
+                      ], @appointment.status),
+                      {},
+                      { class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" } %>
+              </div>
+            </div>
+
+            <!-- Notes and Requirements -->
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <%= form.label :notes, "Notes", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.text_area :notes, rows: 3,
+                      class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                      placeholder: "Internal notes about this appointment..." %>
+              </div>
+
+              <div>
+                <%= form.label :special_requirements, "Special Requirements", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.text_area :special_requirements, rows: 3,
+                      class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                      placeholder: "Customer special requests, props needed, etc." %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Staff Assignment -->
+          <%= render 'staff_assignment_form', form: form %>
+
+          <!-- Production Details -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Production Details</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Equipment Used -->
+              <div>
+                <%= form.label :equipment_used, "Equipment Used", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.text_area :equipment_used, rows: 2,
+                      class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                      placeholder: "Cameras, lenses, lighting equipment..." %>
+              </div>
+
+              <!-- Production Notes -->
+              <div>
+                <%= form.label :production_notes, "Production Notes", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.text_area :production_notes, rows: 2,
+                      class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                      placeholder: "Notes about the shoot, editing requirements..." %>
+              </div>
+
+              <!-- Delivery Date -->
+              <div>
+                <%= form.label :delivery_date, "Expected Delivery Date", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.date_field :delivery_date,
+                      class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+              </div>
+
+              <!-- Payment Status -->
+              <div>
+                <%= form.label :payment_status, "Payment Status", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.select :payment_status,
+                      options_for_select([
+                        ['Unpaid', 'unpaid'],
+                        ['Partial', 'partial'],
+                        ['Paid', 'paid']
+                      ], @appointment.payment_status),
+                      {},
+                      { class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" } %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+            <div class="flex space-x-3">
+              <%= link_to "Cancel", @appointment,
+                    class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors" %>
+
+              <% if @appointment.can_be_cancelled? %>
+                <%= link_to "Cancel Appointment", cancel_appointment_path(@appointment),
+                      method: :patch,
+                      class: "inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-lg text-red-700 bg-white hover:bg-red-50 transition-colors",
+                      data: { confirm: "Are you sure you want to cancel this appointment?" } %>
+              <% end %>
+            </div>
+
+            <div class="flex space-x-3">
+              <%= form.submit "Update Appointment",
+                    class: "inline-flex items-center px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-sm" %>
+            </div>
+          </div>
+
+        <% end %>
+      </div>
+    </main>
+  </div>
+</div>

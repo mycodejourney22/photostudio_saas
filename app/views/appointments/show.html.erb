@@ -1,4 +1,4 @@
-<!-- app/views/appointments/show.html.erb -->
+<!-- app/views/appointments/show.html.erb (Enhanced with sales integration) -->
 <% content_for :title, "Appointment ##{@appointment.id} - #{current_tenant.name}" %>
 
 <div class="min-h-screen bg-gray-50 flex">
@@ -66,21 +66,33 @@
               Edit
             <% end %>
 
+            <!-- Sales Actions -->
             <% if @sale.nil? %>
-              <%= link_to create_sale_appointment_path(@appointment), method: :post,
-                    class: "inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors" do %>
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
-                </svg>
-                Create Sale
-              <% end %>
+              <div class="flex space-x-2">
+                <%= link_to new_sale_path(appointment_id: @appointment.id),
+                      class: "inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors" do %>
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                  </svg>
+                  Create Sale
+                <% end %>
+
+                <%= link_to create_sale_appointment_path(@appointment),
+                      method: :post,
+                      class: "inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors" do %>
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
+                  Quick Sale
+                <% end %>
+              </div>
             <% else %>
               <%= link_to @sale,
                     class: "inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors" do %>
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
-                View Sale
+                View Sale (#<%= @sale.sale_number %>)
               <% end %>
             <% end %>
           </div>
@@ -98,12 +110,14 @@
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <div class="flex items-center">
               <div class="flex-shrink-0">
-                <div class="w-8 h-8 bg-<%= @appointment.status == 'completed' ? 'green' : 'blue' %>-100 rounded-lg flex items-center justify-center">
-                  <svg class="w-5 h-5 text-<%= @appointment.status == 'completed' ? 'green' : 'blue' %>-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-8 h-8 bg-<%= @appointment.status == 'completed' ? 'green' : @appointment.status == 'confirmed' ? 'blue' : @appointment.status == 'pending' ? 'yellow' : 'gray' %>-100 rounded-full flex items-center justify-center">
+                  <svg class="w-4 h-4 text-<%= @appointment.status == 'completed' ? 'green' : @appointment.status == 'confirmed' ? 'blue' : @appointment.status == 'pending' ? 'yellow' : 'gray' %>-600" fill="currentColor" viewBox="0 0 20 20">
                     <% if @appointment.status == 'completed' %>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    <% elsif @appointment.status == 'confirmed' %>
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                     <% else %>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
                     <% end %>
                   </svg>
                 </div>
@@ -119,9 +133,9 @@
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <div class="flex items-center">
               <div class="flex-shrink-0">
-                <div class="w-8 h-8 bg-<%= @appointment.payment_status == 'paid' ? 'green' : 'yellow' %>-100 rounded-lg flex items-center justify-center">
-                  <svg class="w-5 h-5 text-<%= @appointment.payment_status == 'paid' ? 'green' : 'yellow' %>-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                <div class="w-8 h-8 bg-<%= @appointment.payment_status == 'paid' ? 'green' : @appointment.payment_status == 'partial' ? 'yellow' : 'red' %>-100 rounded-full flex items-center justify-center">
+                  <svg class="w-4 h-4 text-<%= @appointment.payment_status == 'paid' ? 'green' : @appointment.payment_status == 'partial' ? 'yellow' : 'red' %>-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"/>
                   </svg>
                 </div>
               </div>
@@ -132,36 +146,49 @@
             </div>
           </div>
 
-          <!-- Photographer -->
+          <!-- Sale Status -->
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <div class="flex items-center">
               <div class="flex-shrink-0">
-                <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                <div class="w-8 h-8 bg-<%= @sale.present? ? 'green' : 'gray' %>-100 rounded-full flex items-center justify-center">
+                  <svg class="w-4 h-4 text-<%= @sale.present? ? 'green' : 'gray' %>-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
                   </svg>
                 </div>
               </div>
               <div class="ml-3">
-                <p class="text-sm font-medium text-gray-900">Photographer</p>
-                <p class="text-sm text-gray-500"><%= @appointment.photographer_name %></p>
+                <p class="text-sm font-medium text-gray-900">Sale</p>
+                <p class="text-sm text-gray-500">
+                  <% if @sale.present? %>
+                    Created (#<%= @sale.sale_number %>)
+                  <% else %>
+                    Not Created
+                  <% end %>
+                </p>
               </div>
             </div>
           </div>
 
-          <!-- Editor -->
+          <!-- Revenue -->
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <div class="flex items-center">
               <div class="flex-shrink-0">
-                <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-                  <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"/>
                   </svg>
                 </div>
               </div>
               <div class="ml-3">
-                <p class="text-sm font-medium text-gray-900">Editor</p>
-                <p class="text-sm text-gray-500"><%= @appointment.editor_name %></p>
+                <p class="text-sm font-medium text-gray-900">Value</p>
+                <p class="text-sm text-gray-500">
+                  <% if @sale.present? %>
+                    $<%= @sale.total_amount %>
+                  <% else %>
+                    $<%= @appointment.price %>
+                  <% end %>
+                </p>
               </div>
             </div>
           </div>
@@ -169,622 +196,472 @@
 
         <!-- Main Content Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-          <!-- Left Column - Appointment Details -->
+          <!-- Left Column: Appointment Details -->
           <div class="lg:col-span-2 space-y-6">
-
-            <!-- Appointment Information -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">Appointment Details</h2>
-              </div>
-              <div class="p-6">
-                <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500">Customer</dt>
-                    <dd class="mt-1 text-sm text-gray-900">
-                      <%= link_to @appointment.customer.full_name, @appointment.customer, class: "text-blue-600 hover:text-blue-800" %>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500">Contact</dt>
-                    <dd class="mt-1 text-sm text-gray-900">
-                      <%= @appointment.customer.email %><br>
-                      <%= @appointment.customer.phone %>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500">Service Package</dt>
-                    <dd class="mt-1 text-sm text-gray-900"><%= @appointment.service_package_name %></dd>
-                  </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500">Session Type</dt>
-                    <dd class="mt-1 text-sm text-gray-900 capitalize"><%= @appointment.session_type.humanize %></dd>
-                  </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500">Duration</dt>
-                    <dd class="mt-1 text-sm text-gray-900"><%= @appointment.duration_minutes %> minutes</dd>
-                  </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500">Price</dt>
-                    <dd class="mt-1 text-sm text-gray-900">$<%= number_with_precision(@appointment.price, precision: 2) %></dd>
-                  </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500">Location</dt>
-                    <dd class="mt-1 text-sm text-gray-900"><%= @appointment.location_name %></dd>
-                  </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500">Scheduled</dt>
-                    <dd class="mt-1 text-sm text-gray-900">
-                      <%= @appointment.scheduled_at.strftime("%B %d, %Y") %><br>
-                      <span class="text-gray-500"><%= @appointment.scheduled_at.strftime("%I:%M %p") %> - <%= @appointment.end_time.strftime("%I:%M %p") %></span>
-                    </dd>
-                  </div>
-                </dl>
-
-                <% if @appointment.notes.present? %>
-                  <div class="mt-6">
-                    <dt class="text-sm font-medium text-gray-500">Notes</dt>
-                    <dd class="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded-lg">
-                      <%= simple_format(@appointment.notes) %>
-                    </dd>
-                  </div>
-                <% end %>
-
-                <% if @appointment.special_requirements.present? %>
-                  <div class="mt-4">
-                    <dt class="text-sm font-medium text-gray-500">Special Requirements</dt>
-                    <dd class="mt-1 text-sm text-gray-900 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                      <%= simple_format(@appointment.special_requirements) %>
-                    </dd>
-                  </div>
-                <% end %>
+            <!-- Customer Information -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 class="text-lg font-medium text-gray-900 mb-4">Customer Information</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Name</label>
+                  <p class="mt-1 text-sm text-gray-900"><%= @appointment.customer.full_name %></p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Email</label>
+                  <p class="mt-1 text-sm text-gray-900">
+                    <% if @appointment.customer.email.present? %>
+                      <%= link_to @appointment.customer.email, "mailto:#{@appointment.customer.email}", class: "text-blue-600 hover:text-blue-500" %>
+                    <% else %>
+                      <span class="text-gray-400">Not provided</span>
+                    <% end %>
+                  </p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Phone</label>
+                  <p class="mt-1 text-sm text-gray-900">
+                    <% if @appointment.customer.phone.present? %>
+                      <%= link_to @appointment.customer.phone, "tel:#{@appointment.customer.phone}", class: "text-blue-600 hover:text-blue-500" %>
+                    <% else %>
+                      <span class="text-gray-400">Not provided</span>
+                    <% end %>
+                  </p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Customer Since</label>
+                  <p class="mt-1 text-sm text-gray-900"><%= @appointment.customer.created_at.strftime("%B %Y") %></p>
+                </div>
               </div>
             </div>
 
-            <!-- Production Workflow -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-gray-900">Production Workflow</h2>
-                <div class="flex space-x-2">
-                  <% unless @appointment.shoot_completed? %>
-                    <button onclick="markShootCompleted()"
-                            class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full hover:bg-green-200 transition-colors">
-                      Mark Shoot Complete
-                    </button>
-                  <% end %>
-                  <% if @appointment.shoot_completed? && !@appointment.editing_completed? %>
-                    <button onclick="markEditingCompleted()"
-                            class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full hover:bg-blue-200 transition-colors">
-                      Mark Editing Complete
-                    </button>
-                  <% end %>
+            <!-- Session Details -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 class="text-lg font-medium text-gray-900 mb-4">Session Details</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Service Package</label>
+                  <p class="mt-1 text-sm text-gray-900"><%= @appointment.service_package_name %></p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Session Type</label>
+                  <p class="mt-1 text-sm text-gray-900 capitalize"><%= @appointment.session_type.humanize %></p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Duration</label>
+                  <p class="mt-1 text-sm text-gray-900"><%= @appointment.duration_minutes %> minutes</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Price</label>
+                  <p class="mt-1 text-sm text-gray-900 font-medium">$<%= @appointment.price %></p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Location</label>
+                  <p class="mt-1 text-sm text-gray-900">
+                    <% if @appointment.studio_location.present? %>
+                      <%= @appointment.studio_location.name %>
+                    <% else %>
+                      <span class="text-gray-400">Not assigned</span>
+                    <% end %>
+                  </p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Scheduled</label>
+                  <p class="mt-1 text-sm text-gray-900"><%= @appointment.scheduled_at.strftime("%B %d, %Y at %I:%M %p") %></p>
                 </div>
               </div>
-              <div class="p-6">
 
-                <!-- Staff Assignments -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <!-- Photographer Assignment -->
-                  <div class="bg-gray-50 p-4 rounded-lg">
-                    <div class="flex items-center justify-between mb-3">
-                      <h3 class="text-sm font-medium text-gray-900">Photographer</h3>
-                      <% if @appointment.assigned_photographer.nil? %>
-                        <button onclick="openAssignModal('photographer')"
-                                class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full hover:bg-blue-200 transition-colors">
-                          Assign
-                        </button>
+              <% if @appointment.notes.present? || @appointment.special_requirements.present? %>
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                  <% if @appointment.notes.present? %>
+                    <div class="mb-3">
+                      <label class="block text-sm font-medium text-gray-700">Notes</label>
+                      <p class="mt-1 text-sm text-gray-900"><%= @appointment.notes %></p>
+                    </div>
+                  <% end %>
+                  <% if @appointment.special_requirements.present? %>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700">Special Requirements</label>
+                      <p class="mt-1 text-sm text-gray-900"><%= @appointment.special_requirements %></p>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+
+            <!-- Sale Information (if exists) -->
+            <% if @sale.present? %>
+              <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-lg font-medium text-gray-900">Sale Information</h3>
+                  <%= link_to "View Full Sale", @sale, class: "text-blue-600 hover:text-blue-500 text-sm font-medium" %>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">Sale Number</label>
+                    <p class="mt-1 text-sm text-gray-900 font-mono">#<%= @sale.sale_number %></p>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">Total Amount</label>
+                    <p class="mt-1 text-sm text-gray-900 font-medium">$<%= @sale.total_amount %></p>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">Payment Status</label>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                      <%= case @sale.payment_status
+                          when 'paid' then 'bg-green-100 text-green-800'
+                          when 'partial' then 'bg-yellow-100 text-yellow-800'
+                          else 'bg-red-100 text-red-800'
+                          end %>">
+                      <%= @sale.payment_status.humanize %>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Sale Items Summary -->
+                <% if @sale.sale_items.any? %>
+                  <div class="border-t border-gray-200 pt-4">
+                    <h4 class="text-sm font-medium text-gray-900 mb-2">Items</h4>
+                    <div class="space-y-2">
+                      <% @sale.sale_items.limit(3).each do |item| %>
+                        <div class="flex justify-between text-sm">
+                          <span class="text-gray-900"><%= item.quantity %>x <%= item.name %></span>
+                          <span class="text-gray-600">$<%= item.total_price %></span>
+                        </div>
+                      <% end %>
+                      <% if @sale.sale_items.count > 3 %>
+                        <div class="text-sm text-gray-500">
+                          ... and <%= @sale.sale_items.count - 3 %> more items
+                        </div>
                       <% end %>
                     </div>
-                    <% if @appointment.assigned_photographer %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+
+          <!-- Right Column: Actions & Timeline -->
+          <div class="space-y-6">
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+              <div class="space-y-3">
+                <!-- Sales Actions -->
+                <% if @sale.nil? %>
+                  <div class="space-y-2">
+                    <%= link_to new_sale_path(appointment_id: @appointment.id),
+                          class: "w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors" do %>
+                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                      </svg>
+                      Create Detailed Sale
+                    <% end %>
+
+                    <%= link_to create_sale_appointment_path(@appointment),
+                          method: :post,
+                          class: "w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors" do %>
+                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                      </svg>
+                      Quick Sale (Service Only)
+                    <% end %>
+                  </div>
+                <% else %>
+                  <div class="space-y-2">
+                    <%= link_to @sale,
+                          class: "w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors" do %>
+                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                      </svg>
+                      View Sale Details
+                    <% end %>
+
+                    <%= link_to edit_sale_path(@sale),
+                          class: "w-full inline-flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors" do %>
+                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                      </svg>
+                      Edit Sale
+                    <% end %>
+                  </div>
+                <% end %>
+
+                <!-- Other Actions -->
+                <div class="pt-3 border-t border-gray-200 space-y-2">
+                  <%= link_to edit_appointment_path(@appointment),
+                        class: "w-full inline-flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors" do %>
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Edit Appointment
+                  <% end %>
+
+                  <button class="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                    Send Message
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Staff Assignment -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+                 data-controller="staff-assignment"
+                 data-staff-assignment-appointment-id-value="<%= @appointment.id %>">
+              <h3 class="text-lg font-medium text-gray-900 mb-4">Staff Assignment</h3>
+
+              <!-- Photographer Assignment -->
+              <div class="mb-6">
+                <div class="flex items-center justify-between mb-2">
+                  <label class="block text-sm font-medium text-gray-700">Photographer</label>
+                  <% if @photographers.any? %>
+                    <div class="relative">
+                      <select data-staff-assignment-target="photographerSelect"
+                              class="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <option value="">Assign photographer...</option>
+                        <% @photographers.each do |photographer| %>
+                          <option value="<%= photographer.id %>"
+                                  <%= 'selected' if @appointment.assigned_photographer_id == photographer.id %>>
+                            <%= photographer.full_name %>
+                          </option>
+                        <% end %>
+                      </select>
+                    </div>
+                  <% end %>
+                </div>
+
+                <div data-staff-assignment-target="photographerDisplay">
+                  <% if @appointment.assigned_photographer.present? %>
+                    <div class="flex items-center justify-between">
                       <div class="flex items-center">
-                        <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                          <span class="text-xs font-medium text-purple-600">
-                            <%= @appointment.assigned_photographer.first_name.first %>
-                          </span>
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                          <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                          </svg>
                         </div>
                         <div>
                           <p class="text-sm font-medium text-gray-900"><%= @appointment.assigned_photographer.full_name %></p>
                           <p class="text-xs text-gray-500">Photographer</p>
                         </div>
                       </div>
-                    <% else %>
-                      <p class="text-sm text-gray-500 italic">No photographer assigned</p>
-                    <% end %>
-                  </div>
-
-                  <!-- Editor Assignment -->
-                  <div class="bg-gray-50 p-4 rounded-lg">
-                    <div class="flex items-center justify-between mb-3">
-                      <h3 class="text-sm font-medium text-gray-900">Editor</h3>
-                      <% if @appointment.assigned_editor.nil? %>
-                        <button onclick="openAssignModal('editor')"
-                                class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full hover:bg-blue-200 transition-colors">
-                          Assign
-                        </button>
+                      <button type="button"
+                              class="text-red-400 hover:text-red-600 transition-colors"
+                              data-action="click->staff-assignment#removePhotographer"
+                              title="Remove Assignment">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                      </button>
+                    </div>
+                  <% else %>
+                    <div class="text-center py-4">
+                      <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                      </div>
+                      <p class="text-sm text-gray-500">No photographer assigned</p>
+                      <% if @photographers.any? %>
+                        <div class="mt-2 space-x-1">
+                          <% @photographers.limit(3).each do |photographer| %>
+                            <button type="button"
+                                    class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded hover:bg-blue-200 transition-colors"
+                                    data-action="click->staff-assignment#quickAssign"
+                                    data-staff-id="<%= photographer.id %>"
+                                    data-assignment-type="photographer">
+                              <%= photographer.first_name %>
+                            </button>
+                          <% end %>
+                        </div>
                       <% end %>
                     </div>
-                    <% if @appointment.assigned_editor %>
+                  <% end %>
+                </div>
+              </div>
+
+              <!-- Editor Assignment -->
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="block text-sm font-medium text-gray-700">Editor</label>
+                  <% if @editors.any? %>
+                    <div class="relative">
+                      <select data-staff-assignment-target="editorSelect"
+                              class="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <option value="">Assign editor...</option>
+                        <% @editors.each do |editor| %>
+                          <option value="<%= editor.id %>"
+                                  <%= 'selected' if @appointment.assigned_editor_id == editor.id %>>
+                            <%= editor.full_name %>
+                          </option>
+                        <% end %>
+                      </select>
+                    </div>
+                  <% end %>
+                </div>
+
+                <div data-staff-assignment-target="editorDisplay">
+                  <% if @appointment.assigned_editor.present? %>
+                    <div class="flex items-center justify-between">
                       <div class="flex items-center">
-                        <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
-                          <span class="text-xs font-medium text-indigo-600">
-                            <%= @appointment.assigned_editor.first_name.first %>
-                          </span>
+                        <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                          <svg class="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                          </svg>
                         </div>
                         <div>
                           <p class="text-sm font-medium text-gray-900"><%= @appointment.assigned_editor.full_name %></p>
                           <p class="text-xs text-gray-500">Editor</p>
                         </div>
                       </div>
-                    <% else %>
-                      <p class="text-sm text-gray-500 italic">No editor assigned</p>
-                    <% end %>
-                  </div>
-                </div>
-
-                <!-- Production Timeline -->
-                <div class="space-y-4">
-                  <h3 class="text-sm font-medium text-gray-900">Production Timeline</h3>
-                  <div class="flow-root">
-                    <ul class="-mb-8">
-                      <% @production_timeline.each_with_index do |step, index| %>
-                        <li>
-                          <div class="relative pb-8">
-                            <% unless index == @production_timeline.length - 1 %>
-                              <span class="absolute top-5 left-5 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
-                            <% end %>
-                            <div class="relative flex items-start space-x-3">
-                              <div class="relative">
-                                <div class="h-10 w-10 rounded-full <%= step[:completed] ? 'bg-green-500' : 'bg-gray-300' %> flex items-center justify-center ring-8 ring-white">
-                                  <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <% case step[:icon] %>
-                                    <% when 'calendar' %>
-                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    <% when 'camera' %>
-                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                                    <% when 'edit' %>
-                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                    <% when 'check' %>
-                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                    <% when 'truck' %>
-                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    <% end %>
-                                  </svg>
-                                </div>
-                              </div>
-                              <div class="min-w-0 flex-1">
-                                <div>
-                                  <p class="text-sm font-medium text-gray-900"><%= step[:title] %></p>
-                                  <p class="text-sm text-gray-500"><%= step[:date].strftime("%B %d, %Y at %I:%M %p") if step[:date] %></p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </li>
-                      <% end %>
-                    </ul>
-                  </div>
-                </div>
-
-                <!-- Production Notes -->
-                <% if @appointment.production_notes.present? %>
-                  <div class="mt-6">
-                    <h3 class="text-sm font-medium text-gray-900 mb-2">Production Notes</h3>
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                      <pre class="text-sm text-gray-700 whitespace-pre-wrap"><%= @appointment.production_notes %></pre>
+                      <button type="button"
+                              class="text-red-400 hover:text-red-600 transition-colors"
+                              data-action="click->staff-assignment#removeEditor"
+                              title="Remove Assignment">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                      </button>
                     </div>
-                  </div>
-                <% end %>
-
-                <!-- Equipment Used -->
-                <% if @appointment.equipment_used.present? %>
-                  <div class="mt-4">
-                    <h3 class="text-sm font-medium text-gray-900 mb-2">Equipment Used</h3>
-                    <p class="text-sm text-gray-700 bg-blue-50 p-3 rounded-lg border border-blue-200">
-                      <%= @appointment.equipment_used %>
-                    </p>
-                  </div>
-                <% end %>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- Right Column - Actions & Sale Info -->
-          <div class="space-y-6">
-
-            <!-- Quick Actions -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">Quick Actions</h2>
-              </div>
-              <div class="p-6 space-y-3">
-
-                <!-- Assign Staff Button -->
-                <button onclick="openAssignModal('photographer')"
-                        class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                  </svg>
-                  Assign Staff
-                </button>
-
-                <!-- Add Production Note -->
-                <button onclick="openNotesModal()"
-                        class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                  </svg>
-                  Add Production Note
-                </button>
-
-                <!-- Set Delivery Date -->
-                <button onclick="openDeliveryModal()"
-                        class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                  </svg>
-                  Set Delivery Date
-                </button>
-              </div>
-            </div>
-
-            <!-- Sale Information -->
-            <% if @sale %>
-              <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div class="px-6 py-4 border-b border-gray-200">
-                  <h2 class="text-lg font-semibold text-gray-900">Sale Information</h2>
-                </div>
-                <div class="p-6">
-                  <div class="space-y-3">
-                    <div class="flex justify-between">
-                      <span class="text-sm text-gray-500">Sale Number</span>
-                      <span class="text-sm font-medium text-gray-900"><%= @sale.sale_number %></span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span class="text-sm text-gray-500">Total Amount</span>
-                      <span class="text-sm font-medium text-gray-900">$<%= number_with_precision(@sale.total_amount, precision: 2) %></span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span class="text-sm text-gray-500">Payment Status</span>
-                      <span class="text-xs px-2 py-1 rounded-full <%= @sale.payment_status == 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' %>">
-                        <%= @sale.payment_status.humanize %>
-                      </span>
-                    </div>
-                    <% if @sale.remaining_balance > 0 %>
-                      <div class="flex justify-between">
-                        <span class="text-sm text-gray-500">Remaining</span>
-                        <span class="text-sm font-medium text-red-600">$<%= number_with_precision(@sale.remaining_balance, precision: 2) %></span>
+                  <% else %>
+                    <div class="text-center py-4">
+                      <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
                       </div>
-                    <% end %>
-                  </div>
-
-                  <div class="mt-4 pt-4 border-t border-gray-200">
-                    <%= link_to @sale, class: "w-full flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all" do %>
-                      View Full Sale
-                    <% end %>
-                  </div>
-                </div>
-              </div>
-            <% else %>
-              <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div class="px-6 py-4 border-b border-gray-200">
-                  <h2 class="text-lg font-semibold text-gray-900">Sale</h2>
-                </div>
-                <div class="p-6 text-center">
-                  <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                  </svg>
-                  <p class="mt-2 text-sm text-gray-500">No sale created for this appointment</p>
-                  <%= link_to create_sale_appointment_path(@appointment), method: :post,
-                        class: "mt-4 w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors" do %>
-                    Create Sale
+                      <p class="text-sm text-gray-500">No editor assigned</p>
+                      <% if @editors.any? %>
+                        <div class="mt-2 space-x-1">
+                          <% @editors.limit(3).each do |editor| %>
+                            <button type="button"
+                                    class="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded hover:bg-purple-200 transition-colors"
+                                    data-action="click->staff-assignment#quickAssign"
+                                    data-staff-id="<%= editor.id %>"
+                                    data-assignment-type="editor">
+                              <%= editor.first_name %>
+                            </button>
+                          <% end %>
+                        </div>
+                      <% end %>
+                    </div>
                   <% end %>
                 </div>
               </div>
-            <% end %>
+            </div>
 
-            <!-- Delivery Information -->
-            <% if @appointment.delivery_date %>
-              <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div class="px-6 py-4 border-b border-gray-200">
-                  <h2 class="text-lg font-semibold text-gray-900">Delivery</h2>
-                </div>
-                <div class="p-6">
-                  <div class="text-center">
-                    <div class="w-12 h-12 mx-auto bg-<%= @appointment.overdue_delivery? ? 'red' : 'green' %>-100 rounded-lg flex items-center justify-center">
-                      <svg class="w-6 h-6 text-<%= @appointment.overdue_delivery? ? 'red' : 'green' %>-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                      </svg>
+            <!-- Production Timeline -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 class="text-lg font-medium text-gray-900 mb-4">Production Timeline</h3>
+              <div class="flow-root">
+                <ul class="-mb-8">
+                  <!-- Appointment Created -->
+                  <li>
+                    <div class="relative pb-8">
+                      <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                      <div class="relative flex space-x-3">
+                        <div>
+                          <span class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                            </svg>
+                          </span>
+                        </div>
+                        <div class="min-w-0 flex-1 pt-1.5">
+                          <div>
+                            <p class="text-sm text-gray-900">Appointment scheduled</p>
+                            <p class="mt-0.5 text-xs text-gray-500">
+                              <%= @appointment.created_at.strftime("%B %d, %Y at %I:%M %p") %>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <p class="mt-2 text-sm font-medium text-gray-900">
-                      <%= @appointment.delivery_date.strftime("%B %d, %Y") %>
-                    </p>
-                    <% if @appointment.days_until_delivery && @appointment.days_until_delivery >= 0 %>
-                      <p class="text-xs text-gray-500">
-                        <%= @appointment.days_until_delivery == 0 ? 'Due today' : "#{@appointment.days_until_delivery} days remaining" %>
-                      </p>
-                    <% elsif @appointment.overdue_delivery? %>
-                      <p class="text-xs text-red-600">
-                        <%= pluralize(@appointment.days_until_delivery.abs, 'day') %> overdue
-                      </p>
-                    <% end %>
-                  </div>
-                </div>
-              </div>
-            <% end %>
+                  </li>
 
+                  <!-- Sale Created (if exists) -->
+                  <% if @sale.present? %>
+                    <li>
+                      <div class="relative pb-8">
+                        <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                        <div class="relative flex space-x-3">
+                          <div>
+                            <span class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center ring-8 ring-white">
+                              <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"/>
+                              </svg>
+                            </span>
+                          </div>
+                          <div class="min-w-0 flex-1 pt-1.5">
+                            <div>
+                              <p class="text-sm text-gray-900">Sale created (#<%= @sale.sale_number %>)</p>
+                              <p class="mt-0.5 text-xs text-gray-500">
+                                <%= @sale.created_at.strftime("%B %d, %Y at %I:%M %p") %>
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  <% end %>
+
+                  <!-- Shoot Completed -->
+                  <% if @appointment.shoot_completed_at.present? %>
+                    <li>
+                      <div class="relative pb-8">
+                        <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                        <div class="relative flex space-x-3">
+                          <div>
+                            <span class="h-8 w-8 rounded-full bg-purple-500 flex items-center justify-center ring-8 ring-white">
+                              <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                              </svg>
+                            </span>
+                          </div>
+                          <div class="min-w-0 flex-1 pt-1.5">
+                            <div>
+                              <p class="text-sm text-gray-900">Photo shoot completed</p>
+                              <p class="mt-0.5 text-xs text-gray-500">
+                                <%= @appointment.shoot_completed_at.strftime("%B %d, %Y at %I:%M %p") %>
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  <% end %>
+
+                  <!-- Editing Completed -->
+                  <% if @appointment.editing_completed_at.present? %>
+                    <li>
+                      <div class="relative">
+                        <div class="relative flex space-x-3">
+                          <div>
+                            <span class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center ring-8 ring-white">
+                              <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                              </svg>
+                            </span>
+                          </div>
+                          <div class="min-w-0 flex-1 pt-1.5">
+                            <div>
+                              <p class="text-sm text-gray-900">Editing completed</p>
+                              <p class="mt-0.5 text-xs text-gray-500">
+                                <%= @appointment.editing_completed_at.strftime("%B %d, %Y at %I:%M %p") %>
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  <% end %>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </main>
   </div>
 </div>
-
-<!-- Staff Assignment Modal -->
-<div id="assignModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-  <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-    <div class="mt-3">
-      <h3 class="text-lg font-medium text-gray-900" id="modalTitle">Assign Staff</h3>
-      <div class="mt-4">
-        <select id="staffSelect" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-          <option value="">Select staff member...</option>
-        </select>
-      </div>
-      <div class="flex justify-end space-x-3 mt-6">
-        <button onclick="closeAssignModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
-          Cancel
-        </button>
-        <button onclick="assignStaff()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-          Assign
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Production Notes Modal -->
-<div id="notesModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-  <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-    <div class="mt-3">
-      <h3 class="text-lg font-medium text-gray-900">Add Production Note</h3>
-      <div class="mt-4">
-        <textarea id="productionNote" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="4" placeholder="Enter production note..."></textarea>
-      </div>
-      <div class="flex justify-end space-x-3 mt-6">
-        <button onclick="closeNotesModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
-          Cancel
-        </button>
-        <button onclick="addProductionNote()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-          Add Note
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Delivery Date Modal -->
-<div id="deliveryModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-  <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-    <div class="mt-3">
-      <h3 class="text-lg font-medium text-gray-900">Set Delivery Date</h3>
-      <div class="mt-4">
-        <input type="date" id="deliveryDate" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" value="<%= @appointment.delivery_date&.strftime('%Y-%m-%d') %>">
-      </div>
-      <div class="flex justify-end space-x-3 mt-6">
-        <button onclick="closeDeliveryModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
-          Cancel
-        </button>
-        <button onclick="updateDeliveryDate()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-          Update Date
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-let currentAssignmentType = '';
-
-// Staff Assignment Functions
-function openAssignModal(type) {
-  currentAssignmentType = type;
-  const modal = document.getElementById('assignModal');
-  const title = document.getElementById('modalTitle');
-  const select = document.getElementById('staffSelect');
-
-  title.textContent = `Assign ${type.charAt(0).toUpperCase() + type.slice(1)}`;
-
-  // Clear and populate select options
-  select.innerHTML = '<option value="">Select staff member...</option>';
-
-  <% if @photographers.present? %>
-    if (type === 'photographer') {
-      <% @photographers.each do |photographer| %>
-        select.innerHTML += '<option value="<%= photographer.id %>"><%= photographer.full_name %></option>';
-      <% end %>
-    }
-  <% end %>
-
-  <% if @editors.present? %>
-    if (type === 'editor') {
-      <% @editors.each do |editor| %>
-        select.innerHTML += '<option value="<%= editor.id %>"><%= editor.full_name %></option>';
-      <% end %>
-    }
-  <% end %>
-
-  modal.classList.remove('hidden');
-}
-
-function closeAssignModal() {
-  document.getElementById('assignModal').classList.add('hidden');
-  currentAssignmentType = '';
-}
-
-function assignStaff() {
-  const staffId = document.getElementById('staffSelect').value;
-  if (!staffId) {
-    alert('Please select a staff member');
-    return;
-  }
-
-  fetch('<%= assign_staff_appointment_path(@appointment) %>', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
-    },
-    body: JSON.stringify({
-      staff_member_id: staffId,
-      assignment_type: currentAssignmentType
-    })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      location.reload(); // Refresh page to show updated assignment
-    } else {
-      alert(data.message || 'Error assigning staff');
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('Error assigning staff');
-  });
-}
-
-// Production Status Functions
-function markShootCompleted() {
-  updateProductionStatus('mark_shoot_completed');
-}
-
-function markEditingCompleted() {
-  updateProductionStatus('mark_editing_completed');
-}
-
-function updateProductionStatus(actionType) {
-  fetch('<%= update_production_appointment_path(@appointment) %>', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
-    },
-    body: JSON.stringify({
-      action_type: actionType
-    })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      location.reload(); // Refresh page to show updated status
-    } else {
-      alert(data.message || 'Error updating status');
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('Error updating status');
-  });
-}
-
-// Production Notes Functions
-function openNotesModal() {
-  document.getElementById('notesModal').classList.remove('hidden');
-}
-
-function closeNotesModal() {
-  document.getElementById('notesModal').classList.add('hidden');
-  document.getElementById('productionNote').value = '';
-}
-
-function addProductionNote() {
-  const note = document.getElementById('productionNote').value;
-  if (!note.trim()) {
-    alert('Please enter a note');
-    return;
-  }
-
-  fetch('<%= update_production_appointment_path(@appointment) %>', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
-    },
-    body: JSON.stringify({
-      action_type: 'add_production_notes',
-      note: note
-    })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      location.reload(); // Refresh page to show new note
-    } else {
-      alert(data.message || 'Error adding note');
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('Error adding note');
-  });
-}
-
-// Delivery Date Functions
-function openDeliveryModal() {
-  document.getElementById('deliveryModal').classList.remove('hidden');
-}
-
-function closeDeliveryModal() {
-  document.getElementById('deliveryModal').classList.add('hidden');
-}
-
-function updateDeliveryDate() {
-  const date = document.getElementById('deliveryDate').value;
-  if (!date) {
-    alert('Please select a delivery date');
-    return;
-  }
-
-  fetch('<%= update_production_appointment_path(@appointment) %>', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
-    },
-    body: JSON.stringify({
-      action_type: 'update_delivery_date',
-      delivery_date: date
-    })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      location.reload(); // Refresh page to show updated date
-    } else {
-      alert(data.message || 'Error updating delivery date');
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('Error updating delivery date');
-  });
-}
-
-// Close modals when clicking outside
-window.onclick = function(event) {
-  const assignModal = document.getElementById('assignModal');
-  const notesModal = document.getElementById('notesModal');
-  const deliveryModal = document.getElementById('deliveryModal');
-
-  if (event.target === assignModal) {
-    closeAssignModal();
-  }
-  if (event.target === notesModal) {
-    closeNotesModal();
-  }
-  if (event.target === deliveryModal) {
-    closeDeliveryModal();
-  }
-}
-</script>

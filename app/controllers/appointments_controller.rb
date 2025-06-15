@@ -87,6 +87,56 @@ class AppointmentsController < ApplicationController
   def edit
   end
 
+  def assign_staff
+    staff_member_id = params[:staff_member_id]
+    assignment_type = params[:assignment_type] # 'photographer' or 'editor'
+
+    begin
+      if staff_member_id.present?
+        staff_member = current_tenant.staff_members.find(staff_member_id)
+
+        case assignment_type
+        when 'photographer'
+          @appointment.assign_photographer!(staff_member)
+          message = "#{staff_member.full_name} assigned as photographer"
+        when 'editor'
+          @appointment.assign_editor!(staff_member)
+          message = "#{staff_member.full_name} assigned as editor"
+        else
+          raise "Invalid assignment type"
+        end
+
+        staff_name = staff_member.full_name
+      else
+        # Remove assignment
+        case assignment_type
+        when 'photographer'
+          @appointment.update!(assigned_photographer: nil)
+          message = "Photographer assignment removed"
+        when 'editor'
+          @appointment.update!(assigned_editor: nil)
+          message = "Editor assignment removed"
+        else
+          raise "Invalid assignment type"
+        end
+
+        staff_name = nil
+      end
+
+      render json: {
+        success: true,
+        message: message,
+        staff_name: staff_name,
+        staff_id: staff_member_id
+      }
+    rescue => e
+      render json: {
+        success: false,
+        message: e.message
+      }, status: :unprocessable_entity
+    end
+  end
+
   def update
     if @appointment.update(appointment_params)
       # Handle staff assignments

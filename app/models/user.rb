@@ -17,7 +17,7 @@ class User < ApplicationRecord
 
   # Validations
   validates :first_name, :last_name, presence: true, length: { maximum: 50 }
-  # validates :phone, format: { with: /\A[\+]?[1-9][\d\s\-\(\)]{7,15}\z/ }, allow_blank: true
+  validates :phone, format: { with: /\A[\+]?[1-9][\d\s\-\(\)]{7,15}\z/ }, allow_blank: true
 
   # Callbacks
   before_validation :normalize_phone

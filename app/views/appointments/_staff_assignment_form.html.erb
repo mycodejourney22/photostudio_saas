@@ -1,0 +1,130 @@
+<!-- app/views/appointments/_staff_assignment_form.html.erb -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+  <h3 class="text-lg font-medium text-gray-900 mb-4">Staff Assignment</h3>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Photographer Assignment -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+        <div class="flex items-center">
+          <svg class="w-4 h-4 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+          </svg>
+          Photographer
+        </div>
+      </label>
+
+      <%= form.select :assigned_photographer_id,
+            options_for_select([['No photographer assigned', '']] + @photographers.map {|p| [p.full_name, p.id]}, form.object.assigned_photographer_id),
+            {},
+            {
+              class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            } %>
+
+      <% if @photographers.any? %>
+        <div class="mt-2">
+          <p class="text-xs text-gray-500 mb-1">Quick assign:</p>
+          <div class="flex flex-wrap gap-1">
+            <% @photographers.limit(3).each do |photographer| %>
+              <button type="button"
+                      class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded hover:bg-blue-200 transition-colors"
+                      onclick="document.getElementById('<%= form.field_id(:assigned_photographer_id) %>').value='<%= photographer.id %>'; document.getElementById('<%= form.field_id(:assigned_photographer_id) %>').dispatchEvent(new Event('change'));">
+                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                </svg>
+                <%= photographer.first_name %>
+              </button>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <% if form.object.assigned_photographer.present? %>
+        <div class="mt-2 p-2 bg-blue-50 rounded-lg">
+          <div class="flex items-center">
+            <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+              <svg class="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs font-medium text-blue-900"><%= form.object.assigned_photographer.full_name %></p>
+              <p class="text-xs text-blue-700">Currently assigned</p>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Editor Assignment -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+        <div class="flex items-center">
+          <svg class="w-4 h-4 text-purple-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+          </svg>
+          Editor
+        </div>
+      </label>
+
+      <%= form.select :assigned_editor_id,
+            options_for_select([['No editor assigned', '']] + @editors.map {|e| [e.full_name, e.id]}, form.object.assigned_editor_id),
+            {},
+            {
+              class: "block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            } %>
+
+      <% if @editors.any? %>
+        <div class="mt-2">
+          <p class="text-xs text-gray-500 mb-1">Quick assign:</p>
+          <div class="flex flex-wrap gap-1">
+            <% @editors.limit(3).each do |editor| %>
+              <button type="button"
+                      class="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded hover:bg-purple-200 transition-colors"
+                      onclick="document.getElementById('<%= form.field_id(:assigned_editor_id) %>').value='<%= editor.id %>'; document.getElementById('<%= form.field_id(:assigned_editor_id) %>').dispatchEvent(new Event('change'));">
+                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                </svg>
+                <%= editor.first_name %>
+              </button>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <% if form.object.assigned_editor.present? %>
+        <div class="mt-2 p-2 bg-purple-50 rounded-lg">
+          <div class="flex items-center">
+            <div class="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center mr-2">
+              <svg class="w-3 h-3 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+              </svg>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs font-medium text-purple-900"><%= form.object.assigned_editor.full_name %></p>
+              <p class="text-xs text-purple-700">Currently assigned</p>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Assignment Tips -->
+  <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+    <div class="flex">
+      <svg class="w-5 h-5 text-gray-400 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <div>
+        <p class="text-sm text-gray-700 font-medium">Assignment Tips</p>
+        <ul class="mt-1 text-xs text-gray-600 space-y-1">
+          <li>• Photographers handle the actual photo shoot</li>
+          <li>• Editors process and enhance the photos after the shoot</li>
+          <li>• Staff will be automatically notified of their assignments</li>
+          <li>• You can change assignments at any time before the appointment</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

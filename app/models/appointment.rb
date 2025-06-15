@@ -176,28 +176,56 @@ class Appointment < ApplicationRecord
     end
   end
 
-  def assign_photographer!(staff_member)
-    raise ArgumentError, "Staff member must be a photographer" unless staff_member.photographer?
 
-    if respond_to?(:assigned_photographer=)
-      update!(assigned_photographer: staff_member)
-    elsif respond_to?(:photographer=)
-      update!(photographer: staff_member)
-    else
-      raise "No photographer assignment column available"
-    end
+  def assign_photographer!(photographer)
+    raise "Photographer must belong to the same tenant" unless photographer.tenant_id == tenant_id
+    raise "Staff member is not a photographer" unless photographer.photographer?
+
+    update!(assigned_photographer: photographer)
+
+    # Log the assignment
+    Rails.logger.info "Photographer #{photographer.full_name} assigned to appointment #{id}"
+
+    # You could add notification logic here
+    # NotificationService.notify_photographer_assignment(self, photographer)
   end
 
-  def assign_editor!(staff_member)
-    raise ArgumentError, "Staff member must be an editor" unless staff_member.editor?
+  def assign_editor!(editor)
+    raise "Editor must belong to the same tenant" unless editor.tenant_id == tenant_id
+    raise "Staff member is not an editor" unless editor.editor?
 
-    if respond_to?(:assigned_editor=)
-      update!(assigned_editor: staff_member)
-    elsif respond_to?(:editor=)
-      update!(editor: staff_member)
-    else
-      raise "No editor assignment column available"
-    end
+    update!(assigned_editor: editor)
+
+    # Log the assignment
+    Rails.logger.info "Editor #{editor.full_name} assigned to appointment #{id}"
+
+    # You could add notification logic here
+    # NotificationService.notify_editor_assignment(self, editor)
+  end
+
+  def unassign_photographer!
+    update!(assigned_photographer: nil)
+    Rails.logger.info "Photographer unassigned from appointment #{id}"
+  end
+
+  def unassign_editor!
+    update!(assigned_editor: nil)
+    Rails.logger.info "Editor unassigned from appointment #{id}"
+  end
+
+  # Check if staff member can be assigned
+  def can_assign_photographer?(photographer)
+    photographer.present? &&
+    photographer.tenant_id == tenant_id &&
+    photographer.photographer? &&
+    photographer.active?
+  end
+
+  def can_assign_editor?(editor)
+    editor.present? &&
+    editor.tenant_id == tenant_id &&
+    editor.editor? &&
+    editor.active?
   end
 
   # Generate a sale for this appointment
