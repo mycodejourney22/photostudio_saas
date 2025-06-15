@@ -1,9 +1,9 @@
-# app/models/sale.rb (Enhanced version)
+# app/models/sale.rb - Fixed callback order
 class Sale < ApplicationRecord
   acts_as_tenant :tenant
 
   # Virtual attributes to skip validations when needed
-  attr_accessor :skip_item_validation, :skip_amount_validation
+  attr_accessor :skip_item_validation, :skip_amount_validation, :user_provided_payment
 
   belongs_to :customer
   belongs_to :staff_member
@@ -11,7 +11,7 @@ class Sale < ApplicationRecord
   has_many :sale_items, dependent: :destroy
 
   validates :sale_number, presence: true, uniqueness: { scope: :tenant_id }
-  validates :total_amount, presence: true, numericality: { greater_than: 0 }, on: :create, unless: :skip_total_validation?
+  validates :total_amount, presence: true, numericality: { greater_than: 0 }, unless: :skip_total_validation?
   validates :customer_name, presence: true
   validates :sale_date, presence: true
   validates :sale_type, inclusion: { in: %w[appointment walk_in online phone] }
@@ -41,11 +41,13 @@ class Sale < ApplicationRecord
   enum payment_status: { unpaid: 0, partial: 1, paid: 2, refunded: 3 }
   enum sale_status: { pending: 0, confirmed: 1, completed: 2, cancelled: 3 }
 
+  # FIXED: Correct callback order - calculate totals FIRST
   before_validation :generate_sale_number, on: :create
   before_validation :set_default_values, on: :create
   before_validation :set_customer_info_from_appointment, if: :appointment_id?
+  before_validation :calculate_totals  # Move this BEFORE validation
   before_validation :auto_set_payment_info, on: :create
-  before_save :calculate_totals
+  before_save :set_payment_status_and_sales_status
   after_create :sync_appointment_payment_status, if: :appointment_id?
   after_update :sync_appointment_payment_status, if: :appointment_id?
 
@@ -263,16 +265,46 @@ class Sale < ApplicationRecord
 
   private
 
+  # def generate_sale_number
+  #   return if sale_number.present?
+
+  #   loop do
+  #     # Generate format: S2024001234
+  #     year = Date.current.year
+  #     sequence = tenant.sales.where('created_at >= ?', Date.current.beginning_of_year).count + 1
+  #     self.sale_number = "S#{year}#{sequence.to_s.rjust(6, '0')}"
+
+  #     break unless self.class.exists?(sale_number: sale_number, tenant_id: tenant_id)
+  #   end
+  # end
+
   def generate_sale_number
     return if sale_number.present?
 
+    year = Date.current.year
+    attempts = 0
+
     loop do
-      # Generate format: S2024001234
-      year = Date.current.year
-      sequence = tenant.sales.where('created_at >= ?', Date.current.beginning_of_year).count + 1
+      attempts += 1
+
+      # Prevent infinite loop
+      if attempts > 50
+        Rails.logger.error "Failed to generate unique sale number after 50 attempts for tenant #{tenant_id}"
+        raise "Unable to generate unique sale number"
+      end
+
+      # Use a more reliable way to get the next sequence
+      max_sequence = tenant.sales
+                          .where("sale_number LIKE ?", "S#{year}%")
+                          .pluck(:sale_number)
+                          .map { |num| num.gsub(/S#{year}/, '').to_i }
+                          .max || 0
+
+      sequence = max_sequence + 1
       self.sale_number = "S#{year}#{sequence.to_s.rjust(6, '0')}"
 
-      break unless self.class.exists?(sale_number: sale_number, tenant_id: tenant_id)
+      # Check uniqueness within the same tenant
+      break unless tenant.sales.where(sale_number: sale_number).exists?
     end
   end
 
@@ -295,6 +327,9 @@ class Sale < ApplicationRecord
   end
 
   def auto_set_payment_info
+    # FIXED: Always skip this if user provided payment information
+    return if user_provided_payment
+
     # Skip if this is a draft
     return if sale_status == 'pending' && payment_status == 'unpaid'
 
@@ -320,24 +355,22 @@ class Sale < ApplicationRecord
     end
   end
 
-  private
-
   def should_auto_pay_based_on_method?
     # Auto-pay for immediate payment methods
     ['cash', 'credit_card', 'debit_card'].include?(payment_method)
   end
 
   def auto_mark_as_paid
-    # Calculate total first to ensure we have the right amount
-    calculate_totals if total_amount.blank? || total_amount.zero?
-
-    self.paid_amount = total_amount
-    self.payment_status = 'paid'
-    self.payment_received_at = Time.current
+    # FIXED: Only auto-set paid_amount if it wasn't provided by user
+    unless user_provided_payment
+      self.paid_amount = total_amount
+      self.payment_status = 'paid'
+      self.payment_received_at = Time.current
+    end
   end
 
   def calculate_totals
-    # Skip calculation if no sale items
+    # FIXED: Ensure we have sale items and they have proper values
     return if sale_items.empty?
 
     # Calculate subtotal from all items that aren't marked for destruction
@@ -345,8 +378,12 @@ class Sale < ApplicationRecord
     return if valid_items.empty?
 
     subtotal = valid_items.sum do |item|
-      quantity = item.quantity.present? ? item.quantity.to_f : 0
+      quantity = item.quantity.present? ? item.quantity.to_f : 1
       price = item.unit_price.present? ? item.unit_price.to_f : 0
+
+      # Make sure each item has its total_price calculated
+      item.total_price = quantity * price
+
       quantity * price
     end
 
@@ -369,7 +406,7 @@ class Sale < ApplicationRecord
   def should_auto_update_payment_status?
     # Don't auto-update if payment status was manually set in form
     # Only auto-update if there are actual payments or it's currently unpaid
-    (paid_amount.present? && paid_amount > 0) || payment_status == 'unpaid'
+    !user_provided_payment && ((paid_amount.present? && paid_amount > 0) || payment_status == 'unpaid' || payment_status == 'partial')
   end
 
   def at_least_one_sale_item
@@ -380,12 +417,15 @@ class Sale < ApplicationRecord
 
   def skip_total_validation?
     # Skip validation if it's a draft or if we're in the middle of building the sale
-    sale_status == 'pending' || skip_amount_validation || total_amount.blank?
+    sale_status == 'pending' || skip_amount_validation || total_amount.blank? || total_amount.zero?
   end
 
   def determine_payment_status(amount)
-    return 'unpaid' if amount.zero?
-    return 'paid' if amount >= total_amount
+    amount = amount.to_f
+    total = total_amount.to_f
+
+    return 'unpaid' if amount <= 0
+    return 'paid' if amount >= total
     'partial'
   end
 
@@ -413,17 +453,64 @@ class Sale < ApplicationRecord
     end
   end
 
-  def sync_appointment_payment_status
-    return unless appointment
+  # def sync_appointment_payment_status
+  #   return unless appointment
 
-    # Update appointment payment status based on sale payment status
-    case payment_status
-    when 'paid'
-      appointment.update_column(:payment_status, 'paid')
-    when 'partial'
-      appointment.update_column(:payment_status, 'partial')
+  #   # Update appointment payment status based on sale payment status
+  #   case payment_status
+  #   when 'paid'
+  #     appointment.update_column(:payment_status, 'paid')
+  #   when 'partial'
+  #     appointment.update_column(:payment_status, 'partial')
+  #   else
+  #     appointment.update_column(:payment_status, 'unpaid')
+  #   end
+  # end
+
+  def sync_appointment_payment_status
+  return unless appointment
+
+  # FIXED: Use enum keys instead of strings, and ensure we have valid values
+  case payment_status
+  when 'paid'
+    appointment.update_column(:payment_status, Appointment.payment_statuses['paid'])
+  when 'partial'
+    # Check if appointment has 'partial' status, otherwise use 'partial_paid'
+    if Appointment.payment_statuses.key?('partial')
+      appointment.update_column(:payment_status, Appointment.payment_statuses['partial'])
+    elsif Appointment.payment_statuses.key?('partial_paid')
+      appointment.update_column(:payment_status, Appointment.payment_statuses['partial_paid'])
     else
-      appointment.update_column(:payment_status, 'unpaid')
+      appointment.update_column(:payment_status, Appointment.payment_statuses['unpaid'])
     end
+  else
+    appointment.update_column(:payment_status, Appointment.payment_statuses['unpaid'])
+  end
+end
+
+  def set_payment_status_and_sales_status
+    # FIXED: Only auto-set payment status if user didn't provide specific payment info
+    if user_provided_payment
+      # User provided specific payment - calculate the correct status
+      if paid_amount.present? && paid_amount > 0
+        self.payment_status = determine_payment_status(paid_amount)
+        self.payment_received_at = Time.current if payment_status.in?(['paid', 'partial']) && payment_received_at.blank?
+      else
+        self.payment_status = 'unpaid'
+        self.paid_amount = 0
+      end
+    else
+      # Auto-set payment status (existing logic)
+      if paid_amount.present? && paid_amount > 0
+        self.payment_status = determine_payment_status(paid_amount)
+        self.payment_received_at = Time.current if payment_status.in?(['paid', 'partial']) && payment_received_at.blank?
+      else
+        self.payment_status = 'unpaid'
+        self.paid_amount = 0
+      end
+    end
+
+    # Set sales status to confirmed if not already set
+    self.sale_status = 'confirmed' if sale_status.blank? || sale_status == 'pending'
   end
 end

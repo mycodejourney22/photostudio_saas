@@ -74,42 +74,101 @@ class SalesController < ApplicationController
     end
   end
 
-  def create
-    @sale = current_tenant.sales.build(sale_params)
+  # def create
+  #   @sale = current_tenant.sales.build(sale_params)
 
-    # Handle different save types
-    if params[:commit] == 'draft'
-      @sale.sale_status = 'pending'
-      @sale.payment_status = 'unpaid'
-      @sale.paid_amount = 0  # Force draft to be unpaid
-    end
+  #   # Handle different save types
+  #   if params[:commit] == 'draft'
+  #     @sale.sale_status = 'pending'
+  #     @sale.payment_status = 'unpaid'
+  #     @sale.paid_amount = 0  # Force draft to be unpaid
+  #   end
 
-    # Ensure sale items have proper tenant assignment
-    @sale.sale_items.each do |item|
-      item.tenant = current_tenant
-    end
+  #   # Ensure sale items have proper tenant assignment
+  #   @sale.sale_items.each do |item|
+  #     item.tenant = current_tenant
+  #   end
 
-    if @sale.save
-      # Create customer record if needed and not from appointment
-      create_or_update_customer_record if should_create_customer?
+  #   if @sale.save
+  #     # Create customer record if needed and not from appointment
+  #     create_or_update_customer_record if should_create_customer?
 
-      # Update appointment if this sale is linked to one
-      update_appointment_sale_reference if @sale.appointment_id.present?
+  #     # Update appointment if this sale is linked to one
+  #     update_appointment_sale_reference if @sale.appointment_id.present?
 
-      redirect_to @sale, notice: 'Sale created successfully.'
+  #     redirect_to @sale, notice: 'Sale created successfully.'
+  #   else
+  #     load_form_data
+  #     render :new, status: :unprocessable_entity
+  #   end
+  # end
+
+def create
+  @sale = current_tenant.sales.build(sale_params)
+
+  # CRITICAL FIX: Set flag to indicate user provided payment information
+  if sale_params[:paid_amount].present?
+    @sale.user_provided_payment = true
+  end
+
+  # Only set staff member automatically if none was provided in the form
+  unless @sale.staff_member_id.present?
+    @sale.staff_member = current_user.staff_members.find_by(tenant: current_tenant) ||
+                        current_tenant.staff_members.customer_service.first
+  end
+
+  # Set payment status based on what user actually entered
+  if sale_params[:paid_amount].present? && sale_params[:paid_amount].to_f > 0
+    @sale.payment_status = determine_payment_status(sale_params[:paid_amount].to_f, @sale.total_amount || 0)
+    @sale.payment_received_at = Time.current if @sale.payment_status.in?(['paid', 'partial'])
+  else
+    @sale.payment_status = 'unpaid'
+    @sale.paid_amount = 0
+  end
+
+  # Set sales status to confirmed when creating a sale
+  @sale.sale_status = 'confirmed'
+
+  if @sale.save
+    redirect_to @sale, notice: 'Sale created successfully.'
+  else
+    load_form_data
+    render :new, status: :unprocessable_entity
+  end
+end
+
+
+  def update
+    if @sale.update(sale_params)
+      # Update payment status if paid amount changed
+      if @sale.saved_change_to_paid_amount?
+        @sale.update_columns(
+          payment_status: determine_payment_status(@sale.paid_amount, @sale.total_amount || 0),
+          payment_received_at: (@sale.paid_amount > 0 ? Time.current : nil)
+        )
+      end
+
+      redirect_to @sale, notice: 'Sale updated successfully.'
     else
       load_form_data
-      render :new, status: :unprocessable_entity
+      render :edit, status: :unprocessable_entity
     end
   end
+
+
 
   def edit
   end
 
   def update
     if @sale.update(sale_params)
-      # Create customer record if needed
-      create_or_update_customer_record if should_create_customer?
+      # Update payment status if paid amount changed
+      if @sale.saved_change_to_paid_amount?
+        @sale.update_columns(
+          payment_status: determine_payment_status(@sale.paid_amount, @sale.total_amount || 0),
+          payment_received_at: (@sale.paid_amount > 0 ? Time.current : nil)
+        )
+      end
 
       redirect_to @sale, notice: 'Sale updated successfully.'
     else
@@ -224,16 +283,36 @@ class SalesController < ApplicationController
                                  .order(:scheduled_at)
   end
 
+  # def sale_params
+  #   params.require(:sale).permit(
+  #     :customer_id, :appointment_id, :staff_member_id, :customer_name, :customer_email, :customer_phone,
+  #     :sale_type, :sale_date, :payment_method, :payment_status, :payment_reference, :paid_amount,
+  #     :notes, :special_instructions,
+  #     sale_items_attributes: [
+  #       :id, :item_type, :name, :description, :quantity, :unit_price, :total_price,
+  #       :product_category, :service_tier_id, :sku, :duration_minutes, :discount_amount, :_destroy
+  #     ]
+  #   )
+  # end
+
   def sale_params
     params.require(:sale).permit(
-      :customer_id, :appointment_id, :staff_member_id, :customer_name, :customer_email, :customer_phone,
-      :sale_type, :sale_date, :payment_method, :payment_status, :payment_reference, :paid_amount,
-      :notes, :special_instructions,
+      :staff_member_id, :appointment_id, :customer_name, :customer_email, :customer_phone,
+      :sale_type, :sale_date, :payment_method, :paid_amount, :notes, :special_instructions,
       sale_items_attributes: [
         :id, :item_type, :name, :description, :quantity, :unit_price, :total_price,
-        :product_category, :service_tier_id, :sku, :duration_minutes, :discount_amount, :_destroy
+        :product_category, :service_tier_id, :sku, :duration_minutes, :_destroy
       ]
     )
+  end
+
+  def determine_payment_status(paid_amount, total_amount)
+    paid_amount = paid_amount.to_f
+    total_amount = total_amount.to_f
+
+    return 'unpaid' if paid_amount <= 0
+    return 'paid' if paid_amount >= total_amount
+    'partial'
   end
 
   def prefill_from_appointment
