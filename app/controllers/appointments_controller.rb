@@ -240,7 +240,113 @@ class AppointmentsController < ApplicationController
     end
   end
 
+  def walk_in
+    @appointment = current_tenant.appointments.build
+    @appointment.scheduled_at = Time.current
+    @appointment.booking_source = 'walk_in'
+    @appointment.status = 'confirmed'
+    @appointment.payment_status = 'unpaid'
+
+    load_form_data
+  end
+
+  def create_walk_in
+    @appointment = current_tenant.appointments.build(walk_in_appointment_params)
+    @appointment.user = current_user
+    @appointment.booking_source = 'walk_in'
+    @appointment.status = 'confirmed'
+    @appointment.payment_status = 'unpaid'
+
+    begin
+      # Handle customer creation or selection
+      if params[:customer_type] == 'new'
+        @customer = find_or_create_walk_in_customer
+        return render_walk_in_with_errors if @customer.errors.any?
+        @appointment.customer = @customer
+      end
+
+      # Set defaults from service tier
+      if @appointment.service_tier.present?
+        @appointment.service_package_id = @appointment.service_tier.service_package_id
+        @appointment.session_type = @appointment.service_tier.service_package.category
+        @appointment.duration_minutes = @appointment.service_tier.duration_minutes
+        @appointment.price = @appointment.service_tier.price
+      end
+
+      if @appointment.save
+        redirect_to @appointment, notice: 'Walk-in appointment created successfully!'
+      else
+        render_walk_in_with_errors
+      end
+
+    rescue ActiveRecord::RecordInvalid => e
+      # Handle customer creation validation errors
+      @appointment.errors.add(:base, "Customer creation failed: #{e.message}")
+      render_walk_in_with_errors
+    rescue ActiveRecord::NotNullViolation => e
+      # Handle database constraint violations gracefully
+      if e.message.include?('studio_location_id')
+        @appointment.errors.add(:studio_location_id, "must be selected")
+      elsif e.message.include?('service_package_id')
+        @appointment.errors.add(:service_tier_id, "must be selected")
+      else
+        @appointment.errors.add(:base, "Please fill in all required fields")
+      end
+      render_walk_in_with_errors
+    rescue => e
+      # Handle any other unexpected errors
+      @appointment.errors.add(:base, "An error occurred: #{e.message}")
+      render_walk_in_with_errors
+    end
+  end
+
+
   private
+
+  def find_or_create_walk_in_customer
+    # Try to find existing customer by email or phone
+    if params[:customer][:email].present?
+      existing = current_tenant.customers.find_by(email: params[:customer][:email])
+      return existing if existing
+    end
+
+    if params[:customer][:phone].present?
+      existing = current_tenant.customers.find_by(phone: params[:customer][:phone])
+      return existing if existing
+    end
+
+    # Create new customer
+    customer_params = params.require(:customer).permit(
+      :first_name, :last_name, :email, :phone, :address, :city, :state, :zip_code, :notes
+    )
+
+    # Use create instead of create! to handle validation errors gracefully
+    customer = current_tenant.customers.create(customer_params)
+
+    # If customer creation fails, add errors to appointment
+    unless customer.persisted?
+      customer.errors.full_messages.each do |error|
+        @appointment.errors.add(:base, "Customer: #{error}")
+      end
+    end
+
+    customer
+  end
+
+
+  def render_walk_in_with_errors
+    load_form_data
+    render :walk_in, status: :unprocessable_entity
+  end
+
+
+  def walk_in_appointment_params
+    params.require(:appointment).permit(
+      :customer_id, :studio_location_id, :service_tier_id, :scheduled_at,
+      :duration_minutes, :price, :session_type, :notes, :special_requirements,
+      :assigned_photographer_id, :assigned_editor_id
+    )
+  end
 
   def set_appointment
     @appointment = current_tenant.appointments.find(params[:id])

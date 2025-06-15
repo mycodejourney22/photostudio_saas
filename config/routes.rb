@@ -63,6 +63,8 @@ Rails.application.routes.draw do
         get :past
         post :bulk_confirm
         post :bulk_cancel
+        get :walk_in
+        post :create_walk_in
       end
     end
 

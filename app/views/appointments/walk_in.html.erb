@@ -1,0 +1,158 @@
+<%# app/views/appointments/walk_in.html.erb %>
+<% content_for :title, "Walk-in Appointment" %>
+
+<div class="max-w-4xl mx-auto p-6">
+  <!-- Header -->
+  <div class="mb-6">
+    <%= link_to appointments_path, class: "text-blue-600 hover:text-blue-500 mb-4 inline-flex items-center" do %>
+      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      Back to Appointments
+    <% end %>
+
+    <h1 class="text-2xl font-bold text-gray-900">Walk-in Customer</h1>
+    <p class="text-gray-600">Create appointment for walk-in customer</p>
+  </div>
+
+  <%= form_with model: @appointment, url: create_walk_in_appointments_path, local: true, class: "space-y-6" do |form| %>
+
+    <!-- Error Messages -->
+    <% if @appointment.errors.any? %>
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+        <h3 class="text-red-800 font-medium mb-2">Please fix the following errors:</h3>
+        <ul class="text-red-700 text-sm list-disc list-inside">
+          <% @appointment.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <!-- Customer Section -->
+    <div class="bg-white border border-gray-200 rounded-lg p-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">Customer Information</h3>
+
+      <!-- Customer Type -->
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Customer Type</label>
+        <div class="flex space-x-4">
+          <label class="flex items-center">
+            <input type="radio" name="customer_type" value="existing" checked
+                   onchange="toggleCustomerSection()" class="text-blue-600">
+            <span class="ml-2">Existing Customer</span>
+          </label>
+          <label class="flex items-center">
+            <input type="radio" name="customer_type" value="new"
+                   onchange="toggleCustomerSection()" class="text-blue-600">
+            <span class="ml-2">New Customer</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Existing Customer -->
+      <div id="existing-customer">
+        <%= form.label :customer_id, "Select Customer", class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <%= form.select :customer_id,
+              options_from_collection_for_select(@customers, :id, :full_name),
+              { include_blank: "Choose a customer..." },
+              { class: "block w-full px-3 py-2 border border-gray-300 rounded-lg" } %>
+      </div>
+
+      <!-- New Customer -->
+      <div id="new-customer" style="display: none;">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <%= label_tag "customer[first_name]", "First Name *", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= text_field_tag "customer[first_name]", "",
+                  class: "block w-full px-3 py-2 border border-gray-300 rounded-lg" %>
+          </div>
+          <div>
+            <%= label_tag "customer[last_name]", "Last Name *", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= text_field_tag "customer[last_name]", "",
+                  class: "block w-full px-3 py-2 border border-gray-300 rounded-lg" %>
+          </div>
+          <div>
+            <%= label_tag "customer[phone]", "Phone *", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= telephone_field_tag "customer[phone]", "",
+                  class: "block w-full px-3 py-2 border border-gray-300 rounded-lg" %>
+          </div>
+          <div>
+            <%= label_tag "customer[email]", "Email", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= email_field_tag "customer[email]", "",
+                  class: "block w-full px-3 py-2 border border-gray-300 rounded-lg" %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service Details -->
+    <div class="bg-white border border-gray-200 rounded-lg p-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">Service Details</h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Service Package -->
+        <div class="md:col-span-2">
+          <%= form.label :service_tier_id, "Service Package *", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= form.select :service_tier_id,
+                grouped_options_for_select(@service_tiers.group_by(&:service_package).map {|package, tiers| [package.name, tiers.map {|tier| [tier.name, tier.id]}]}),
+                { include_blank: "Select a service" },
+                { class: "block w-full px-3 py-2 border border-gray-300 rounded-lg", required: true } %>
+        </div>
+
+        <!-- Studio Location -->
+        <div>
+          <%= form.label :studio_location_id, "Location *", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= form.select :studio_location_id,
+                options_from_collection_for_select(@studio_locations, :id, :name),
+                { include_blank: "Select location" },
+                { class: "block w-full px-3 py-2 border border-gray-300 rounded-lg", required: true } %>
+        </div>
+
+        <!-- Time -->
+        <div>
+          <%= form.label :scheduled_at, "Time *", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= form.datetime_local_field :scheduled_at,
+                value: Time.current.strftime("%Y-%m-%dT%H:%M"),
+                class: "block w-full px-3 py-2 border border-gray-300 rounded-lg", required: true %>
+        </div>
+
+        <!-- Duration -->
+
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="bg-white border border-gray-200 rounded-lg p-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">Notes</h3>
+      <%= form.text_area :notes, rows: 3,
+            placeholder: "Any special notes or instructions...",
+            class: "block w-full px-3 py-2 border border-gray-300 rounded-lg" %>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex justify-end space-x-4">
+      <%= link_to "Cancel", appointments_path,
+            class: "px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" %>
+      <%= form.submit "Create Walk-in Appointment",
+            class: "px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" %>
+    </div>
+
+  <% end %>
+</div>
+
+<script>
+function toggleCustomerSection() {
+  const customerType = document.querySelector('input[name="customer_type"]:checked').value;
+  const existingSection = document.getElementById('existing-customer');
+  const newSection = document.getElementById('new-customer');
+
+  if (customerType === 'existing') {
+    existingSection.style.display = 'block';
+    newSection.style.display = 'none';
+  } else {
+    existingSection.style.display = 'none';
+    newSection.style.display = 'block';
+  }
+}
+</script>
