@@ -1,0 +1,122 @@
+<div class="max-w-7xl mx-auto">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900">Studio Locations</h2>
+      <p class="text-gray-600">Manage your studio locations and operating hours</p>
+    </div>
+
+    <%= link_to new_admin_setup_studio_location_path,
+          class: "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700" do %>
+      ➕ Add Location
+    <% end %>
+  </div>
+
+  <!-- Filters -->
+  <%= form_with url: admin_setup_studio_locations_path, method: :get, local: true, class: "mb-6" do |form| %>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <%= form.text_field :search, placeholder: "Search locations...",
+                value: params[:search],
+                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+        </div>
+
+        <div class="flex space-x-2">
+          <%= form.submit "Filter", class: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" %>
+          <%= link_to "Clear", admin_setup_studio_locations_path, class: "px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400" %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Locations Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <% @studio_locations.each do |location| %>
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-medium text-gray-900"><%= location.name %></h3>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                       <%= location.active? ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' %>">
+              <%= location.active? ? 'Active' : 'Inactive' %>
+            </span>
+          </div>
+
+          <% if location.address.present? %>
+            <div class="text-sm text-gray-600 mb-4">
+              <div><%= location.address %></div>
+              <div><%= location.city %>, <%= location.state %> <%= location.postal_code %></div>
+            </div>
+          <% end %>
+
+          <% if location.phone.present? %>
+            <div class="text-sm text-gray-600 mb-4">
+              📞 <%= location.phone %>
+            </div>
+          <% end %>
+
+          <!-- Operating Hours Summary -->
+          <div class="mb-4">
+            <h4 class="text-sm font-medium text-gray-900 mb-2">Operating Hours</h4>
+            <% if location.operating_hours.present? %>
+              <% weekdays = location.operating_hours.select { |day, hours| hours['start'].present? && hours['end'].present? } %>
+              <% if weekdays.any? %>
+                <div class="text-xs text-gray-600">
+                  <% weekdays.first(2).each do |day, hours| %>
+                    <div><%= day.capitalize %>: <%= hours['start'] %> - <%= hours['end'] %></div>
+                  <% end %>
+                  <% if weekdays.size > 2 %>
+                    <div class="text-gray-500">+ <%= weekdays.size - 2 %> more days</div>
+                  <% end %>
+                </div>
+              <% else %>
+                <div class="text-xs text-gray-500">No hours configured</div>
+              <% end %>
+            <% else %>
+              <div class="text-xs text-gray-500">No hours configured</div>
+            <% end %>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex justify-between items-center pt-4 border-t border-gray-200">
+            <div class="flex space-x-2">
+              <%= link_to edit_admin_setup_studio_location_path(location),
+                    class: "text-blue-600 hover:text-blue-900 text-sm" do %>
+                Edit
+              <% end %>
+
+              <%= link_to toggle_status_admin_setup_studio_location_path(location),
+                    method: :patch,
+                    class: "text-gray-600 hover:text-gray-900 text-sm",
+                    data: { confirm: "Are you sure?" } do %>
+                <%= location.active? ? 'Deactivate' : 'Activate' %>
+              <% end %>
+            </div>
+
+            <% unless location.has_appointments? %>
+              <%= link_to admin_setup_studio_location_path(location),
+                    method: :delete,
+                    class: "text-red-600 hover:text-red-900 text-sm",
+                    data: { confirm: "Are you sure? This action cannot be undone." } do %>
+                Delete
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @studio_locations.empty? %>
+    <div class="text-center py-12">
+      <div class="mx-auto h-12 w-12 text-gray-400 mb-4">
+        📍
+      </div>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">No studio locations found</h3>
+      <p class="text-gray-600 mb-4">Get started by adding your first studio location.</p>
+      <%= link_to "Add Location", new_admin_setup_studio_location_path,
+            class: "inline-block bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors" %>
+    </div>
+  <% end %>
+</div>

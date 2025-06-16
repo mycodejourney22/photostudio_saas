@@ -6,11 +6,16 @@ class StudioLocation < ApplicationRecord
   has_many :service_packages, through: :service_package_studio_locations
   has_many :appointments, dependent: :restrict_with_error
 
+
+  # validates :name, presence: true, uniqueness: { scope: :tenant_id }
   validates :name, presence: true, length: { maximum: 100 }
   validates :default_slot_duration, presence: true,
             numericality: { greater_than: 0, less_than_or_equal_to: 480 } # max 8 hours
 
   scope :active, -> { where(active: true) }
+  scope :ordered, -> { order(:sort_order, :name) }
+
+  scope :recent, -> { order(created_at: :desc) }
   scope :ordered, -> { order(:sort_order, :name) }
 
   def full_address
@@ -24,9 +29,16 @@ class StudioLocation < ApplicationRecord
                    .ordered
   end
 
+  def can_be_deleted?
+    !has_appointments?
+  end
+
+  def has_appointments?
+    appointments.exists? if respond_to?(:appointments)
+  end
+
   def operating_hours_for_day(day)
-    return {} unless operating_hours.is_a?(Hash)
-    operating_hours[day.to_s.downcase] || {}
+    operating_hours[day.to_s] || { 'start' => '', 'end' => '' }
   end
 
   def open_on_day?(day)
@@ -34,24 +46,24 @@ class StudioLocation < ApplicationRecord
     hours['start'].present? && hours['end'].present?
   end
 
-  def default_operating_hours
-    {
+  def build_default_operating_hours
+    self.operating_hours ||= {
       'monday' => { 'start' => '09:00', 'end' => '17:00' },
       'tuesday' => { 'start' => '09:00', 'end' => '17:00' },
       'wednesday' => { 'start' => '09:00', 'end' => '17:00' },
       'thursday' => { 'start' => '09:00', 'end' => '17:00' },
       'friday' => { 'start' => '09:00', 'end' => '17:00' },
       'saturday' => { 'start' => '10:00', 'end' => '16:00' },
-      'sunday' => { 'start' => '', 'end' => '' } # closed
+      'sunday' => { 'start' => '', 'end' => '' }
     }
   end
 
   def booking_buffer_minutes
-    booking_settings.dig('buffer_time') || 15
+    booking_settings['buffer_time'] || 15
   end
 
   def advance_booking_days
-    booking_settings.dig('advance_booking_days') || 30
+    booking_settings['advance_booking_days'] || 30
   end
 
   def max_daily_bookings

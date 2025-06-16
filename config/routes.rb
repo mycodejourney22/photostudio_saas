@@ -22,12 +22,42 @@ Rails.application.routes.draw do
 
   # Public booking flow
   scope :book do
-    get '/:tenant_slug', to: 'booking#index', as: :public_booking
-    get '/:tenant_slug/services', to: 'booking#services', as: :public_booking_services
-    get '/:tenant_slug/calendar', to: 'booking#calendar', as: :public_booking_calendar
-    get '/:tenant_slug/details', to: 'booking#details', as: :public_booking_details
-    post '/:tenant_slug/create', to: 'booking#create', as: :public_booking_create
-    get '/:tenant_slug/confirmation/:appointment_id', to: 'booking#confirmation', as: :public_booking_confirmation
+    get '/:tenant_slug', to: 'public_booking#index', as: :public_booking
+    get '/:tenant_slug/services', to: 'public_booking#services', as: :public_booking_services
+    get '/:tenant_slug/calendar', to: 'public_booking#calendar', as: :public_booking_calendar
+    get '/:tenant_slug/details', to: 'public_booking#details', as: :public_booking_details
+    post '/:tenant_slug/create', to: 'public_booking#create', as: :public_booking_create
+    get '/:tenant_slug/confirmation/:appointment_id', to: 'public_booking#confirmation', as: :public_booking_confirmation
+  end
+
+  # Multi-step booking flow (alternative structure)
+  scope :booking, as: :booking do
+    get '/', to: 'booking#index'
+    get '/:studio_location_id/packages', to: 'booking#packages', as: :packages
+    get '/:studio_location_id/:service_package_id/tiers', to: 'booking#tiers', as: :tiers
+    get '/:studio_location_id/:service_package_id/:service_tier_id/slots', to: 'booking#slots', as: :slots
+    get '/:studio_location_id/:service_package_id/:service_tier_id/details', to: 'booking#details', as: :details
+    post '/:studio_location_id/:service_package_id/:service_tier_id/create', to: 'booking#create', as: :create
+    get '/confirmation/:payment_reference', to: 'booking#confirmation', as: :confirmation
+  end
+
+  # Admin routes (for super admin functionality) - SYSTEM LEVEL ONLY
+  namespace :admin do
+    root 'dashboard#index'
+
+    resources :tenants do
+      member do
+        patch :suspend
+        patch :activate
+        get :usage_stats
+        patch :update_plan
+      end
+    end
+
+    resources :users, only: [:index, :show, :edit, :update, :destroy]
+    get :dashboard, to: 'dashboard#index'
+    get :system_stats, to: 'dashboard#system_stats'
+    get :billing_overview, to: 'billing#overview'
   end
 
   # Tenant-scoped routes (main application)
@@ -58,7 +88,6 @@ Rails.application.routes.draw do
       end
 
       resources :sales, except: [:index], controller: 'appointment_sales'
-
 
       collection do
         patch :bulk_update
@@ -163,8 +192,15 @@ Rails.application.routes.draw do
 
     # Studios and Locations
     resources :studios do
-      resources :studio_locations, except: [:index]
+      member do
+        patch :activate
+        patch :deactivate
+        get :schedule
+        get :availability
+      end
+    end
 
+    resources :studio_locations, except: [:index] do
       member do
         patch :activate
         patch :deactivate
@@ -216,9 +252,41 @@ Rails.application.routes.draw do
 
     # Branding (legacy route for compatibility)
     resources :brandings, only: [:show, :edit, :update]
+
+    # Regular user access to setup (limited) - MOVED TO TENANT CONTEXT
+    namespace :admin do
+      namespace :setup do
+        root 'dashboard#index'
+
+        resources :staff_members do
+          member do
+            patch :toggle_status
+            patch :reset_password
+          end
+          collection do
+            get :invite
+            post :send_invitation
+          end
+        end
+
+        resources :studio_locations do
+          member do
+            patch :toggle_status
+          end
+          resources :operating_hours, only: [:edit, :update]
+        end
+
+        resources :services do
+          resources :service_tiers, except: [:index]
+          member do
+            patch :toggle_status
+          end
+        end
+      end
+    end
   end
 
-  # Nested routes for better organization
+  # API routes for JSON responses
   scope :api, defaults: { format: :json } do
     resources :appointments, only: [] do
       member do
@@ -347,23 +415,6 @@ Rails.application.routes.draw do
     post 'stripe/invoice_paid', to: 'stripe#invoice_paid'
     post 'calendar/google_sync', to: 'calendar#google_sync'
     post 'email/delivery_status', to: 'email#delivery_status'
-  end
-
-  # Admin routes (for super admin functionality)
-  namespace :admin do
-    resources :tenants do
-      member do
-        patch :suspend
-        patch :activate
-        get :usage_stats
-        patch :update_plan
-      end
-    end
-
-    resources :users, only: [:index, :show, :edit, :update, :destroy]
-    get :dashboard, to: 'dashboard#index'
-    get :system_stats, to: 'dashboard#system_stats'
-    get :billing_overview, to: 'billing#overview'
   end
 
   # Public API (for mobile apps or integrations)

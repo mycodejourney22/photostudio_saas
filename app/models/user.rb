@@ -1,3 +1,4 @@
+# app/models/user.rb
 class User < ApplicationRecord
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
@@ -5,62 +6,238 @@ class User < ApplicationRecord
          :recoverable, :rememberable, :validatable,
          :confirmable
 
-  # Multi-tenancy
+  # Associations
   has_many :tenant_users, dependent: :destroy
   has_many :tenants, through: :tenant_users
-  has_many :appointments, dependent: :destroy
-  has_many :staff_members, dependent: :destroy
-
-
-  # File attachments
-  # has_one_attached :avatar
+  has_one :staff_member, dependent: :nullify
+  has_many :appointments, dependent: :restrict_with_error
 
   # Validations
-  validates :first_name, :last_name, presence: true, length: { maximum: 50 }
+  validates :first_name, :last_name, presence: true
+  validates :first_name, :last_name, length: { minimum: 2, maximum: 50 }
   validates :phone, format: { with: /\A[\+]?[1-9][\d\s\-\(\)]{7,15}\z/ }, allow_blank: true
-
-  # Callbacks
-  before_validation :normalize_phone
-  # after_create :send_welcome_email
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
 
   # Scopes
   scope :active, -> { where(active: true) }
-  scope :by_role, ->(role) { joins(:tenant_users).where(tenant_users: { role: role }) }
+  scope :inactive, -> { where(active: false) }
+  scope :super_admins, -> { where(super_admin: true) }
+  scope :regular_users, -> { where(super_admin: false) }
+  scope :confirmed, -> { where.not(confirmed_at: nil) }
+  scope :unconfirmed, -> { where(confirmed_at: nil) }
 
+  # Instance methods
   def full_name
     "#{first_name} #{last_name}".strip
   end
 
-  def primary_tenant
-    tenant_users.joins(:tenant).where(tenants: { status: 'active' }).first&.tenant
+  def initials
+    "#{first_name.first}#{last_name.first}".upcase
   end
 
-  def staff_role_in_tenant(tenant)
-    staff_members.find_by(tenant: tenant)&.role
+  def active_for_authentication?
+    super && active?
   end
 
+  def inactive_message
+    active? ? super : :inactive_account
+  end
+
+  # Super admin functionality
+  def super_admin?
+    super_admin == true
+  end
+
+  def make_super_admin!
+    update!(super_admin: true)
+  end
+
+  def remove_super_admin!
+    update!(super_admin: false)
+  end
+
+  # Role management within tenants
   def role_in_tenant(tenant)
-    tenant_users.find_by(tenant: tenant)&.role
+    tenant_user = tenant_users.find_by(tenant: tenant)
+    tenant_user&.role
   end
 
+  def owner_of?(tenant)
+    role_in_tenant(tenant) == 'owner'
+  end
+
+  def admin_of?(tenant)
+    role_in_tenant(tenant)&.in?(['owner', 'admin'])
+  end
+
+  def staff_of?(tenant)
+    role_in_tenant(tenant)&.in?(['owner', 'admin', 'staff'])
+  end
+
+  def can_manage_tenant?(tenant)
+    super_admin? || admin_of?(tenant)
+  end
+
+  def can_access_setup?(tenant = nil)
+    return true if super_admin? # System-level super admin can access any tenant
+    return false unless tenant
+
+    # Check if user is owner or admin of this specific tenant
+    role_in_tenant(tenant)&.in?(['owner', 'admin'])
+  end
+
+  # Tenant access control (CRITICAL - this was missing!)
   def can_access_tenant?(tenant)
+    return true if super_admin?
+    return false unless tenant
+
+    # Check if user belongs to this tenant
     tenant_users.exists?(tenant: tenant)
   end
 
-  def can_book_appointments_in?(tenant)
-    tenant_user = tenant_users.find_by(tenant: tenant)
-    return false unless tenant_user
+  def primary_tenant
+    # Return the first tenant where user is owner, or first tenant if no ownership
+    owner_tenant = tenants.joins(:tenant_users)
+                          .where(tenant_users: { role: 'owner' })
+                          .first
 
-    tenant_user.can_book_appointments?
+    owner_tenant || tenants.first
+  end
+
+  # Staff member functionality
+  def staff_member_in_tenant(tenant)
+    ActsAsTenant.with_tenant(tenant) do
+      tenant.staff_members.find_by(user: self)
+    end
+  end
+
+  def has_staff_role?(role, tenant)
+    staff_member = staff_member_in_tenant(tenant)
+    staff_member&.role == role.to_s
+  end
+
+  # Authentication and security
+  def password_expired?
+    return false unless password_changed_at.present?
+    password_changed_at < 90.days.ago
+  end
+
+  def force_password_change!
+    update!(password_changed_at: 91.days.ago)
+  end
+
+  # Utility methods
+  def display_email
+    email.truncate(30)
+  end
+
+  def created_recently?
+    created_at > 7.days.ago
+  end
+
+  def last_sign_in_display
+    return 'Never' unless current_sign_in_at.present?
+
+    if current_sign_in_at > 1.day.ago
+      current_sign_in_at.strftime('%I:%M %p')
+    elsif current_sign_in_at > 1.week.ago
+      current_sign_in_at.strftime('%a %I:%M %p')
+    else
+      current_sign_in_at.strftime('%m/%d/%Y')
+    end
+  end
+
+  # Preference management
+  def preference(key, default = nil)
+    preferences.fetch(key.to_s, default)
+  end
+
+  def set_preference(key, value)
+    self.preferences = preferences.merge(key.to_s => value)
+    save!
+  end
+
+  def theme
+    preference('theme', 'light')
+  end
+
+  def timezone
+    preference('timezone', 'UTC')
+  end
+
+  def notifications_enabled?
+    preference('notifications_enabled', true)
+  end
+
+  # Class methods
+  class << self
+    def find_super_admin_by_email(email)
+      super_admins.find_by(email: email)
+    end
+
+    def create_super_admin!(attributes)
+      user = new(attributes)
+      user.super_admin = true
+      user.confirmed_at = Time.current # Auto-confirm super admins
+      user.save!
+      user
+    end
+
+    def setup_first_super_admin!
+      return if super_admins.exists?
+
+      create_super_admin!(
+        email: 'admin@photostudio.com',
+        password: SecureRandom.alphanumeric(12),
+        first_name: 'Super',
+        last_name: 'Admin'
+      )
+    end
+
+    def active_count
+      active.count
+    end
+
+    def recent_signups(days = 7)
+      where('created_at > ?', days.days.ago)
+    end
   end
 
   private
 
   def normalize_phone
-    self.phone = phone.to_s.gsub(/[^\d\+]/, '') if phone.present?
+    return unless phone.present?
+
+    # Remove all non-numeric characters except + at the beginning
+    self.phone = phone.gsub(/[^\d+]/, '')
+
+    # Ensure + is only at the beginning
+    if phone.include?('+') && !phone.starts_with?('+')
+      self.phone = phone.gsub('+', '')
+    end
   end
 
-  def send_welcome_email
-    UserMailer.welcome_email(self).deliver_later
+  # Callbacks
+  before_validation :normalize_phone
+  before_create :set_default_preferences
+  after_create :send_welcome_notification
+
+  def set_default_preferences
+    self.preferences ||= {
+      'theme' => 'light',
+      'timezone' => 'UTC',
+      'notifications_enabled' => true,
+      'dashboard_layout' => 'default'
+    }
+  end
+
+  def send_welcome_notification
+    return if super_admin? # Don't send welcome emails to super admins
+
+    # Send welcome email after user creation
+    UserMailer.welcome_email(self).deliver_later if persisted?
   end
 end
+
+# Create a simple command to make a user super admin
+# Usage: rails runner "User.find_by(email: 'your@email.com')&.make_super_admin!"

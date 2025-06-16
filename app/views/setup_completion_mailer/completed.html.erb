@@ -1,0 +1,48 @@
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; text-align: center;">
+    <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Setup Complete!</h1>
+  </div>
+
+  <div style="padding: 40px; background: #f8f9fa;">
+    <p style="font-size: 18px; color: #333; margin-bottom: 20px;">
+      Congratulations, <%= @owner.first_name %>!
+    </p>
+
+    <p style="color: #555; line-height: 1.6; margin-bottom: 20px;">
+      Your photography studio <strong><%= @tenant.name %></strong> is now fully configured and ready to start accepting bookings!
+    </p>
+
+    <div style="background: #e8f5e8; padding: 20px; border-radius: 5px; margin: 20px 0;">
+      <h3 style="margin: 0 0 15px 0; color: #2e7d32;">✅ What's been set up:</h3>
+      <ul style="margin: 0; padding-left: 20px; color: #333;">
+        <li style="margin-bottom: 8px;">Staff members and roles configured</li>
+        <li style="margin-bottom: 8px;">Studio locations and operating hours set</li>
+        <li style="margin-bottom: 8px;">Service packages and pricing established</li>
+        <li style="margin-bottom: 8px;">Booking system activated</li>
+        <li style="margin-bottom: 8px;">Customer portal enabled</li>
+      </ul>
+    </div>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="<%= @dashboard_url %>"
+         style="background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+        Go to Your Dashboard
+      </a>
+    </div>
+
+    <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 5px; margin: 20px 0;">
+      <h4 style="margin: 0 0 10px 0; color: #856404;">💡 Next Steps:</h4>
+      <ul style="margin: 0; padding-left: 20px; color: #856404;">
+        <li style="margin-bottom: 5px;">Customize your branding and colors</li>
+        <li style="margin-bottom: 5px;">Test the booking flow</li>
+        <li style="margin-bottom: 5px;">Add your first customers</li>
+        <li style="margin-bottom: 5px;">Schedule your first appointments</li>
+      </ul>
+    </div>
+
+    <p style="color: #777; font-size: 14px; margin-top: 30px;">
+      Need help? Check out our <a href="#" style="color: #667eea;">getting started guide</a>
+      or contact support.
+    </p>
+  </div>
+</div>

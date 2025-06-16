@@ -1,0 +1,31 @@
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; text-align: center;">
+    <h1 style="color: white; margin: 0; font-size: 28px;">You're Invited!</h1>
+  </div>
+
+  <div style="padding: 40px; background: #f8f9fa;">
+    <p style="font-size: 18px; color: #333; margin-bottom: 20px;">
+      Hi <%= @staff_member.first_name %>,
+    </p>
+
+    <p style="color: #555; line-height: 1.6; margin-bottom: 20px;">
+      <%= @invited_by.full_name %> has invited you to join the team at <strong><%= @tenant.name %></strong>
+      as a <%= @staff_member.display_role %>.
+    </p>
+
+    <p style="color: #555; line-height: 1.6; margin-bottom: 30px;">
+      To get started, please contact your administrator to set up your account.
+    </p>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="<%= @login_url %>"
+         style="background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+        Access <%= @tenant.name %>
+      </a>
+    </div>
+
+    <p style="color: #777; font-size: 14px; margin-top: 30px;">
+      If you have any questions, please contact <%= @invited_by.email %>.
+    </p>
+  </div>
+</div>

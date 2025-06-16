@@ -1,0 +1,38 @@
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; text-align: center;">
+    <h1 style="color: white; margin: 0; font-size: 28px;">Welcome to the Team!</h1>
+  </div>
+
+  <div style="padding: 40px; background: #f8f9fa;">
+    <p style="font-size: 18px; color: #333; margin-bottom: 20px;">
+      Hi <%= @staff_member.first_name %>,
+    </p>
+
+    <p style="color: #555; line-height: 1.6; margin-bottom: 20px;">
+      Your account has been created for <strong><%= @tenant.name %></strong>.
+      You've been added as a <%= @staff_member.display_role %>.
+    </p>
+
+    <div style="background: #e3f2fd; padding: 20px; border-radius: 5px; margin: 20px 0;">
+      <h3 style="margin: 0 0 10px 0; color: #1976d2;">Your Login Details:</h3>
+      <p style="margin: 5px 0; color: #333;"><strong>Email:</strong> <%= @staff_member.email %></p>
+      <p style="margin: 5px 0; color: #333;"><strong>Temporary Password:</strong> <%= @temporary_password %></p>
+    </div>
+
+    <p style="color: #e65100; background: #fff3e0; padding: 15px; border-radius: 5px; margin: 20px 0;">
+      <strong>Important:</strong> Please change your password after your first login for security.
+    </p>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="<%= @login_url %>"
+         style="background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+        Login to <%= @tenant.name %>
+      </a>
+    </div>
+
+    <p style="color: #777; font-size: 14px; margin-top: 30px;">
+      If you have any questions about your account or need help getting started,
+      please contact your administrator.
+    </p>
+  </div>
+</div>

@@ -71,6 +71,21 @@ class Tenant < ApplicationRecord
     )
   end
 
+  def can_be_deleted?
+    # Check if tenant has any critical data
+    users.none? && appointments.none? && sales.none?
+  end
+
+  def usage_summary
+    {
+      users: users.count,
+      staff: staff_members.count,
+      appointments: appointments.count,
+      sales: sales.count,
+      revenue: sales.sum(:total_amount)
+    }
+  end
+
   # Service package helpers
   def active_service_packages
     service_packages.active.ordered

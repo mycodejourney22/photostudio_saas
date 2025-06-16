@@ -18,6 +18,24 @@ class ServicePackage < ApplicationRecord
   scope :by_category, ->(category) { where(category: category) }
   scope :ordered, -> { order(:sort_order, :name) }
 
+  CATEGORIES = %w[
+    portrait
+    family
+    wedding
+    commercial
+    event
+    headshot
+    maternity
+    newborn
+  ].freeze
+
+  validates :category, inclusion: { in: CATEGORIES }
+
+
+  scope :recent, -> { order(created_at: :desc) }
+  scope :ordered, -> { order(:sort_order, :name) }
+
+
   before_validation :generate_slug, if: -> { name.present? && slug.blank? }
 
   def to_param
@@ -30,6 +48,18 @@ class ServicePackage < ApplicationRecord
 
   def starting_price
     active_tiers.minimum(:price) || 0
+  end
+
+  def can_be_deleted?
+    !has_bookings?
+  end
+
+  def has_bookings?
+    service_tiers.joins(:appointments).exists? if respond_to?(:service_tiers)
+  end
+
+  def starting_price
+    service_tiers.active.minimum(:price) || 0
   end
 
   private

@@ -51,6 +51,12 @@ module PhotostudioSaas
     config.main_domain = ENV.fetch('MAIN_DOMAIN', 'www.photostudio.com')
     config.action_controller.raise_on_open_redirects = false
 
+    config.setup_module = ActiveSupport::OrderedOptions.new
+    config.setup_module.default_roles = %w[
+      owner manager customer_service photographer editor receptionist assistant
+    ]
+    config.setup_module.required_roles = %w[owner customer_service]
+
 
 
      config.active_storage.variant_processor = :image_processing

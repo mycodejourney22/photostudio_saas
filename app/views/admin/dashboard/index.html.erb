@@ -1,0 +1,139 @@
+<!-- app/views/admin/dashboard/index.html.erb -->
+<div class="max-w-7xl mx-auto">
+  <div class="mb-8">
+    <h2 class="text-2xl font-bold text-gray-900">Super Admin Dashboard</h2>
+    <p class="text-gray-600">Manage all tenants and system-wide settings</p>
+  </div>
+
+  <!-- System Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+            🏢
+          </div>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-600">Total Tenants</p>
+          <p class="text-2xl font-semibold text-gray-900"><%= @stats[:total_tenants] %></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+            ✅
+          </div>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-600">Active Tenants</p>
+          <p class="text-2xl font-semibold text-gray-900"><%= @stats[:active_tenants] %></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+            👤
+          </div>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-600">Total Users</p>
+          <p class="text-2xl font-semibold text-gray-900"><%= @stats[:total_users] %></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+            👑
+          </div>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-600">Super Admins</p>
+          <p class="text-2xl font-semibold text-gray-900"><%= @stats[:super_admins] %></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Recent Tenants -->
+    <div class="bg-white rounded-lg shadow">
+      <div class="p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Recent Tenants</h3>
+
+        <% if @recent_tenants.any? %>
+          <div class="space-y-3">
+            <% @recent_tenants.each do |tenant| %>
+              <div class="flex items-center justify-between p-3 border border-gray-200 rounded-md">
+                <div>
+                  <p class="text-sm font-medium text-gray-900"><%= tenant.name %></p>
+                  <p class="text-xs text-gray-500"><%= tenant.subdomain %>.studio.com</p>
+                </div>
+                <div class="flex space-x-2">
+                  <%= link_to "Setup", admin_setup_root_path(tenant_id: tenant.id),
+                        class: "text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded" %>
+                  <%= link_to "Manage", admin_tenant_path(tenant),
+                        class: "text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded" %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-gray-500 text-center py-4">No tenants yet</p>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-lg shadow">
+      <div class="p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+
+        <div class="space-y-3">
+          <%= link_to admin_setup_root_path,
+                class: "flex items-center justify-between p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors" do %>
+            <div class="flex items-center">
+              <span class="text-lg mr-3">🔧</span>
+              <span class="text-sm font-medium text-gray-900">Studio Setup Tool</span>
+            </div>
+            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+            </svg>
+          <% end %>
+
+          <%= link_to admin_tenants_path,
+                class: "flex items-center justify-between p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors" do %>
+            <div class="flex items-center">
+              <span class="text-lg mr-3">🏢</span>
+              <span class="text-sm font-medium text-gray-900">Manage Tenants</span>
+            </div>
+            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+            </svg>
+          <% end %>
+
+          <%= link_to admin_users_path,
+                class: "flex items-center justify-between p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors" do %>
+            <div class="flex items-center">
+              <span class="text-lg mr-3">👤</span>
+              <span class="text-sm font-medium text-gray-900">User Management</span>
+            </div>
+            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+            </svg>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

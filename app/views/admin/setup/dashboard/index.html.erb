@@ -1,0 +1,223 @@
+<div class="max-w-7xl mx-auto">
+  <div class="mb-8">
+    <h2 class="text-2xl font-bold text-gray-900">Studio Setup Overview</h2>
+    <% if @tenant %>
+      <p class="text-gray-600">Configure settings for <%= @tenant.name %></p>
+    <% else %>
+      <p class="text-gray-600">Select a tenant to configure studio settings</p>
+    <% end %>
+  </div>
+
+  <% if @tenant %>
+    <!-- Setup Progress Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              👥
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Staff Members</p>
+            <p class="text-2xl font-semibold text-gray-900"><%= @setup_stats[:staff_members] %></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+              📍
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Studio Locations</p>
+            <p class="text-2xl font-semibold text-gray-900"><%= @setup_stats[:studio_locations] %></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+              📋
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Service Packages</p>
+            <p class="text-2xl font-semibold text-gray-900"><%= @setup_stats[:service_packages] %></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+              📅
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Active Bookings</p>
+            <p class="text-2xl font-semibold text-gray-900"><%= @setup_stats[:active_appointments] %></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Setup Status & Quick Actions -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Setup Status -->
+      <div class="bg-white rounded-lg shadow">
+        <div class="p-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Setup Status</h3>
+
+          <% if @incomplete_setups.any? %>
+            <div class="space-y-3">
+              <% @incomplete_setups.each do |issue| %>
+                <div class="flex items-center p-3 bg-amber-50 border border-amber-200 rounded-md">
+                  <div class="flex-shrink-0">
+                    <svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm text-amber-800"><%= issue %></p>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="flex items-center p-3 bg-green-50 border border-green-200 rounded-md">
+              <div class="flex-shrink-0">
+                <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm text-green-800">Studio setup is complete! 🎉</p>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="bg-white rounded-lg shadow">
+        <div class="p-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+
+          <div class="space-y-3">
+            <%= link_to admin_setup_staff_members_path,
+                  class: "flex items-center justify-between p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors" do %>
+              <div class="flex items-center">
+                <span class="text-lg mr-3">👥</span>
+                <span class="text-sm font-medium text-gray-900">Manage Staff</span>
+              </div>
+              <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+              </svg>
+            <% end %>
+
+            <%= link_to new_admin_setup_staff_member_path,
+                  class: "flex items-center justify-between p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors" do %>
+              <div class="flex items-center">
+                <span class="text-lg mr-3">➕</span>
+                <span class="text-sm font-medium text-gray-900">Add New Staff Member</span>
+              </div>
+              <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+              </svg>
+            <% end %>
+
+            <%= link_to admin_setup_studio_locations_path,
+                  class: "flex items-center justify-between p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors" do %>
+              <div class="flex items-center">
+                <span class="text-lg mr-3">📍</span>
+                <span class="text-sm font-medium text-gray-900">Studio Locations</span>
+              </div>
+              <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+              </svg>
+            <% end %>
+
+            <%= link_to admin_setup_services_path,
+                  class: "flex items-center justify-between p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors" do %>
+              <div class="flex items-center">
+                <span class="text-lg mr-3">📋</span>
+                <span class="text-sm font-medium text-gray-900">Services & Packages</span>
+              </div>
+              <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+              </svg>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <% if (@recent_staff&.any?) || (@recent_locations&.any?) %>
+      <div class="mt-8 bg-white rounded-lg shadow">
+        <div class="p-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Recent Activity</h3>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <% if @recent_staff&.any? %>
+              <div>
+                <h4 class="text-sm font-medium text-gray-600 mb-3">Recent Staff</h4>
+                <div class="space-y-2">
+                  <% @recent_staff.each do |staff| %>
+                    <div class="flex items-center justify-between p-2 rounded hover:bg-gray-50">
+                      <div>
+                        <p class="text-sm font-medium text-gray-900"><%= staff.full_name %></p>
+                        <p class="text-xs text-gray-500"><%= staff.display_role %></p>
+                      </div>
+                      <span class="text-xs text-gray-400">
+                        <%= time_ago_in_words(staff.created_at) %> ago
+                      </span>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+
+            <% if @recent_locations&.any? %>
+              <div>
+                <h4 class="text-sm font-medium text-gray-600 mb-3">Recent Locations</h4>
+                <div class="space-y-2">
+                  <% @recent_locations.each do |location| %>
+                    <div class="flex items-center justify-between p-2 rounded hover:bg-gray-50">
+                      <div>
+                        <p class="text-sm font-medium text-gray-900"><%= location.name %></p>
+                        <p class="text-xs text-gray-500"><%= location.city %>, <%= location.state %></p>
+                      </div>
+                      <span class="text-xs text-gray-400">
+                        <%= time_ago_in_words(location.created_at) %> ago
+                      </span>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+  <% else %>
+    <!-- No Tenant Selected -->
+    <div class="bg-white rounded-lg shadow p-8 text-center">
+      <div class="mx-auto h-16 w-16 text-gray-400 mb-4">
+        🏢
+      </div>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">No Tenant Selected</h3>
+      <p class="text-gray-600 mb-6">Choose a tenant from the admin dashboard to configure their studio setup.</p>
+      <%= link_to "Back to Admin Dashboard", admin_root_path,
+            class: "inline-block bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors" %>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,129 @@
+<%= form_with model: [:admin, :setup, @staff_member], local: true, class: "space-y-6" do |form| %>
+  <% if @staff_member.errors.any? %>
+    <div class="bg-red-50 border border-red-200 rounded-md p-4">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">Please fix the following errors:</h3>
+          <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+            <% @staff_member.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <%= form.label :first_name, class: "block text-sm font-medium text-gray-700" %>
+        <%= form.text_field :first_name,
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+
+      <div>
+        <%= form.label :last_name, class: "block text-sm font-medium text-gray-700" %>
+        <%= form.text_field :last_name,
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+
+      <div>
+        <%= form.label :email, class: "block text-sm font-medium text-gray-700" %>
+        <%= form.email_field :email,
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+
+      <div>
+        <%= form.label :phone, class: "block text-sm font-medium text-gray-700" %>
+        <%= form.telephone_field :phone,
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Role & Permissions</h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <%= form.label :role, class: "block text-sm font-medium text-gray-700" %>
+        <%= form.select :role,
+              options_for_select(@available_roles.map { |role| [role.humanize, role] }, @staff_member.role),
+              { prompt: "Select a role" },
+              { class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
+        <p class="mt-1 text-sm text-gray-500">Determines what actions this staff member can perform</p>
+      </div>
+
+      <div>
+        <%= form.label :hourly_rate, "Hourly Rate ($)", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.number_field :hourly_rate,
+              step: 0.01, min: 0,
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+        <p class="mt-1 text-sm text-gray-500">Optional: For tracking costs and payments</p>
+      </div>
+
+      <div>
+        <%= form.label :hire_date, class: "block text-sm font-medium text-gray-700" %>
+        <%= form.date_field :hire_date,
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Access Settings</h3>
+
+    <div class="space-y-4">
+      <div class="flex items-start">
+        <div class="flex items-center h-5">
+          <%= form.check_box :has_login,
+                class: "focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded" %>
+        </div>
+        <div class="ml-3 text-sm">
+          <%= form.label :has_login, "Allow login access", class: "font-medium text-gray-700" %>
+          <p class="text-gray-500">Staff member can log into the system</p>
+        </div>
+      </div>
+
+      <% unless @staff_member.persisted? && @staff_member.user.present? %>
+        <div class="flex items-start">
+          <div class="flex items-center h-5">
+            <%= check_box_tag :create_login_account, "1", false,
+                  class: "focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded" %>
+          </div>
+          <div class="ml-3 text-sm">
+            <%= label_tag :create_login_account, "Create user account automatically", class: "font-medium text-gray-700" %>
+            <p class="text-gray-500">Automatically create login credentials and send welcome email</p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Additional Information</h3>
+
+    <div>
+      <%= form.label :notes, class: "block text-sm font-medium text-gray-700" %>
+      <%= form.text_area :notes,
+            rows: 3,
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm",
+            placeholder: "Any additional notes about this staff member..." %>
+    </div>
+  </div>
+
+  <div class="flex justify-end space-x-3">
+    <%= link_to "Cancel", admin_setup_staff_members_path,
+          class: "px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
+    <%= form.submit @staff_member.persisted? ? "Update Staff Member" : "Create Staff Member",
+          class: "px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700" %>
+  </div>
+<% end %>

@@ -23,6 +23,8 @@ class StaffMember < ApplicationRecord
   validates :user_id, uniqueness: { scope: :tenant_id }, allow_nil: true
   validates :hourly_rate, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
+
+
   scope :active, -> { where(active: true) }
   scope :with_login, -> { where(has_login: true) }
   scope :without_login, -> { where(has_login: false) }
@@ -32,6 +34,22 @@ class StaffMember < ApplicationRecord
   scope :customer_service, -> { where(role: 'customer_service') }
   scope :managers, -> { where(role: 'manager') }
   scope :can_process_sales, -> { where(role: ['customer_service', 'manager', 'owner']) }
+  scope :recent, -> { order(created_at: :desc) }
+  scope :with_user_accounts, -> { joins(:user) }
+  scope :without_user_accounts, -> { where(user_id: nil) }
+
+  AVAILABLE_ROLES = %w[
+    owner
+    manager
+    customer_service
+    photographer
+    editor
+    receptionist
+    assistant
+  ].freeze
+
+   validates :role, inclusion: { in: AVAILABLE_ROLES }
+
 
   def full_name
     "#{first_name} #{last_name}".strip
@@ -43,6 +61,26 @@ class StaffMember < ApplicationRecord
 
   def display_role
     role.humanize
+  end
+
+  def can_be_deleted?
+    !has_active_appointments? && !has_sales_records?
+  end
+
+  def has_active_appointments?
+    return false unless respond_to?(:appointments_as_photographer) || respond_to?(:appointments_as_editor)
+
+    (appointments_as_photographer&.exists? || false) ||
+    (appointments_as_editor&.exists? || false)
+  end
+
+  def has_sales_records?
+    return false unless respond_to?(:sales)
+    sales&.exists? || false
+  end
+
+  def build_default_operating_hours
+    # This method is for studio_location, but adding here for consistency
   end
 
   # Role checking methods

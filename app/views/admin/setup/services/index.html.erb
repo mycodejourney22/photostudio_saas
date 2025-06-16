@@ -1,0 +1,146 @@
+<div class="max-w-7xl mx-auto">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900">Services & Packages</h2>
+      <p class="text-gray-600">Manage your service offerings and pricing</p>
+    </div>
+
+    <%= link_to new_admin_setup_service_path,
+          class: "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700" do %>
+      ➕ Add Service Package
+    <% end %>
+  </div>
+
+  <!-- Filters -->
+  <%= form_with url: admin_setup_services_path, method: :get, local: true, class: "mb-6" do |form| %>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <%= form.text_field :search, placeholder: "Search services...",
+                value: params[:search],
+                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
+        </div>
+
+        <div>
+          <%= form.select :category,
+                options_for_select([['All Categories', '']] + ServicePackage::CATEGORIES.map { |cat| [cat.humanize, cat] }, params[:category]),
+                {},
+                { class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" } %>
+        </div>
+
+        <div class="flex space-x-2">
+          <%= form.submit "Filter", class: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" %>
+          <%= link_to "Clear", admin_setup_services_path, class: "px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400" %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Services Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <% @service_packages.each do |package| %>
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-medium text-gray-900"><%= package.name %></h3>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                       <%= package.active? ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' %>">
+              <%= package.active? ? 'Active' : 'Inactive' %>
+            </span>
+          </div>
+
+          <% if package.category.present? %>
+            <div class="mb-3">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <%= package.category.humanize %>
+              </span>
+            </div>
+          <% end %>
+
+          <% if package.description.present? %>
+            <p class="text-sm text-gray-600 mb-4 line-clamp-3"><%= package.description %></p>
+          <% end %>
+
+          <!-- Service Tiers -->
+          <div class="mb-4">
+            <h4 class="text-sm font-medium text-gray-900 mb-2">
+              Service Tiers (<%= package.service_tiers.count %>)
+            </h4>
+            <% if package.service_tiers.any? %>
+              <div class="space-y-2">
+                <% package.service_tiers.order(:sort_order).limit(3).each do |tier| %>
+                  <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <span class="text-sm text-gray-900"><%= tier.name %></span>
+                    <span class="text-sm font-medium text-gray-900">$<%= tier.price %></span>
+                  </div>
+                <% end %>
+                <% if package.service_tiers.count > 3 %>
+                  <div class="text-xs text-gray-500 text-center">
+                    + <%= package.service_tiers.count - 3 %> more tiers
+                  </div>
+                <% end %>
+              </div>
+            <% else %>
+              <div class="text-sm text-gray-500">No tiers configured</div>
+            <% end %>
+          </div>
+
+          <!-- Price Range -->
+          <% if package.service_tiers.any? %>
+            <div class="mb-4">
+              <div class="text-sm text-gray-600">
+                Starting from <span class="font-medium text-gray-900">$<%= package.starting_price %></span>
+              </div>
+            </div>
+          <% end %>
+
+          <!-- Actions -->
+          <div class="flex justify-between items-center pt-4 border-t border-gray-200">
+            <div class="flex space-x-2">
+              <%= link_to edit_admin_setup_service_path(package),
+                    class: "text-blue-600 hover:text-blue-900 text-sm" do %>
+                Edit
+              <% end %>
+
+              <%= link_to toggle_status_admin_setup_service_path(package),
+                    method: :patch,
+                    class: "text-gray-600 hover:text-gray-900 text-sm",
+                    data: { confirm: "Are you sure?" } do %>
+                <%= package.active? ? 'Deactivate' : 'Activate' %>
+              <% end %>
+            </div>
+
+            <div class="flex space-x-2">
+              <%= link_to new_admin_setup_service_service_tier_path(package),
+                    class: "text-green-600 hover:text-green-900 text-sm" do %>
+                Add Tier
+              <% end %>
+
+              <% unless package.has_bookings? %>
+                <%= link_to admin_setup_service_path(package),
+                      method: :delete,
+                      class: "text-red-600 hover:text-red-900 text-sm",
+                      data: { confirm: "Are you sure? This action cannot be undone." } do %>
+                  Delete
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @service_packages.empty? %>
+    <div class="text-center py-12">
+      <div class="mx-auto h-12 w-12 text-gray-400 mb-4">
+        📋
+      </div>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">No service packages found</h3>
+      <p class="text-gray-600 mb-4">Get started by creating your first service package.</p>
+      <%= link_to "Add Service Package", new_admin_setup_service_path,
+            class: "inline-block bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors" %>
+    </div>
+  <% end %>
+</div>
