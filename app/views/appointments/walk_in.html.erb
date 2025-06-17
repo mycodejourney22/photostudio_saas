@@ -1,6 +1,16 @@
 <%# app/views/appointments/walk_in.html.erb %>
 <% content_for :title, "Walk-in Appointment" %>
 
+<div class="min-h-screen bg-gray-50 flex">
+  <!-- Sidebar - Desktop -->
+  <div class="hidden lg:flex lg:flex-shrink-0">
+    <div class="flex flex-col w-64">
+      <div class="flex-1 flex flex-col min-h-0 bg-gradient-to-b from-blue-600 to-purple-700">
+        <%= render 'shared/sidebar' %>
+      </div>
+    </div>
+  </div>
+
 <div class="max-w-4xl mx-auto p-6">
   <!-- Header -->
   <div class="mb-6">
@@ -139,6 +149,7 @@
     </div>
 
   <% end %>
+</div>
 </div>
 
 <script>

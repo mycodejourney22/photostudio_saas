@@ -33,7 +33,7 @@ module DashboardHelper
   end
 
   def format_currency(amount)
-    "$#{number_with_delimiter(amount.to_f.round(2))}"
+    "₦#{number_with_delimiter(amount.to_f.round(2))}"
   end
 
   def format_percentage_change(change)

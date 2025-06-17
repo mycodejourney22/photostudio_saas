@@ -10,7 +10,7 @@
       <%= @service_tier.name %> at <%= @studio_location.name %>
     </p>
     <div class="text-sm text-gray-500 mt-2">
-      <%= @service_tier.duration_display %> • $<%= number_with_delimiter(@service_tier.price.to_i) %>
+      <%= @service_tier.duration_display %> • ₦<%= number_with_delimiter(@service_tier.price.to_i) %>
     </div>
   </div>
 

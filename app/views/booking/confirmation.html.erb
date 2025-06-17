@@ -74,7 +74,7 @@
               <%= @appointment.payment_status.humanize %>
             </p>
             <p class="text-sm text-gray-600">
-              $<%= number_with_delimiter(@appointment.price.to_i) %> -
+              ₦<%= number_with_delimiter(@appointment.price.to_i) %> -
               Paid via <%= @appointment.metadata&.dig('payment_channel')&.humanize || 'Paystack' %>
             </p>
           </div>

@@ -81,19 +81,19 @@
           sales_change = todays_sales - yesterdays_sales
         %>
         <%= link_to sales_path, class: "dashboard-stat cursor-pointer hover:shadow-xl transition-shadow block" do %>
-          <div class="dashboard-stat-value">$<%= number_with_delimiter(todays_sales) %></div>
+          <div class="dashboard-stat-value">₦<%= number_with_delimiter(todays_sales) %></div>
           <div class="dashboard-stat-label">Today's Sales</div>
           <div class="flex items-center text-sm mt-2">
             <% if sales_change > 0 %>
               <svg class="w-4 h-4 text-green-200 mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
               </svg>
-              <span class="text-blue-100">+$<%= number_with_delimiter(sales_change) %> vs yesterday</span>
+              <span class="text-blue-100">+₦<%= number_with_delimiter(sales_change) %> vs yesterday</span>
             <% elsif sales_change < 0 %>
               <svg class="w-4 h-4 text-red-200 mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
               </svg>
-              <span class="text-blue-100">$<%= number_with_delimiter(sales_change) %> vs yesterday</span>
+              <span class="text-blue-100">₦<%= number_with_delimiter(sales_change) %> vs yesterday</span>
             <% else %>
               <span class="text-blue-100">Same as yesterday</span>
             <% end %>
@@ -165,19 +165,19 @@
           expenses_change = todays_expenses - yesterdays_expenses
         %>
         <%= link_to expenses_path, class: "bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg p-4 lg:p-6 shadow-lg cursor-pointer hover:shadow-xl transition-shadow block" do %>
-          <div class="dashboard-stat-value">$<%= number_with_delimiter(todays_expenses) %></div>
+          <div class="dashboard-stat-value">₦<%= number_with_delimiter(todays_expenses) %></div>
           <div class="dashboard-stat-label">Today's Expenses</div>
           <div class="flex items-center text-sm mt-2">
             <% if expenses_change > 0 %>
               <svg class="w-4 h-4 text-red-200 mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
               </svg>
-              <span class="text-orange-100">+$<%= number_with_delimiter(expenses_change) %> vs yesterday</span>
+              <span class="text-orange-100">+₦<%= number_with_delimiter(expenses_change) %> vs yesterday</span>
             <% elsif expenses_change < 0 %>
               <svg class="w-4 h-4 text-green-200 mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
               </svg>
-              <span class="text-orange-100">-$<%= number_with_delimiter(expenses_change.abs) %> vs yesterday</span>
+              <span class="text-orange-100">-₦<%= number_with_delimiter(expenses_change.abs) %> vs yesterday</span>
             <% else %>
               <span class="text-orange-100">Same as yesterday</span>
             <% end %>
@@ -272,7 +272,7 @@
                     </div>
                   </div>
                   <div class="text-sm font-semibold text-green-600">
-                    $<%= number_with_delimiter(appointment.price) %>
+                    ₦<%= number_with_delimiter(appointment.price) %>
                   </div>
                 </div>
               <% end %>
@@ -442,7 +442,7 @@
                     <div class="text-sm font-medium text-gray-900"><%= category %></div>
                     <div class="text-xs text-gray-500"><%= pluralize(data[:count], 'item') %></div>
                   </div>
-                  <div class="text-sm font-bold text-green-600">$<%= number_with_delimiter(data[:amount]) %></div>
+                  <div class="text-sm font-bold text-green-600">₦<%= number_with_delimiter(data[:amount]) %></div>
                 </div>
               <% end %>
 
@@ -452,7 +452,7 @@
                     <div class="text-base font-semibold text-gray-900">Total Sales</div>
                     <div class="text-sm text-gray-500"><%= pluralize(todays_sales.count, 'transaction') %></div>
                   </div>
-                  <div class="text-lg font-bold text-green-600">$<%= number_with_delimiter(total_todays_sales) %></div>
+                  <div class="text-lg font-bold text-green-600">₦<%= number_with_delimiter(total_todays_sales) %></div>
                 </div>
               </div>
             <% else %>
@@ -496,7 +496,7 @@
                     <div class="text-sm font-medium text-gray-900"><%= category %></div>
                     <div class="text-xs text-gray-500"><%= pluralize(todays_expenses_count_by_category[category] || 0, 'expense') %></div>
                   </div>
-                  <div class="text-sm font-bold text-red-600">-$<%= number_with_delimiter(amount) %></div>
+                  <div class="text-sm font-bold text-red-600">-₦<%= number_with_delimiter(amount) %></div>
                 </div>
               <% end %>
 
@@ -506,7 +506,7 @@
                     <div class="text-base font-semibold text-gray-900">Total Expenses</div>
                     <div class="text-sm text-gray-500"><%= pluralize(todays_expenses_by_category.values.sum, 'transaction') %> today</div>
                   </div>
-                  <div class="text-lg font-bold text-red-600">-$<%= number_with_delimiter(total_todays_expenses) %></div>
+                  <div class="text-lg font-bold text-red-600">-₦<%= number_with_delimiter(total_todays_expenses) %></div>
                 </div>
               </div>
             <% else %>

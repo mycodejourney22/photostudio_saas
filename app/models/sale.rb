@@ -118,7 +118,7 @@ class Sale < ApplicationRecord
     raise ArgumentError, "Refund amount exceeds paid amount" if amount > (paid_amount || 0)
 
     new_paid_amount = (paid_amount || 0) - amount
-    refund_note = "Refund: $#{amount}"
+    refund_note = "Refund: ₦#{amount}"
     refund_note += " - #{reason}" if reason.present?
 
     update!(

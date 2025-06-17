@@ -725,7 +725,7 @@ ActsAsTenant.with_tenant(demo_tenant) do
     • Today's Schedule: #{today_appointments}
     • This Week: #{this_week_bookings}
     • Completed Sessions: #{Appointment.completed.count}
-    • Total Revenue: $#{total_revenue.to_f}
+    • Total Revenue: ₦#{total_revenue.to_f}
 
     🎯 Features Ready to Test:
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -60,7 +60,7 @@ class Expense < ApplicationRecord
   after_create :create_recurring_expense, if: :recurring?
 
   def formatted_amount
-    "$#{amount.to_f}"
+    "₦#{amount.to_f}"
   end
 
   def overdue?

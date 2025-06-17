@@ -94,7 +94,7 @@
               </span>
             </div>
             <p class="text-lg font-semibold text-gray-900">
-              $<%= number_with_delimiter(@appointment.price.to_i) %>
+              ₦<%= number_with_delimiter(@appointment.price.to_i) %>
             </p>
             <% if @appointment.payment_status == 'unpaid' %>
               <p class="text-sm text-gray-500 mt-1">Payment due at session</p>

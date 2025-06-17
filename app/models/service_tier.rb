@@ -15,7 +15,7 @@ class ServiceTier < ApplicationRecord
   end
 
   def formatted_price
-    "$#{price.to_i}"
+    "₦#{price.to_i}"
   end
 
   def duration_hours

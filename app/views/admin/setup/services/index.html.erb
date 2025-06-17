@@ -72,7 +72,7 @@
                 <% package.service_tiers.order(:sort_order).limit(3).each do |tier| %>
                   <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
                     <span class="text-sm text-gray-900"><%= tier.name %></span>
-                    <span class="text-sm font-medium text-gray-900">$<%= tier.price %></span>
+                    <span class="text-sm font-medium text-gray-900">₦<%= tier.price %></span>
                   </div>
                 <% end %>
                 <% if package.service_tiers.count > 3 %>
@@ -90,7 +90,7 @@
           <% if package.service_tiers.any? %>
             <div class="mb-4">
               <div class="text-sm text-gray-600">
-                Starting from <span class="font-medium text-gray-900">$<%= package.starting_price %></span>
+                Starting from <span class="font-medium text-gray-900">₦<%= package.starting_price %></span>
               </div>
             </div>
           <% end %>

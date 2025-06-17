@@ -5,7 +5,7 @@
     <div class="flex items-center space-x-4">
       <span class="text-sm text-gray-500">
         <%= pluralize(appointment.sales.count, 'sale') %> •
-        $<%= number_with_precision(appointment.total_sales_amount, precision: 2) %> total
+        ₦<%= number_with_precision(appointment.total_sales_amount, precision: 2) %> total
       </span>
 
       <% unless appointment.has_main_sale? %>
@@ -57,7 +57,7 @@
                           method: :post,
                           class: "w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center",
                           role: "menuitem" do %>
-                      🖼️ <span class="ml-2">Frame - $25.00</span>
+                      🖼️ <span class="ml-2">Frame - ₦25.00</span>
                     <% end %>
 
                     <%= button_to add_prints_appointment_path(appointment),
@@ -65,7 +65,7 @@
                           method: :post,
                           class: "w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center",
                           role: "menuitem" do %>
-                      📸 <span class="ml-2">Prints (10x) - $15.00</span>
+                      📸 <span class="ml-2">Prints (10x) - ₦15.00</span>
                     <% end %>
 
                     <%= button_to add_photobook_appointment_path(appointment),
@@ -73,7 +73,7 @@
                           method: :post,
                           class: "w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center",
                           role: "menuitem" do %>
-                      📖 <span class="ml-2">Photobook - $75.00</span>
+                      📖 <span class="ml-2">Photobook - ₦75.00</span>
                     <% end %>
 
                     <div class="border-t border-gray-100"></div>
@@ -102,21 +102,21 @@
                   params: { frame_type: "8x10 Frame", price: 25.00 },
                   method: :post,
                   class: "px-3 py-1 bg-white border border-gray-300 text-gray-700 text-xs rounded hover:bg-gray-50" do %>
-              🖼️ Frame ($25)
+              🖼️ Frame (₦25)
             <% end %>
 
             <%= button_to add_prints_appointment_path(appointment),
                   params: { print_type: "4x6 Prints", price: 1.50, quantity: 10 },
                   method: :post,
                   class: "px-3 py-1 bg-white border border-gray-300 text-gray-700 text-xs rounded hover:bg-gray-50" do %>
-              📸 Prints ($15)
+              📸 Prints (₦15)
             <% end %>
 
             <%= button_to add_photobook_appointment_path(appointment),
                   params: { book_type: "Premium Photobook", price: 75.00, pages: 20 },
                   method: :post,
                   class: "px-3 py-1 bg-white border border-gray-300 text-gray-700 text-xs rounded hover:bg-gray-50" do %>
-              📖 Photobook ($75)
+              📖 Photobook (₦75)
             <% end %>
 
             <%= link_to new_sale_path(appointment_id: appointment.id, additional: true),
@@ -133,16 +133,16 @@
       <div class="grid grid-cols-3 gap-4 text-sm">
         <div>
           <span class="text-gray-600">Total Amount:</span>
-          <div class="font-medium">$<%= number_with_precision(appointment.total_sales_amount, precision: 2) %></div>
+          <div class="font-medium">₦<%= number_with_precision(appointment.total_sales_amount, precision: 2) %></div>
         </div>
         <div>
           <span class="text-gray-600">Amount Paid:</span>
-          <div class="font-medium text-green-600">$<%= number_with_precision(appointment.sales.sum(:paid_amount), precision: 2) %></div>
+          <div class="font-medium text-green-600">₦<%= number_with_precision(appointment.sales.sum(:paid_amount), precision: 2) %></div>
         </div>
         <div>
           <span class="text-gray-600">Balance Due:</span>
           <div class="font-medium text-red-600">
-            $<%= number_with_precision(appointment.total_sales_amount - appointment.sales.sum(:paid_amount), precision: 2) %>
+            ₦<%= number_with_precision(appointment.total_sales_amount - appointment.sales.sum(:paid_amount), precision: 2) %>
           </div>
         </div>
       </div>

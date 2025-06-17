@@ -68,13 +68,13 @@
         <div>
           <p class="text-sm font-medium text-gray-600">Total Revenue</p>
           <p class="text-2xl font-bold text-gray-900">
-            $<%= appointments.sum(:price) %>
+            ₦<%= appointments.sum(:price) %>
           </p>
         </div>
         <div>
           <p class="text-sm font-medium text-gray-600">Avg per Session</p>
           <p class="text-xl font-semibold text-gray-800">
-            $<%= (appointments.sum(:price) / appointments.count.to_f).round(2) %>
+            ₦<%= (appointments.sum(:price) / appointments.count.to_f).round(2) %>
           </p>
         </div>
         <div>
@@ -156,7 +156,7 @@
                 </h4>
                 <p class="text-sm text-gray-600">
                   <%= pluralize(monthly_appointments.count, 'appointment') %> •
-                  $<%= monthly_appointments.sum(&:price) %> revenue •
+                  ₦<%= monthly_appointments.sum(&:price) %> revenue •
                   <%= monthly_appointments.count { |a| a.status == 'completed' } %> completed
                 </p>
               </div>
@@ -164,7 +164,7 @@
                 <div class="text-right">
                   <p class="text-sm text-gray-500">Avg per appointment</p>
                   <p class="font-semibold text-gray-900">
-                    $<%= (monthly_appointments.sum(&:price) / monthly_appointments.count.to_f).round(2) %>
+                    ₦<%= (monthly_appointments.sum(&:price) / monthly_appointments.count.to_f).round(2) %>
                   </p>
                 </div>
                 <div class="flex space-x-1">
@@ -223,7 +223,7 @@
           <p class="text-gray-600">
             <% best_month = appointments.group_by { |a| a.scheduled_at.strftime("%B %Y") }.max_by { |_, apps| apps.sum(&:price) } %>
             <% if best_month %>
-              <%= best_month.first %> ($<%= best_month.last.sum(&:price) %>)
+              <%= best_month.first %> (₦<%= best_month.last.sum(&:price) %>)
             <% else %>
               No data available
             <% end %>

@@ -279,7 +279,7 @@ class SalesController < ApplicationController
 
       render json: {
         success: true,
-        message: "Payment of $#{amount} added successfully",
+        message: "Payment of ₦#{amount} added successfully",
         new_balance: @sale.remaining_balance,
         payment_status: @sale.payment_status
       }

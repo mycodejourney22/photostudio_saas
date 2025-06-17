@@ -24,7 +24,7 @@
     <% sale.sale_items.limit(3).each do |item| %>
       <div class="flex justify-between text-sm <%= is_main ? 'text-blue-800' : 'text-gray-700' %>">
         <span><%= item.quantity %>x <%= item.name %></span>
-        <span>$<%= item.total_price %></span>
+        <span>₦<%= item.total_price %></span>
       </div>
     <% end %>
     <% if sale.sale_items.count > 3 %>
@@ -38,11 +38,11 @@
   <div class="grid grid-cols-2 gap-4 text-sm mb-3">
     <div>
       <span class="<%= is_main ? 'text-blue-700' : 'text-gray-600' %>">Total:</span>
-      <span class="font-medium">$<%= sale.total_amount %></span>
+      <span class="font-medium">₦<%= sale.total_amount %></span>
     </div>
     <div>
       <span class="<%= is_main ? 'text-blue-700' : 'text-gray-600' %>">Paid:</span>
-      <span class="font-medium">$<%= sale.paid_amount || 0 %></span>
+      <span class="font-medium">₦<%= sale.paid_amount || 0 %></span>
     </div>
   </div>
 

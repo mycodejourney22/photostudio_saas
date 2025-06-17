@@ -153,7 +153,7 @@
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700">Base Price</label>
-                  <p class="mt-1 text-sm text-gray-900 font-medium">$<%= @appointment.price %></p>
+                  <p class="mt-1 text-sm text-gray-900 font-medium">₦<%= @appointment.price %></p>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700">Location</label>
@@ -478,7 +478,7 @@
                           <div class="min-w-0 flex-1 pt-1.5">
                             <div>
                               <p class="text-sm text-gray-900">
-                                Additional purchase (#<%= sale.sale_number %>) - $<%= sale.total_amount %>
+                                Additional purchase (#<%= sale.sale_number %>) - ₦<%= sale.total_amount %>
                               </p>
                               <p class="mt-0.5 text-xs text-gray-500">
                                 <%= sale.created_at.strftime("%B %d, %Y at %I:%M %p") %>
@@ -684,16 +684,16 @@
                   </div>
                   <div class="flex justify-between text-sm">
                     <span class="text-gray-600">Total Revenue:</span>
-                    <span class="font-medium">$<%= number_with_precision(@appointment.total_sales_amount, precision: 2) %></span>
+                    <span class="font-medium">₦<%= number_with_precision(@appointment.total_sales_amount, precision: 2) %></span>
                   </div>
                   <div class="flex justify-between text-sm">
                     <span class="text-gray-600">Amount Paid:</span>
-                    <span class="font-medium text-green-600">$<%= number_with_precision(@appointment.sales.sum(:paid_amount), precision: 2) %></span>
+                    <span class="font-medium text-green-600">₦<%= number_with_precision(@appointment.sales.sum(:paid_amount), precision: 2) %></span>
                   </div>
                   <div class="flex justify-between text-sm border-t border-gray-200 pt-2">
                     <span class="text-gray-600">Outstanding Balance:</span>
                     <span class="font-medium <%= (@appointment.total_sales_amount - @appointment.sales.sum(:paid_amount)) > 0 ? 'text-red-600' : 'text-green-600' %>">
-                      $<%= number_with_precision(@appointment.total_sales_amount - @appointment.sales.sum(:paid_amount), precision: 2) %>
+                      ₦<%= number_with_precision(@appointment.total_sales_amount - @appointment.sales.sum(:paid_amount), precision: 2) %>
                     </span>
                   </div>
                 </div>
@@ -718,7 +718,7 @@
                 </div>
                 <div class="flex justify-between text-sm">
                   <span class="text-gray-600">Total Spent:</span>
-                  <span class="font-medium">$<%= number_with_precision(@appointment.customer.total_revenue || 0, precision: 2) %></span>
+                  <span class="font-medium">₦<%= number_with_precision(@appointment.customer.total_revenue || 0, precision: 2) %></span>
                 </div>
                 <div class="flex justify-between text-sm">
                   <span class="text-gray-600">Last Visit:</span>
