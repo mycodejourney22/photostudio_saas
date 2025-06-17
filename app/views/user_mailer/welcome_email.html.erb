@@ -1,0 +1,12 @@
+<!-- app/views/user_mailer/welcome_email.html.erb -->
+<h1>Welcome to PhotoStudio, <%= @user.first_name %>!</h1>
+
+<p>Thank you for signing up. Your account has been created successfully.</p>
+
+<% if @tenant %>
+  <p>You can access your studio dashboard at:
+     <a href="<%= tenant_dashboard_url(@tenant) %>"><%= @tenant.full_domain %></a>
+  </p>
+<% end %>
+
+<p>Best regards,<br>The PhotoStudio Team</p>

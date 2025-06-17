@@ -235,7 +235,9 @@ class User < ApplicationRecord
     return if super_admin? # Don't send welcome emails to super admins
 
     # Send welcome email after user creation
-    UserMailer.welcome_email(self).deliver_later if persisted?
+    # UserMailer.welcome_email(self).deliver_later if persisted?
+    Rails.logger.info "User #{email} registered - welcome email skipped (UserMailer not implemented)"
+
   end
 end
 

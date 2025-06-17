@@ -62,7 +62,14 @@
     <main class="flex-1 overflow-y-auto p-4 lg:p-6">
       <div class="max-w-4xl mx-auto">
 
-        <%= form_with model: @sale, local: true, class: "space-y-6", data: { controller: "sales-form" } do |form| %>
+        <%= form_with model: @sale, local: true, class: "space-y-6",
+              data: {
+                controller: "sales-form",
+                action: "submit->sales-form#handleSubmit"
+              } do |form| %>
+
+          <!-- Error container for validation errors -->
+          <div data-sales-form-target="errorContainer" class="hidden"></div>
 
           <!-- Error Messages -->
           <% if @sale.errors.any? %>
@@ -206,30 +213,39 @@
                                 data: { action: "change->sales-form#updateItemType" } } %>
                       </div>
 
-                      <!-- Name -->
+                      <!-- Name (REQUIRED) -->
                       <div>
-                        <%= item_form.label :name, "Item Name", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                        <%= item_form.label :name, class: "block text-sm font-medium text-gray-700 mb-2" do %>
+                          Item Name <span class="text-red-500">*</span>
+                        <% end %>
                         <%= item_form.text_field :name,
+                              required: true,
                               class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500",
                               placeholder: "Item name" %>
                       </div>
 
-                      <!-- Quantity -->
+                      <!-- Quantity (REQUIRED) -->
                       <div>
-                        <%= item_form.label :quantity, "Qty", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                        <%= item_form.label :quantity, class: "block text-sm font-medium text-gray-700 mb-2" do %>
+                          Qty <span class="text-red-500">*</span>
+                        <% end %>
                         <%= item_form.number_field :quantity,
                               value: item_form.object.quantity || 1,
                               min: 1,
+                              required: true,
                               class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500",
                               data: { action: "change->sales-form#calculateItemTotal" } %>
                       </div>
 
-                      <!-- Unit Price -->
+                      <!-- Unit Price (REQUIRED) -->
                       <div>
-                        <%= item_form.label :unit_price, "Price", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                        <%= item_form.label :unit_price, class: "block text-sm font-medium text-gray-700 mb-2" do %>
+                          Price <span class="text-red-500">*</span>
+                        <% end %>
                         <%= item_form.number_field :unit_price,
                               step: 0.01,
-                              min: 0,
+                              min: 0.01,
+                              required: true,
                               class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500",
                               data: { action: "change->sales-form#calculateItemTotal" } %>
                       </div>
@@ -370,9 +386,11 @@
                   </div>
                 </div>
 
-                <!-- Payment Method -->
+                <!-- Payment Method (REQUIRED) -->
                 <div class="pt-4 border-t border-gray-200">
-                  <%= form.label :payment_method, "Payment Method", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                  <%= form.label :payment_method, class: "block text-sm font-medium text-gray-700 mb-2" do %>
+                    Payment Method <span class="text-red-500">*</span>
+                  <% end %>
                   <%= form.select :payment_method,
                         options_for_select([
                           ['Cash', 'cash'],
@@ -383,15 +401,21 @@
                           ['Other', 'other']
                         ], @sale.payment_method),
                         { include_blank: 'Select payment method...' },
-                        { class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" } %>
+                        {
+                          required: true,
+                          class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        } %>
                 </div>
 
-                <!-- Amount Paid -->
+                <!-- Amount Paid (REQUIRED) -->
                 <div class="pt-4">
-                  <%= form.label :paid_amount, "Amount Paid", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                  <%= form.label :paid_amount, class: "block text-sm font-medium text-gray-700 mb-2" do %>
+                    Amount Paid <span class="text-red-500">*</span>
+                  <% end %>
                   <%= form.number_field :paid_amount,
                         step: 0.01,
                         min: 0,
+                        required: true,
                         value: @sale.paid_amount,
                         class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500",
                         placeholder: "0.00",
@@ -433,6 +457,11 @@
           </div>
 
         <% end %>
+
+        <!-- Required asterisk legend -->
+        <p class="text-sm text-gray-500 mt-4 text-center">
+          <span class="text-red-500">*</span> Required fields
+        </p>
       </div>
     </main>
   </div>

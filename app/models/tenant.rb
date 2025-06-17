@@ -71,6 +71,10 @@ class Tenant < ApplicationRecord
     )
   end
 
+  def system_user
+    @system_user ||= find_or_create_system_user
+  end
+
   def can_be_deleted?
     # Check if tenant has any critical data
     users.none? && appointments.none? && sales.none?
@@ -296,5 +300,32 @@ class Tenant < ApplicationRecord
         sort_order: 2
       }
     ])
+  end
+
+  def find_or_create_system_user
+    # Look for existing system user
+    system_user = users.joins(:tenant_users)
+                      .where(tenant_users: { role: 'system' })
+                      .first
+
+    return system_user if system_user
+
+    # Create system user if it doesn't exist
+    User.transaction do
+      user = User.create!(
+        email: "system+#{subdomain}@photostudio.internal",
+        password: SecureRandom.hex(20),
+        first_name: "Online",
+        last_name: "Booking",
+        confirmed_at: Time.current
+      )
+
+      tenant_users.create!(
+        user: user,
+        role: 'system'  # You might need to add this role to TenantUser
+      )
+
+      user
+    end
   end
 end

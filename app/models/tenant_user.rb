@@ -4,10 +4,10 @@ class TenantUser < ApplicationRecord
   belongs_to :user
   has_one :staff_member, foreign_key: 'user_id', primary_key: 'user_id'
 
-  validates :role, inclusion: { in: %w[owner admin staff] }
+  validates :role, inclusion: { in: %w[owner admin staff system] }
   validates :user_id, uniqueness: { scope: :tenant_id }
 
-  enum role: { owner: 0, admin: 1, staff: 2 }
+  enum role: { owner: 0, admin: 1, staff: 2, system: 3  }
 
   scope :active, -> { joins(:user).where(users: { active: true }) }
   scope :can_manage_studio, -> { where(role: ['owner', 'admin']) }

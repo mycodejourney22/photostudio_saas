@@ -1,0 +1,133 @@
+<!-- app/views/public_booking/calendar.html.erb -->
+<% content_for :title, "Select Date & Time - #{@tenant.name}" %>
+<% content_for :body_class, "bg-gray-50 min-h-screen" %>
+
+<div class="max-w-5xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Select Your Date & Time</h1>
+    <div class="text-lg text-gray-600">
+      <span class="font-medium"><%= @service_package.name %></span> -
+      <span><%= @service_tier.name %></span> at
+      <span class="font-medium"><%= @studio_location.name %></span>
+    </div>
+    <div class="text-sm text-gray-500 mt-1">
+      Duration: <%= @service_tier.duration_display %> | Price: $<%= number_with_delimiter(@service_tier.price.to_i) %>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="mb-8">
+    <div class="flex items-center justify-center">
+      <div class="flex items-center text-sm">
+        <div class="flex items-center text-green-600">
+          <div class="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-medium">✓</div>
+          <span class="ml-2 font-medium">Service</span>
+        </div>
+        <div class="w-16 h-1 bg-green-200 mx-4"></div>
+        <div class="flex items-center text-blue-600">
+          <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">2</div>
+          <span class="ml-2 font-medium">Date & Time</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-200 mx-4"></div>
+        <div class="flex items-center text-gray-400">
+          <div class="w-8 h-8 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-sm">3</div>
+          <span class="ml-2">Details</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content with Stimulus Controller -->
+  <div class="bg-white rounded-2xl shadow-xl overflow-hidden booking-calendar"
+       data-controller="public-booking-calendar"
+       data-public-booking-calendar-available-dates-value="<%= @available_dates.map(&:to_s).to_json %>"
+       data-public-booking-calendar-time-slots-by-date-value="<%= @time_slots_by_date.to_json %>"
+       data-public-booking-calendar-tenant-slug-value="<%= @tenant.subdomain %>"
+       data-public-booking-calendar-studio-location-id-value="<%= @studio_location.id %>"
+       data-public-booking-calendar-service-package-id-value="<%= @service_package.id %>"
+       data-public-booking-calendar-service-tier-id-value="<%= @service_tier.id %>">
+
+    <!-- Calendar Header -->
+    <div class="calendar-header bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+      <div class="flex items-center justify-between">
+        <button class="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                data-action="click->public-booking-calendar#previousMonth">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        <h2 data-public-booking-calendar-target="monthHeader" class="text-xl font-semibold">
+          <%= Date.current.strftime('%B %Y') %>
+        </h2>
+        <button class="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                data-action="click->public-booking-calendar#nextMonth">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Calendar Body -->
+    <div class="p-6">
+      <!-- Calendar Grid -->
+      <div class="mb-8">
+        <!-- Weekday Headers -->
+        <div class="grid grid-cols-7 gap-1 mb-2">
+          <% %w[Sun Mon Tue Wed Thu Fri Sat].each do |day| %>
+            <div class="p-2 text-center text-sm font-medium text-gray-500"><%= day %></div>
+          <% end %>
+        </div>
+
+        <!-- Calendar Days -->
+        <div data-public-booking-calendar-target="calendarGrid" class="grid grid-cols-7 gap-1">
+          <!-- Calendar days will be populated by Stimulus controller -->
+        </div>
+      </div>
+
+      <!-- Selected Date Display -->
+      <div class="mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Selected Date</h3>
+        <div class="p-4 bg-gray-50 rounded-lg">
+          <span data-public-booking-calendar-target="selectedDateText">Select a date to see available times</span>
+        </div>
+      </div>
+
+      <!-- Available Time Slots -->
+      <div data-public-booking-calendar-target="timeSlotsContainer" class="hidden">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Available Times</h3>
+        <div data-public-booking-calendar-target="timeSlots" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <!-- Time slots will be populated by Stimulus controller -->
+        </div>
+
+        <!-- Continue Button -->
+        <div class="mt-8 flex justify-center">
+          <button data-public-booking-calendar-target="continueBtn"
+                  data-action="click->public-booking-calendar#continue"
+                  class="hidden bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transform transition-all duration-200 hover:scale-105">
+            Continue to Details
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div data-public-booking-calendar-target="emptyState" class="text-center py-8">
+        <div class="text-gray-400 mb-4">
+          <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+        </div>
+        <p class="text-gray-500 text-lg">Select a date to see available time slots</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Back Button -->
+  <div class="mt-8 text-center">
+    <%= link_to public_booking_path(@tenant.subdomain),
+          class: "text-gray-600 hover:text-gray-800 font-medium" do %>
+      ← Back to Services
+    <% end %>
+  </div>
+</div>

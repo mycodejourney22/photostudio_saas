@@ -84,7 +84,7 @@ class SalesController < ApplicationController
       @appointment = current_tenant.appointments.find(params[:appointment_id])
 
       # Check if this is for the main sale or additional sale
-      if params[:additional] == 'true' || @appointment.has_main_sale?
+      if params[:additional] == 'true' || @appointment.sales.any?
         setup_additional_sale
       else
         setup_main_sale
@@ -169,6 +169,7 @@ class SalesController < ApplicationController
   # end
 
     def create
+      # binding.pry
       @sale = current_tenant.sales.build(sale_params)
 
       # Set flag if user provided payment information
@@ -181,7 +182,6 @@ class SalesController < ApplicationController
         @sale.staff_member = current_user.staff_members.find_by(tenant: current_tenant) ||
                             current_tenant.staff_members.customer_service.first
       end
-      binding.pry
     # Set payment status based on user input
       if sale_params[:paid_amount].present? && sale_params[:paid_amount].to_f > 0
         @sale.payment_status = determine_payment_status(sale_params[:paid_amount].to_f, @sale.total_amount || 0)
@@ -327,7 +327,7 @@ class SalesController < ApplicationController
   def create_from_appointment
     @appointment = current_tenant.appointments.find(params[:appointment_id])
 
-    if @appointment.has_main_sale?
+    if @appointment.sales.any?
       redirect_to @appointment.main_sale, notice: 'Main sale already exists for this appointment'
       return
     end
@@ -483,7 +483,7 @@ class SalesController < ApplicationController
     @sale.customer_name = @appointment.customer.full_name
     @sale.customer_email = @appointment.customer.email
     @sale.customer_phone = @appointment.customer.phone
-    @sale.sale_type = 'walk_in'  # Additional sales are typically walk-in type
+     # Additional sales are typically walk-in type
 
     # Start with empty sale items for additional products/services
     @sale.sale_items.build

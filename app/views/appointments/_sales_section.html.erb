@@ -9,7 +9,7 @@
       </span>
 
       <% unless appointment.has_main_sale? %>
-        <%= link_to create_from_appointment_sales_path(appointment),
+        <%= link_to new_sale_path(appointment_id: @appointment.id),
               method: :post,
               class: "inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700" do %>
           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,7 +156,7 @@
       <h4 class="mt-2 text-sm font-medium text-gray-900">No sales created yet</h4>
       <p class="mt-1 text-sm text-gray-500">Create the main sale for this appointment to get started.</p>
 
-      <%= link_to create_from_appointment_sales_path(appointment),
+      <%= link_to  new_sale_path(appointment_id: @appointment.id),
             method: :post,
             class: "mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700" do %>
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

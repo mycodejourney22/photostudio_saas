@@ -28,6 +28,9 @@ Rails.application.routes.draw do
     get '/:tenant_slug/details', to: 'public_booking#details', as: :public_booking_details
     post '/:tenant_slug/create', to: 'public_booking#create', as: :public_booking_create
     get '/:tenant_slug/confirmation/:appointment_id', to: 'public_booking#confirmation', as: :public_booking_confirmation
+
+    # Payment callback (optional - if using payment processing)
+    get '/:tenant_slug/payment/callback', to: 'public_booking#payment_callback', as: :public_booking_payment_callback
   end
 
   # Multi-step booking flow (alternative structure)

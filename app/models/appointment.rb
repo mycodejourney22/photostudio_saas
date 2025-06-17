@@ -33,7 +33,7 @@ class Appointment < ApplicationRecord
   validates :scheduled_at, presence: true
   validates :duration_minutes, presence: true, numericality: { greater_than: 0 }
   validates :price, presence: true, numericality: { greater_than_or_equal_to: 0 }
-  validates :session_type, inclusion: { in: %w[portrait wedding family event commercial] }
+  validates :session_type, inclusion: { in: %w[portrait wedding family event commercial, newborn] }
   validates :status, inclusion: { in: %w[pending confirmed in_progress completed cancelled] }
   validates :payment_status, inclusion: { in: %w[unpaid partial_paid paid refunded] }
   validates :booking_source, inclusion: { in: %w[customer staff walk_in online] }
@@ -79,7 +79,7 @@ class Appointment < ApplicationRecord
   end
 
   enum status: { pending: 0, confirmed: 1, in_progress: 2, completed: 3, cancelled: 4 }
-  enum session_type: { portrait: 0, wedding: 1, family: 2, event: 3, commercial: 4 }
+  enum session_type: { portrait: 0, wedding: 1, family: 2, event: 3, commercial: 4, newborn: 5 }
   enum payment_status: { unpaid: 0, partial_paid: 1, paid: 2, refunded: 3 }
   enum booking_source: { customer: 0, staff: 1, walk_in: 2, online: 3 }
 
@@ -110,12 +110,17 @@ class Appointment < ApplicationRecord
     service_tier&.name || 'Custom'
   end
 
-    def main_sale
-      sales.where(sale_type: 'appointment').first
-    end
+  def main_sale
+    # The first sale created for this appointment is the main sale
+    sales.order(:created_at).first
+  end
 
   def additional_sales
-    sales.where.not(sale_type: 'appointment')
+    # All sales except the first one are additional sales
+    main_sale_id = main_sale&.id
+    return Sale.none unless main_sale_id
+
+    sales.where.not(id: main_sale_id).order(:created_at)
   end
 
   def total_sales_amount
@@ -439,6 +444,17 @@ class Appointment < ApplicationRecord
                 end
 
     update!(payment_status: new_status, paid_amount: total_paid)
+  end
+
+  def sale_summary
+    {
+      main_sale: main_sale,
+      additional_sales: additional_sales,
+      total_amount: total_sales_amount,
+      count: sales.count,
+      main_sale_type: main_sale&.sale_type, # HOW the main sale was created
+      additional_sale_types: additional_sales.pluck(:sale_type).uniq
+    }
   end
 
   private
