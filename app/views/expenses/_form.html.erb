@@ -1,0 +1,246 @@
+<!-- app/views/expenses/_form.html.erb -->
+<%= form_with model: @expense, local: true, multipart: true, class: "space-y-6" do |form| %>
+  <% if @expense.errors.any? %>
+    <div class="bg-red-50 border border-red-200 rounded-xl p-4">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">
+            There were <%= pluralize(@expense.errors.count, "error") %> with your submission:
+          </h3>
+          <div class="mt-2 text-sm text-red-700">
+            <ul role="list" class="list-disc list-inside space-y-1">
+              <% @expense.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Left Column -->
+    <div class="space-y-6">
+      <div class="bg-white shadow-sm rounded-xl p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+
+        <div class="space-y-4">
+          <div>
+            <%= form.label :title, class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= form.text_field :title, class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent", placeholder: "Enter expense title" %>
+          </div>
+
+          <div>
+            <%= form.label :description, class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= form.text_area :description, rows: 3, class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                               placeholder: "Describe the expense..." %>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <%= form.label :amount, class: "block text-sm font-medium text-gray-700 mb-1" %>
+              <div class="relative rounded-lg shadow-sm">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span class="text-gray-500 sm:text-sm">$</span>
+                </div>
+                <%= form.number_field :amount, step: 0.01, class: "w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                                      placeholder: "0.00" %>
+              </div>
+            </div>
+
+            <div>
+              <%= form.label :currency, class: "block text-sm font-medium text-gray-700 mb-1" %>
+              <%= form.select :currency,
+                              [['USD', 'USD'], ['EUR', 'EUR'], ['GBP', 'GBP'], ['CAD', 'CAD'], ['AUD', 'AUD']],
+                              { selected: @expense.currency || 'USD' },
+                              { class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" } %>
+            </div>
+          </div>
+
+          <div>
+            <%= form.label :expense_date, class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= form.date_field :expense_date, class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white shadow-sm rounded-xl p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Location & Category</h3>
+
+        <div class="space-y-4">
+          <div>
+            <%= form.label :studio_location_id, "Studio Location", class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <% studio_locations = current_tenant.studio_locations.active.ordered rescue [] %>
+            <%= form.select :studio_location_id,
+                            options_from_collection_for_select(studio_locations, :id, :name, @expense.studio_location_id),
+                            { prompt: "Select a location" },
+                            { class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" } %>
+          </div>
+
+          <div>
+            <%= form.label :expense_category_id, "Category", class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <% expense_categories = current_tenant.expense_categories.active.ordered rescue [] %>
+            <%= form.select :expense_category_id,
+                            options_from_collection_for_select(expense_categories, :id, :name, @expense.expense_category_id),
+                            { prompt: "Select a category" },
+                            { class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" } %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="space-y-6">
+      <div class="bg-white shadow-sm rounded-xl p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Vendor Information</h3>
+
+        <div class="space-y-4">
+          <div>
+            <%= form.label :vendor_name, class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= form.text_field :vendor_name, class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                                placeholder: "Vendor or supplier name" %>
+          </div>
+
+          <div>
+            <%= form.label :vendor_contact, class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= form.text_field :vendor_contact, class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                                placeholder: "Phone or email" %>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <%= form.label :invoice_number, class: "block text-sm font-medium text-gray-700 mb-1" %>
+              <%= form.text_field :invoice_number, class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                                  placeholder: "Invoice #" %>
+            </div>
+
+            <div>
+              <%= form.label :receipt_number, class: "block text-sm font-medium text-gray-700 mb-1" %>
+              <%= form.text_field :receipt_number, class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                                  placeholder: "Receipt #" %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white shadow-sm rounded-xl p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Payment Details</h3>
+
+        <div class="space-y-4">
+          <div>
+            <%= form.label :payment_method, class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= form.select :payment_method,
+                            [
+                              ['Cash', 'cash'],
+                              ['Check', 'check'],
+                              ['Credit Card', 'credit_card'],
+                              ['Debit Card', 'debit_card'],
+                              ['Bank Transfer', 'bank_transfer'],
+                              ['Online Payment', 'online_payment'],
+                              ['Petty Cash', 'petty_cash'],
+                              ['Company Card', 'company_card']
+                            ],
+                            { prompt: "Select payment method", selected: @expense.payment_method },
+                            { class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" } %>
+          </div>
+
+          <div>
+            <%= form.label :payment_reference, class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= form.text_field :payment_reference, class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                                placeholder: "Check #, Transaction ID, etc." %>
+          </div>
+
+          <div>
+            <%= form.label :payment_date, class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= form.date_field :payment_date, class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+          </div>
+
+          <div>
+            <%= form.label :payment_status, class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= form.select :payment_status,
+                            [
+                              ['Pending', 'pending'],
+                              ['Paid', 'paid'],
+                              ['Overdue', 'overdue'],
+                              ['Cancelled', 'cancelled'],
+                              ['Refunded', 'refunded']
+                            ],
+                            { selected: @expense.payment_status || 'pending' },
+                            { class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" } %>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white shadow-sm rounded-xl p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Additional Options</h3>
+
+        <div class="space-y-4">
+          <div class="flex items-center">
+            <%= form.check_box :recurring, class: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" %>
+            <%= form.label :recurring, "Recurring Expense", class: "ml-2 block text-sm text-gray-900" %>
+          </div>
+
+          <div id="recurring-options" style="<%= 'display: none;' unless @expense.recurring? %>">
+            <%= form.label :recurring_frequency, class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= form.select :recurring_frequency,
+                            [
+                              ['Weekly', 'weekly'],
+                              ['Monthly', 'monthly'],
+                              ['Quarterly', 'quarterly'],
+                              ['Yearly', 'yearly']
+                            ],
+                            { prompt: "Select frequency", selected: @expense.recurring_frequency, include_blank: true },
+                            { class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" } %>
+          </div>
+
+          <div class="flex items-center">
+            <%= form.check_box :tax_deductible, class: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" %>
+            <%= form.label :tax_deductible, "Tax Deductible", class: "ml-2 block text-sm text-gray-900" %>
+          </div>
+
+          <div>
+            <%= form.label :notes, class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= form.text_area :notes, rows: 3, class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                               placeholder: "Additional notes..." %>
+          </div>
+
+          <div>
+            <%= form.label :receipts, "Upload Receipts", class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= form.file_field :receipts, multiple: true, accept: "image/*,application/pdf",
+                                class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+            <p class="mt-1 text-sm text-gray-500">Upload receipt images or PDFs</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+    <%= link_to "Cancel", (@expense.persisted? ? expense_path(@expense) : expenses_path), class: "inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
+    <%= form.submit(@expense.persisted? ? "Update Expense" : "Create Expense",
+                    class: "inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500") %>
+  </div>
+<% end %>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const recurringCheckbox = document.getElementById('expense_recurring');
+    const recurringOptions = document.getElementById('recurring-options');
+
+    if (recurringCheckbox && recurringOptions) {
+      recurringCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+          recurringOptions.style.display = 'block';
+        } else {
+          recurringOptions.style.display = 'none';
+        }
+      });
+    }
+  });
+</script>

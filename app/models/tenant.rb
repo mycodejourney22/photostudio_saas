@@ -6,6 +6,8 @@ class Tenant < ApplicationRecord
   # User and tenant relationships
   has_many :tenant_users, dependent: :destroy
   has_many :users, through: :tenant_users
+  after_create :setup_default_expense_categories
+
 
   # Core business entities
   has_many :customers, dependent: :destroy
@@ -13,6 +15,10 @@ class Tenant < ApplicationRecord
   has_many :sales, dependent: :destroy  # ← Missing association added!
   has_many :sale_items, through: :sales
   has_many :staff_members, dependent: :destroy
+
+  has_many :expenses, dependent: :destroy
+  has_many :expense_categories, dependent: :destroy
+  has_many :expense_attachments, through: :expense
 
   # Studio and location management
   has_many :studios, dependent: :destroy
@@ -49,6 +55,26 @@ class Tenant < ApplicationRecord
   # Instance methods
   def full_domain
     "#{subdomain}.#{Rails.application.config.app_domain}"
+  end
+
+  def can_be_deleted?
+    # Check if tenant has any critical data
+    users.none? && appointments.none? && sales.none? && expenses.none?
+  end
+
+  # Add expense-related setup
+  def setup_default_expense_categories
+    return if expense_categories.any?
+
+    ExpenseCategory::DEFAULT_CATEGORIES.each_with_index do |category_data, index|
+      expense_categories.create!(
+        name: category_data[:name],
+        description: category_data[:description],
+        color: category_data[:color],
+        sort_order: index,
+        active: true
+      )
+    end
   end
 
   def plan_limits

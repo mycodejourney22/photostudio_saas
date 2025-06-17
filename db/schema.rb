@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_15_201122) do
+ActiveRecord::Schema[7.1].define(version: 2025_06_17_123731) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -128,6 +128,81 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_15_201122) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["tenant_id"], name: "index_customers_on_tenant_id"
+  end
+
+  create_table "expense_attachments", force: :cascade do |t|
+    t.bigint "expense_id", null: false
+    t.string "attachment_type", null: false
+    t.string "filename", null: false
+    t.string "content_type"
+    t.bigint "file_size"
+    t.text "description"
+    t.json "metadata", default: {}
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["expense_id", "attachment_type"], name: "index_expense_attachments_on_expense_id_and_attachment_type"
+    t.index ["expense_id"], name: "index_expense_attachments_on_expense_id"
+  end
+
+  create_table "expense_categories", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.string "color", default: "#3b82f6"
+    t.boolean "active", default: true, null: false
+    t.integer "sort_order", default: 0
+    t.json "metadata", default: {}
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id", "active", "sort_order"], name: "idx_on_tenant_id_active_sort_order_06fd0f4c28"
+    t.index ["tenant_id", "name"], name: "index_expense_categories_on_tenant_id_and_name", unique: true
+    t.index ["tenant_id"], name: "index_expense_categories_on_tenant_id"
+  end
+
+  create_table "expenses", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.bigint "studio_location_id", null: false
+    t.bigint "expense_category_id", null: false
+    t.bigint "staff_member_id"
+    t.string "title", null: false
+    t.text "description"
+    t.decimal "amount", precision: 10, scale: 2, null: false
+    t.string "currency", default: "USD", null: false
+    t.date "expense_date", null: false
+    t.string "vendor_name"
+    t.string "vendor_contact"
+    t.string "invoice_number"
+    t.string "receipt_number"
+    t.integer "payment_method", default: 0, null: false
+    t.string "payment_reference"
+    t.date "payment_date"
+    t.integer "payment_status", default: 0, null: false
+    t.boolean "recurring", default: false, null: false
+    t.string "recurring_frequency"
+    t.date "next_due_date"
+    t.boolean "tax_deductible", default: true, null: false
+    t.text "notes"
+    t.integer "approval_status", default: 0, null: false
+    t.bigint "approved_by_id"
+    t.datetime "approved_at"
+    t.text "approval_notes"
+    t.json "metadata", default: {}
+    t.json "tags", default: []
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["approved_by_id"], name: "index_expenses_on_approved_by_id"
+    t.index ["expense_category_id", "expense_date"], name: "index_expenses_on_expense_category_id_and_expense_date"
+    t.index ["expense_category_id"], name: "index_expenses_on_expense_category_id"
+    t.index ["recurring", "next_due_date"], name: "index_expenses_on_recurring_and_next_due_date", where: "(recurring = true)"
+    t.index ["staff_member_id"], name: "index_expenses_on_staff_member_id"
+    t.index ["studio_location_id", "expense_date"], name: "index_expenses_on_studio_location_id_and_expense_date"
+    t.index ["studio_location_id"], name: "index_expenses_on_studio_location_id"
+    t.index ["tenant_id", "approval_status"], name: "index_expenses_on_tenant_id_and_approval_status"
+    t.index ["tenant_id", "expense_category_id"], name: "index_expenses_on_tenant_id_and_expense_category_id"
+    t.index ["tenant_id", "expense_date"], name: "index_expenses_on_tenant_id_and_expense_date"
+    t.index ["tenant_id", "payment_status"], name: "index_expenses_on_tenant_id_and_payment_status"
+    t.index ["tenant_id", "studio_location_id"], name: "index_expenses_on_tenant_id_and_studio_location_id"
+    t.index ["tenant_id"], name: "index_expenses_on_tenant_id"
   end
 
   create_table "sale_items", force: :cascade do |t|
@@ -381,6 +456,13 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_15_201122) do
   add_foreign_key "appointments", "users"
   add_foreign_key "brandings", "tenants"
   add_foreign_key "customers", "tenants"
+  add_foreign_key "expense_attachments", "expenses"
+  add_foreign_key "expense_categories", "tenants"
+  add_foreign_key "expenses", "expense_categories"
+  add_foreign_key "expenses", "staff_members"
+  add_foreign_key "expenses", "staff_members", column: "approved_by_id"
+  add_foreign_key "expenses", "studio_locations"
+  add_foreign_key "expenses", "tenants"
   add_foreign_key "sale_items", "sales"
   add_foreign_key "sale_items", "service_tiers"
   add_foreign_key "sale_items", "tenants"

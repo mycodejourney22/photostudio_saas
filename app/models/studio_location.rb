@@ -5,6 +5,8 @@ class StudioLocation < ApplicationRecord
   has_many :service_package_studio_locations, dependent: :destroy
   has_many :service_packages, through: :service_package_studio_locations
   has_many :appointments, dependent: :restrict_with_error
+  has_many :expenses, dependent: :restrict_with_error
+
 
 
   # validates :name, presence: true, uniqueness: { scope: :tenant_id }
@@ -35,6 +37,22 @@ class StudioLocation < ApplicationRecord
 
   def has_appointments?
     appointments.exists? if respond_to?(:appointments)
+  end
+
+   def has_expenses?
+    expenses.exists?
+  end
+
+  def total_expenses_this_month
+    expenses.this_month.sum(:amount)
+  end
+
+  def total_expenses_this_year
+    expenses.this_year.sum(:amount)
+  end
+
+  def recent_expenses(limit = 5)
+    expenses.recent.limit(limit)
   end
 
   def operating_hours_for_day(day)

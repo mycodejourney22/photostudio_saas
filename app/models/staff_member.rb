@@ -8,6 +8,9 @@ class StaffMember < ApplicationRecord
   has_many :appointments_as_photographer, class_name: 'Appointment', foreign_key: 'assigned_photographer_id'
   has_many :appointments_as_editor, class_name: 'Appointment', foreign_key: 'assigned_editor_id'
 
+  has_many :recorded_expenses, class_name: 'Expense', foreign_key: 'staff_member_id', dependent: :nullify
+  has_many :approved_expenses, class_name: 'Expense', foreign_key: 'approved_by_id', dependent: :nullify
+
   # Sales relationships
   has_many :sales, foreign_key: 'staff_member_id', dependent: :restrict_with_error
 
@@ -23,7 +26,8 @@ class StaffMember < ApplicationRecord
   validates :user_id, uniqueness: { scope: :tenant_id }, allow_nil: true
   validates :hourly_rate, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
-
+  has_many :recorded_expenses, class_name: 'Expense', foreign_key: 'staff_member_id', dependent: :nullify
+  has_many :approved_expenses, class_name: 'Expense', foreign_key: 'approved_by_id', dependent: :nullify
 
   scope :active, -> { where(active: true) }
   scope :with_login, -> { where(has_login: true) }
@@ -73,6 +77,21 @@ class StaffMember < ApplicationRecord
     (appointments_as_photographer&.exists? || false) ||
     (appointments_as_editor&.exists? || false)
   end
+
+
+  def has_expense_records?
+    recorded_expenses.exists? || approved_expenses.exists?
+  end
+
+  def can_approve_expenses?
+    %w[owner manager].include?(role)
+  end
+
+  def can_record_expenses?
+    # Most staff members can record expenses, but you can customize this
+    active?
+  end
+
 
   def has_sales_records?
     return false unless respond_to?(:sales)

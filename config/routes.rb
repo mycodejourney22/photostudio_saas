@@ -291,6 +291,23 @@ Rails.application.routes.draw do
       get 'custom_report', to: 'overview#custom_report'
     end
 
+    resources :expenses do
+      member do
+        patch :approve
+        patch :reject
+      end
+      collection do
+        get :analytics
+        get :export
+      end
+    end
+
+    resources :expense_categories do
+      member do
+        patch :toggle_status
+      end
+    end
+
     # Settings
     get '/settings', to: 'settings#index', as: :settings
     patch '/settings', to: 'settings#update'
@@ -311,6 +328,8 @@ Rails.application.routes.draw do
     namespace :admin do
       namespace :setup do
         root 'dashboard#index'
+        resources :expense_categories, except: [:show]
+
 
         resources :staff_members do
           member do
