@@ -87,12 +87,14 @@
                     </div>
 
                     <!-- Book Now Button -->
+                    <% if service.service_tiers.any? %>
                     <%= link_to public_booking_calendar_path(@tenant.subdomain,
                                   studio_location_id: location.id,
                                   service_package_id: service.id,
-                                  service_tier_id: service.service_tiers.active.first.id),
+                                  service_tier_id: service.service_tiers.active.first.id ),
                           class: "w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-xl font-semibold text-center block hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5" do %>
                       Book This Service
+                    <% end %>
                     <% end %>
                   </div>
                 <% end %>

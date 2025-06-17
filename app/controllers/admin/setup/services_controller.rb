@@ -12,15 +12,18 @@ class Admin::Setup::ServicesController < Admin::Setup::BaseController
   def new
     @service_package = @tenant.service_packages.build
     @available_categories = ServicePackage::CATEGORIES
+    @studio_locations = @tenant.studio_locations.active.order(:name)
   end
 
   def create
     @service_package = @tenant.service_packages.build(service_package_params)
 
     if @service_package.save
+      handle_studio_location_assignments
       redirect_to admin_setup_services_path(tenant_id: @tenant.id), notice: 'Service package created successfully.'
     else
       @available_categories = ServicePackage::CATEGORIES
+      @studio_locations = @tenant.studio_locations.active.order(:name)
       render :new, status: :unprocessable_entity
     end
   end
@@ -33,13 +36,16 @@ class Admin::Setup::ServicesController < Admin::Setup::BaseController
 
   def edit
     @available_categories = ServicePackage::CATEGORIES
+    @studio_locations = @tenant.studio_locations.active.order(:name)
   end
 
   def update
     if @service_package.update(service_package_params)
+      handle_studio_location_assignments
       redirect_to admin_setup_services_path(tenant_id: @tenant.id), notice: 'Service package updated successfully.'
     else
       @available_categories = ServicePackage::CATEGORIES
+      @studio_locations = @tenant.studio_locations.active.order(:name)
       render :edit, status: :unprocessable_entity
     end
   end
@@ -74,8 +80,16 @@ class Admin::Setup::ServicesController < Admin::Setup::BaseController
   def service_package_params
     params.require(:service_package).permit(
       :name, :slug, :description, :category, :sort_order,
-      metadata: {}
+      metadata: {},
+      studio_location_ids: []
     )
+  end
+
+  def handle_studio_location_assignments
+    if params[:service_package][:studio_location_ids].present?
+      studio_location_ids = params[:service_package][:studio_location_ids].reject(&:blank?)
+      @service_package.studio_location_ids = studio_location_ids
+    end
   end
 
   def can_delete_service?
