@@ -230,15 +230,65 @@ Rails.application.routes.draw do
       end
     end
 
-    # Analytics and Reports
+    # Reports and analytics
+    namespace :reports do
+      # Sales reports
+      get 'sales', to: 'sales#monthly' # Default to monthly view
+      get 'sales/daily', to: 'sales#daily'
+      get 'sales/weekly', to: 'sales#weekly'
+      get 'sales/monthly', to: 'sales#monthly'
+      get 'sales/yearly', to: 'sales#yearly'
+      get 'sales/by_staff', to: 'sales#by_staff'
+      get 'sales/by_service', to: 'sales#by_service'
+      get 'sales/by_customer', to: 'sales#by_customer'
+      get 'sales/payment_summary', to: 'sales#payment_summary'
+      get 'sales/outstanding', to: 'sales#outstanding'
+      get 'sales/day/:date', to: 'sales#daily', as: :sales_daily_detail
+
+      # Appointment reports
+      get 'appointments/daily', to: 'appointments#daily'
+      get 'appointments/weekly', to: 'appointments#weekly'
+      get 'appointments/monthly', to: 'appointments#monthly'
+      get 'appointments/by_photographer', to: 'appointments#by_photographer'
+      get 'appointments/by_service', to: 'appointments#by_service'
+      get 'appointments/cancellation_rate', to: 'appointments#cancellation_rate'
+      get 'appointments/no_show_rate', to: 'appointments#no_show_rate'
+
+      # Revenue reports
+      get 'revenue/forecast', to: 'revenue#forecast'
+      get 'revenue/trends', to: 'revenue#trends'
+      get 'revenue/by_service_type', to: 'revenue#by_service_type'
+      get 'revenue/by_location', to: 'revenue#by_location'
+      get 'revenue/profit_margins', to: 'revenue#profit_margins'
+
+      # Customer reports
+      get 'customers/acquisition', to: 'customers#acquisition'
+      get 'customers/retention', to: 'customers#retention'
+      get 'customers/lifetime_value', to: 'customers#lifetime_value'
+      get 'customers/demographics', to: 'customers#demographics'
+
+      # Staff reports
+      get 'staff/performance', to: 'staff#performance'
+      get 'staff/schedules', to: 'staff#schedules'
+      get 'staff/commissions', to: 'staff#commissions'
+
+      # Export endpoints
+      get 'export/sales_csv', to: 'export#sales_csv'
+      get 'export/appointments_csv', to: 'export#appointments_csv'
+      get 'export/customers_csv', to: 'export#customers_csv'
+      get 'export/financial_summary', to: 'export#financial_summary'
+    end
+
+    # Analytics and Reports (CLEANED UP - NO DUPLICATES)
     namespace :analytics do
-      get :overview
-      get :revenue
-      get :bookings
-      get :customers
-      get :staff_performance
-      get :service_popularity
-      get :custom_report
+      root 'overview#index'
+      get 'overview', to: 'overview#index'
+      get 'revenue', to: 'overview#revenue'
+      get 'bookings', to: 'overview#bookings'
+      get 'customers', to: 'overview#customers'
+      get 'staff_performance', to: 'overview#staff_performance'
+      get 'service_popularity', to: 'overview#service_popularity'
+      get 'custom_report', to: 'overview#custom_report'
     end
 
     # Settings
@@ -364,53 +414,6 @@ Rails.application.routes.draw do
     post 'sales/add_frame/:appointment_id', to: 'sales#add_frame', as: :add_frame
     post 'sales/add_prints/:appointment_id', to: 'sales#add_prints', as: :add_prints
     post 'sales/add_photobook/:appointment_id', to: 'sales#add_photobook', as: :add_photobook
-  end
-
-  # Reports and analytics
-  namespace :reports do
-    # Sales reports
-    get 'sales/daily', to: 'sales#daily'
-    get 'sales/weekly', to: 'sales#weekly'
-    get 'sales/monthly', to: 'sales#monthly'
-    get 'sales/yearly', to: 'sales#yearly'
-    get 'sales/by_staff', to: 'sales#by_staff'
-    get 'sales/by_service', to: 'sales#by_service'
-    get 'sales/by_customer', to: 'sales#by_customer'
-    get 'sales/payment_summary', to: 'sales#payment_summary'
-    get 'sales/outstanding', to: 'sales#outstanding'
-
-    # Appointment reports
-    get 'appointments/daily', to: 'appointments#daily'
-    get 'appointments/weekly', to: 'appointments#weekly'
-    get 'appointments/monthly', to: 'appointments#monthly'
-    get 'appointments/by_photographer', to: 'appointments#by_photographer'
-    get 'appointments/by_service', to: 'appointments#by_service'
-    get 'appointments/cancellation_rate', to: 'appointments#cancellation_rate'
-    get 'appointments/no_show_rate', to: 'appointments#no_show_rate'
-
-    # Revenue reports
-    get 'revenue/forecast', to: 'revenue#forecast'
-    get 'revenue/trends', to: 'revenue#trends'
-    get 'revenue/by_service_type', to: 'revenue#by_service_type'
-    get 'revenue/by_location', to: 'revenue#by_location'
-    get 'revenue/profit_margins', to: 'revenue#profit_margins'
-
-    # Customer reports
-    get 'customers/acquisition', to: 'customers#acquisition'
-    get 'customers/retention', to: 'customers#retention'
-    get 'customers/lifetime_value', to: 'customers#lifetime_value'
-    get 'customers/demographics', to: 'customers#demographics'
-
-    # Staff reports
-    get 'staff/performance', to: 'staff#performance'
-    get 'staff/schedules', to: 'staff#schedules'
-    get 'staff/commissions', to: 'staff#commissions'
-
-    # Export endpoints
-    get 'export/sales_csv', to: 'export#sales_csv'
-    get 'export/appointments_csv', to: 'export#appointments_csv'
-    get 'export/customers_csv', to: 'export#customers_csv'
-    get 'export/financial_summary', to: 'export#financial_summary'
   end
 
   # Webhooks for integrations

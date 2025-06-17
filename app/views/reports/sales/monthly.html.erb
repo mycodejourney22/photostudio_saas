@@ -1,0 +1,264 @@
+<!-- app/views/reports/sales/monthly.html.erb -->
+<% content_for :title, "Monthly Sales Report - #{current_tenant.name}" %>
+
+<div class="min-h-screen bg-gray-50 flex">
+  <!-- Sidebar - Desktop -->
+  <div class="hidden lg:flex lg:flex-shrink-0">
+    <div class="flex flex-col w-64">
+      <div class="flex-1 flex flex-col min-h-0 bg-gradient-to-b from-blue-600 to-purple-700">
+        <%= render 'shared/sidebar' %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile sidebar overlay -->
+  <div class="lg:hidden" data-controller="mobile-navigation">
+    <!-- Mobile menu button -->
+    <div class="fixed top-4 left-4 z-50">
+      <button data-action="mobile-navigation#toggleMenu"
+              class="bg-white p-2 rounded-lg shadow-lg text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile backdrop -->
+    <div data-mobile-navigation-target="backdrop"
+         data-action="click->mobile-navigation#closeOnBackdrop"
+         class="hidden fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+
+    <!-- Mobile sidebar -->
+    <div data-mobile-navigation-target="menu"
+         class="fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-blue-600 to-purple-700 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out">
+      <%= render 'shared/sidebar' %>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
+      <div class="px-4 lg:px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 min-w-0 ml-12 lg:ml-0">
+            <h1 class="text-xl lg:text-2xl font-bold text-gray-900">
+              Sales Data for <%= @date.strftime('%B %Y') %>
+            </h1>
+            <p class="text-gray-600 text-sm mt-1">Monthly sales breakdown and performance analytics</p>
+          </div>
+          <div class="flex items-center space-x-4">
+            <%= link_to reports_sales_daily_path, class: "btn btn-secondary" do %>
+              📊 Daily Reports
+            <% end %>
+            <%= link_to analytics_overview_path, class: "btn btn-primary" do %>
+              📈 Analytics
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main content area -->
+    <main class="flex-1 overflow-auto bg-gray-50">
+      <div class="px-4 lg:px-6 py-6">
+
+        <!-- Month Navigation -->
+        <div class="dashboard-card mb-6">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+              <%= link_to reports_sales_monthly_path(year: @date.prev_month.year, month: @date.prev_month.month),
+                    class: "btn btn-secondary" do %>
+                ← Previous Month
+              <% end %>
+              <h2 class="text-2xl font-bold text-gray-900"><%= @date.strftime('%B %Y') %></h2>
+              <%= link_to reports_sales_monthly_path(year: @date.next_month.year, month: @date.next_month.month),
+                    class: "btn btn-secondary" do %>
+                Next Month →
+              <% end %>
+            </div>
+            <div class="text-right">
+              <div class="text-3xl font-bold text-green-600">
+                ₦<%= number_with_delimiter(@monthly_stats[:total_revenue].to_i) %>
+              </div>
+              <div class="text-sm text-gray-600">Total Monthly Revenue</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="dashboard-stat">
+            <div class="dashboard-stat-value"><%= @monthly_stats[:total_sales] %></div>
+            <div class="dashboard-stat-label">Total Sales</div>
+          </div>
+
+          <div class="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg p-6 shadow-lg">
+            <div class="dashboard-stat-value">₦<%= number_with_delimiter(@monthly_stats[:avg_sale].to_i) %></div>
+            <div class="text-green-100 text-sm">Average Sale</div>
+          </div>
+
+          <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg p-6 shadow-lg">
+            <div class="dashboard-stat-value">₦<%= number_with_delimiter(@monthly_stats[:avg_daily].to_i) %></div>
+            <div class="text-purple-100 text-sm">Daily Average</div>
+          </div>
+
+          <div class="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg p-6 shadow-lg">
+            <div class="dashboard-stat-value"><%= @monthly_stats[:active_days] %></div>
+            <div class="text-orange-100 text-sm">Active Days</div>
+          </div>
+        </div>
+
+        <!-- Daily Sales Grid -->
+        <div class="dashboard-card mb-8">
+          <h3 class="text-lg font-semibold text-gray-900 mb-6">Daily Sales Overview</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <% @daily_sales.sort_by { |date, amount| Date.parse(date.to_s) }.reverse.each do |date, amount| %>
+              <% formatted_date = Date.parse(date.to_s) rescue date %>
+              <%= link_to reports_sales_daily_path(date: formatted_date),
+                    class: "block bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:-translate-y-1 transition-all duration-200" do %>
+                <div class="flex items-center justify-between mb-2">
+                  <div class="text-sm font-medium text-gray-900">
+                    <%= formatted_date.strftime('%A, %B %d') %>
+                  </div>
+                  <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                </div>
+                <div class="text-xl font-bold text-green-600">
+                  ₦<%= number_with_delimiter(amount.to_i) %>
+                </div>
+                <div class="text-xs text-gray-500 mt-1">Click for details</div>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Weekly Performance -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div class="dashboard-card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Weekly Performance</h3>
+            <div class="space-y-4">
+              <% @weekly_stats.each_with_index do |week, index| %>
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <div class="font-medium">Week <%= index + 1 %></div>
+                    <div class="text-sm text-gray-600">
+                      <%= week[:start_date].strftime('%b %d') %> - <%= week[:end_date].strftime('%b %d') %>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-bold text-green-600">₦<%= number_with_delimiter(week[:revenue].to_i) %></div>
+                    <div class="text-sm text-gray-600"><%= week[:sales_count] %> sales</div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+          <!-- Top Performing Days -->
+          <div class="dashboard-card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Top Performing Days</h3>
+            <div class="space-y-3">
+              <% @top_days.limit(5).each_with_index do |day_data, index| %>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                      <%= index + 1 %>
+                    </div>
+                    <span class="font-medium">
+                      <%= Date.parse(day_data.sale_day.to_s).strftime('%A, %B %d') %>
+                    </span>
+                  </div>
+                  <span class="text-green-600 font-bold">
+                    ₦<%= number_with_delimiter(day_data.daily_total.to_i) %>
+                  </span>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Status Overview -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="dashboard-card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Payment Status</h3>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center">
+                <span class="text-green-600">Paid Sales</span>
+                <span class="font-bold"><%= @monthly_stats[:paid_sales] %></span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-blue-600">Total Paid</span>
+                <span class="font-bold">₦<%= number_with_delimiter(@monthly_stats[:total_paid].to_i) %></span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-orange-600">Outstanding</span>
+                <span class="font-bold">₦<%= number_with_delimiter(@monthly_stats[:outstanding].to_i) %></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+            <div class="space-y-3">
+              <%= link_to reports_sales_outstanding_path,
+                    class: "block w-full btn btn-secondary" do %>
+                View Outstanding Payments
+              <% end %>
+              <%= link_to reports_sales_by_staff_path(start_date: @date.beginning_of_month, end_date: @date.end_of_month),
+                    class: "block w-full btn btn-secondary" do %>
+                Staff Performance Report
+              <% end %>
+              <%= link_to sales_path(start_date: @date.beginning_of_month, end_date: @date.end_of_month),
+                    class: "block w-full btn btn-primary" do %>
+                View All Sales
+              <% end %>
+            </div>
+          </div>
+
+          <div class="dashboard-card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Export Options</h3>
+            <div class="space-y-3">
+              <%= link_to "#", class: "block w-full btn btn-secondary" do %>
+                📄 Export PDF Report
+              <% end %>
+              <%= link_to "#", class: "block w-full btn btn-secondary" do %>
+                📊 Export Excel
+              <% end %>
+              <%= link_to "#", class: "block w-full btn btn-secondary" do %>
+                📧 Email Report
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Day Details Modal -->
+<div id="dayModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-screen overflow-y-auto">
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex justify-between items-center">
+          <h2 class="text-xl font-bold text-gray-900">Daily Sales Breakdown</h2>
+          <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div id="modalContent" class="p-6">
+        <!-- Content loaded via AJAX -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Add any JavaScript for interactive features
+  function closeModal() {
+    document.getElementById('dayModal').classList.add('hidden');
+  }
+</script>

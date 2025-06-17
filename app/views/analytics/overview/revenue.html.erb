@@ -1,0 +1,234 @@
+<!-- app/views/analytics/overview/revenue.html.erb -->
+<% content_for :title, "Revenue Analytics - #{current_tenant.name}" %>
+
+<div class="min-h-screen bg-gray-50 flex">
+  <!-- Sidebar - Desktop -->
+  <div class="hidden lg:flex lg:flex-shrink-0">
+    <div class="flex flex-col w-64">
+      <div class="flex-1 flex flex-col min-h-0 bg-gradient-to-b from-blue-600 to-purple-700">
+        <%= render 'shared/sidebar' %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile sidebar overlay -->
+  <div class="lg:hidden" data-controller="mobile-navigation">
+    <!-- Mobile menu button -->
+    <div class="fixed top-4 left-4 z-50">
+      <button data-action="mobile-navigation#toggleMenu"
+              class="bg-white p-2 rounded-lg shadow-lg text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile backdrop -->
+    <div data-mobile-navigation-target="backdrop"
+         data-action="click->mobile-navigation#closeOnBackdrop"
+         class="hidden fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+
+    <!-- Mobile sidebar -->
+    <div data-mobile-navigation-target="menu"
+         class="fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-blue-600 to-purple-700 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out">
+      <%= render 'shared/sidebar' %>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
+      <div class="px-4 lg:px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 min-w-0 ml-12 lg:ml-0">
+            <h1 class="text-xl lg:text-2xl font-bold text-gray-900">
+              Revenue Analytics
+            </h1>
+            <p class="text-gray-600 text-sm mt-1">Detailed revenue breakdown and insights</p>
+          </div>
+          <div class="flex items-center space-x-4">
+            <%= link_to "/analytics", class: "btn btn-secondary" do %>
+              ← Back to Overview
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main content area -->
+    <main class="flex-1 overflow-auto bg-gray-50">
+      <div class="px-4 lg:px-6 py-6">
+
+        <!-- Revenue Summary Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="dashboard-stat">
+            <div class="dashboard-stat-value">₦<%= number_with_delimiter(@revenue_data[:total_revenue].to_i) %></div>
+            <div class="dashboard-stat-label">Total Revenue</div>
+          </div>
+
+          <div class="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg p-6 shadow-lg">
+            <div class="dashboard-stat-value">₦<%= number_with_delimiter(@revenue_data[:revenue_forecast][:daily_average].to_i) %></div>
+            <div class="text-green-100 text-sm">Daily Average</div>
+          </div>
+
+          <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg p-6 shadow-lg">
+            <div class="dashboard-stat-value">₦<%= number_with_delimiter(@revenue_data[:revenue_forecast][:forecasted_total].to_i) %></div>
+            <div class="text-purple-100 text-sm">Forecasted Total</div>
+          </div>
+
+          <div class="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg p-6 shadow-lg">
+            <div class="dashboard-stat-value"><%= @revenue_data[:revenue_forecast][:days_remaining] %></div>
+            <div class="text-orange-100 text-sm">Days Remaining</div>
+          </div>
+        </div>
+
+        <!-- Revenue Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <!-- Revenue by Period Chart -->
+          <div class="dashboard-card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Revenue by Period</h3>
+            <canvas id="revenuePeriodChart" width="400" height="200"></canvas>
+          </div>
+
+          <!-- Payment Status Breakdown -->
+          <div class="dashboard-card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Payment Status</h3>
+            <canvas id="paymentStatusChart" width="400" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- Revenue Breakdown Tables -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Revenue by Service -->
+          <div class="dashboard-card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Revenue by Service</h3>
+            <div class="space-y-3">
+              <% @revenue_data[:revenue_by_service].each_with_index do |(service, revenue), index| %>
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                      <%= index + 1 %>
+                    </div>
+                    <span class="font-medium"><%= service %></span>
+                  </div>
+                  <span class="text-green-600 font-bold">₦<%= number_with_delimiter(revenue.to_i) %></span>
+                </div>
+              <% end %>
+
+              <% if @revenue_data[:revenue_by_service].empty? %>
+                <div class="text-center py-8 text-gray-500">
+                  <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                  <p>No service revenue data available for this period</p>
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+          <!-- Revenue by Staff -->
+          <div class="dashboard-card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Revenue by Staff</h3>
+            <div class="space-y-3">
+              <% @revenue_data[:revenue_by_staff].each_with_index do |(staff_data, revenue), index| %>
+                <% staff_id, first_name, last_name = staff_data %>
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                      <%= index + 1 %>
+                    </div>
+                    <span class="font-medium"><%= "#{first_name} #{last_name}" %></span>
+                  </div>
+                  <span class="text-green-600 font-bold">₦<%= number_with_delimiter(revenue.to_i) %></span>
+                </div>
+              <% end %>
+
+              <% if @revenue_data[:revenue_by_staff].empty? %>
+                <div class="text-center py-8 text-gray-500">
+                  <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                  </svg>
+                  <p>No staff revenue data available for this period</p>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+  // Revenue by Period Chart
+  const revenuePeriodCtx = document.getElementById('revenuePeriodChart').getContext('2d');
+  const revenuePeriodData = <%= raw @revenue_data[:revenue_by_period].to_json %>;
+
+  new Chart(revenuePeriodCtx, {
+    type: 'line',
+    data: {
+      labels: Object.keys(revenuePeriodData),
+      datasets: [{
+        label: 'Revenue',
+        data: Object.values(revenuePeriodData),
+        borderColor: 'rgb(59, 130, 246)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return '₦' + value.toLocaleString();
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Payment Status Chart
+  const paymentStatusCtx = document.getElementById('paymentStatusChart').getContext('2d');
+  const paymentStatusData = <%= raw @revenue_data[:payment_status_breakdown].to_json %>;
+
+  new Chart(paymentStatusCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Paid', 'Partial', 'Unpaid'],
+      datasets: [{
+        data: [
+          paymentStatusData.paid || 0,
+          paymentStatusData.partial || 0,
+          paymentStatusData.unpaid || 0
+        ],
+        backgroundColor: [
+          'rgb(34, 197, 94)',
+          'rgb(251, 191, 36)',
+          'rgb(239, 68, 68)'
+        ],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+</script>

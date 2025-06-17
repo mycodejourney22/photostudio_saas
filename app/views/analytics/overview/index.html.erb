@@ -1,0 +1,326 @@
+<!-- app/views/analytics/overview/index.html.erb -->
+<% content_for :title, "Sales Analytics - #{current_tenant.name}" %>
+
+<div class="min-h-screen bg-gray-50 flex">
+  <!-- Sidebar - Desktop -->
+  <div class="hidden lg:flex lg:flex-shrink-0">
+    <div class="flex flex-col w-64">
+      <div class="flex-1 flex flex-col min-h-0 bg-gradient-to-b from-blue-600 to-purple-700">
+        <%= render 'shared/sidebar' %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile sidebar overlay -->
+  <div class="lg:hidden" data-controller="mobile-navigation">
+    <!-- Mobile menu button -->
+    <div class="fixed top-4 left-4 z-50">
+      <button data-action="mobile-navigation#toggleMenu"
+              class="bg-white p-2 rounded-lg shadow-lg text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile backdrop -->
+    <div data-mobile-navigation-target="backdrop"
+         data-action="click->mobile-navigation#closeOnBackdrop"
+         class="hidden fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+
+    <!-- Mobile sidebar -->
+    <div data-mobile-navigation-target="menu"
+         class="fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-blue-600 to-purple-700 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out">
+      <%= render 'shared/sidebar' %>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
+      <div class="px-4 lg:px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 min-w-0 ml-12 lg:ml-0">
+            <h1 class="text-xl lg:text-2xl font-bold text-gray-900">
+              Sales Analytics & Insights
+            </h1>
+            <p class="text-gray-600 text-sm mt-1">Advanced analytics and performance insights for your business</p>
+          </div>
+          <div class="flex items-center space-x-4">
+            <!-- Period Selector -->
+            <select class="form-input text-sm" onchange="updatePeriod(this.value)">
+              <option value="month" <%= 'selected' if params[:period] == 'month' %>>This Month</option>
+              <option value="week" <%= 'selected' if params[:period] == 'week' %>>This Week</option>
+              <option value="quarter" <%= 'selected' if params[:period] == 'quarter' %>>This Quarter</option>
+              <option value="year" <%= 'selected' if params[:period] == 'year' %>>This Year</option>
+            </select>
+            <%= link_to reports_sales_monthly_path, class: "btn btn-secondary" do %>
+              📊 Reports
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main content area -->
+    <main class="flex-1 overflow-auto bg-gray-50">
+      <div class="px-4 lg:px-6 py-6">
+
+        <!-- Overview Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="dashboard-stat">
+            <div class="dashboard-stat-value">₦<%= number_with_delimiter(@analytics_data[:overview_stats][:total_revenue].to_i) %></div>
+            <div class="dashboard-stat-label">Total Revenue</div>
+            <% if @analytics_data[:growth_metrics][:revenue_growth] != 0 %>
+              <div class="mt-2 flex items-center">
+                <% if @analytics_data[:growth_metrics][:revenue_growth] > 0 %>
+                  <svg class="w-4 h-4 text-green-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                  <span class="text-green-600 text-sm font-medium">+<%= @analytics_data[:growth_metrics][:revenue_growth] %>%</span>
+                <% else %>
+                  <svg class="w-4 h-4 text-red-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                  <span class="text-red-600 text-sm font-medium"><%= @analytics_data[:growth_metrics][:revenue_growth] %>%</span>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+
+          <div class="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg p-6 shadow-lg">
+            <div class="dashboard-stat-value"><%= @analytics_data[:overview_stats][:total_sales] %></div>
+            <div class="text-green-100 text-sm">Total Sales</div>
+            <% if @analytics_data[:growth_metrics][:sales_count_growth] != 0 %>
+              <div class="mt-2 flex items-center">
+                <% if @analytics_data[:growth_metrics][:sales_count_growth] > 0 %>
+                  <svg class="w-4 h-4 text-green-200 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                  <span class="text-green-200 text-sm font-medium">+<%= @analytics_data[:growth_metrics][:sales_count_growth] %>%</span>
+                <% else %>
+                  <span class="text-green-200 text-sm font-medium"><%= @analytics_data[:growth_metrics][:sales_count_growth] %>%</span>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+
+          <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg p-6 shadow-lg">
+            <div class="dashboard-stat-value">₦<%= number_with_delimiter(@analytics_data[:overview_stats][:avg_sale_value].to_i) %></div>
+            <div class="text-purple-100 text-sm">Average Sale</div>
+          </div>
+
+          <div class="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg p-6 shadow-lg">
+            <div class="dashboard-stat-value"><%= @analytics_data[:overview_stats][:total_customers] %></div>
+            <div class="text-orange-100 text-sm">Active Customers</div>
+          </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <!-- Revenue Trend Chart -->
+          <div class="dashboard-card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Revenue Trend</h3>
+            <canvas id="revenueChart" width="400" height="200"></canvas>
+          </div>
+
+          <!-- Sales Distribution -->
+          <div class="dashboard-card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Daily Sales Distribution</h3>
+            <canvas id="salesChart" width="400" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <!-- Top Performers -->
+          <div class="dashboard-card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Top Performing Staff</h3>
+            <div class="space-y-3">
+              <% @analytics_data[:top_performers][:top_staff].each_with_index do |(staff_id, revenue), index| %>
+                <% staff = current_tenant.staff_members.find(staff_id) rescue nil %>
+                <% next unless staff %>
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                      <%= index + 1 %>
+                    </div>
+                    <span class="font-medium"><%= staff.full_name %></span>
+                  </div>
+                  <span class="text-green-600 font-bold">₦<%= number_with_delimiter(revenue.to_i) %></span>
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+          <!-- Top Services -->
+          <div class="dashboard-card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Popular Services</h3>
+            <div class="space-y-3">
+              <% @analytics_data[:top_performers][:top_services].each_with_index do |(service_name, revenue), index| %>
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                      <%= index + 1 %>
+                    </div>
+                    <span class="font-medium"><%= service_name %></span>
+                  </div>
+                  <span class="text-green-600 font-bold">₦<%= number_with_delimiter(revenue.to_i) %></span>
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+          <!-- Key Insights -->
+          <div class="dashboard-card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Key Insights</h3>
+            <div class="space-y-4">
+              <% @analytics_data[:key_insights].each do |insight| %>
+                <div class="flex items-start space-x-3">
+                  <div class="w-2 h-2 rounded-full mt-2
+                    <%= case insight[:type]
+                        when 'positive' then 'bg-green-500'
+                        when 'warning' then 'bg-orange-500'
+                        when 'info' then 'bg-blue-500'
+                        else 'bg-gray-500'
+                        end %>"></div>
+                  <div>
+                    <p class="text-sm font-medium"><%= insight[:title] %></p>
+                    <p class="text-xs text-gray-600"><%= insight[:message] %></p>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Analytics Links -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <%= link_to analytics_revenue_path, class: "dashboard-card hover:shadow-lg transition-shadow" do %>
+            <div class="text-center">
+              <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                </svg>
+              </div>
+              <h4 class="font-medium text-gray-900">Revenue Analytics</h4>
+              <p class="text-sm text-gray-600 mt-1">Detailed revenue breakdown and forecasting</p>
+            </div>
+          <% end %>
+
+          <%= link_to analytics_customers_path, class: "dashboard-card hover:shadow-lg transition-shadow" do %>
+            <div class="text-center">
+              <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+              </div>
+              <h4 class="font-medium text-gray-900">Customer Analytics</h4>
+              <p class="text-sm text-gray-600 mt-1">Customer behavior and retention insights</p>
+            </div>
+          <% end %>
+
+          <%= link_to analytics_staff_performance_path, class: "dashboard-card hover:shadow-lg transition-shadow" do %>
+            <div class="text-center">
+              <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+              </div>
+              <h4 class="font-medium text-gray-900">Staff Performance</h4>
+              <p class="text-sm text-gray-600 mt-1">Individual and team performance metrics</p>
+            </div>
+          <% end %>
+
+          <%= link_to analytics_service_popularity_path, class: "dashboard-card hover:shadow-lg transition-shadow" do %>
+            <div class="text-center">
+              <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                </svg>
+              </div>
+              <h4 class="font-medium text-gray-900">Service Analytics</h4>
+              <p class="text-sm text-gray-600 mt-1">Service popularity and performance trends</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+  // Revenue Trend Chart
+  const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+  const revenueData = <%= raw @analytics_data[:revenue_trend].to_json %>;
+
+  new Chart(revenueCtx, {
+    type: 'line',
+    data: {
+      labels: revenueData.map(d => d.date),
+      datasets: [{
+        label: 'Revenue',
+        data: revenueData.map(d => d.revenue),
+        borderColor: 'rgb(59, 130, 246)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return '₦' + value.toLocaleString();
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Sales Distribution Chart
+  const salesCtx = document.getElementById('salesChart').getContext('2d');
+  const salesData = <%= raw @analytics_data[:sales_distribution].to_json %>;
+
+  new Chart(salesCtx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(salesData),
+      datasets: [{
+        label: 'Sales Count',
+        data: Object.values(salesData),
+        backgroundColor: 'rgba(34, 197, 94, 0.8)',
+        borderColor: 'rgb(34, 197, 94)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+
+  function updatePeriod(period) {
+    window.location.href = '<%= analytics_overview_path %>?period=' + period;
+  }
+</script>

@@ -5,6 +5,7 @@ class Customer < ApplicationRecord
   # has_many :customer_photos, dependent: :destroy
 
   has_one_attached :profile_image
+  has_many :sales, dependent: :destroy
 
   validates :first_name, :last_name, presence: true
   validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }

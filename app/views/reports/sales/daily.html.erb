@@ -1,0 +1,246 @@
+<!-- app/views/reports/sales/daily.html.erb -->
+<% content_for :title, "Daily Sales Report - #{@date.strftime('%B %d, %Y')} - #{current_tenant.name}" %>
+
+<div class="min-h-screen bg-gray-50 flex">
+  <!-- Sidebar - Desktop -->
+  <div class="hidden lg:flex lg:flex-shrink-0">
+    <div class="flex flex-col w-64">
+      <div class="flex-1 flex flex-col min-h-0 bg-gradient-to-b from-blue-600 to-purple-700">
+        <%= render 'shared/sidebar' %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile sidebar overlay -->
+  <div class="lg:hidden" data-controller="mobile-navigation">
+    <!-- Mobile menu button -->
+    <div class="fixed top-4 left-4 z-50">
+      <button data-action="mobile-navigation#toggleMenu"
+              class="bg-white p-2 rounded-lg shadow-lg text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile backdrop -->
+    <div data-mobile-navigation-target="backdrop"
+         data-action="click->mobile-navigation#closeOnBackdrop"
+         class="hidden fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+
+    <!-- Mobile sidebar -->
+    <div data-mobile-navigation-target="menu"
+         class="fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-blue-600 to-purple-700 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out">
+      <%= render 'shared/sidebar' %>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
+      <div class="px-4 lg:px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 min-w-0 ml-12 lg:ml-0">
+            <h1 class="text-xl lg:text-2xl font-bold text-gray-900">
+              Sales Breakdown for <%= @date.strftime('%A, %B %d, %Y') %>
+            </h1>
+            <p class="text-gray-600 text-sm mt-1">Detailed sales information and customer transactions</p>
+          </div>
+          <div class="flex items-center space-x-4">
+            <%= link_to reports_sales_monthly_path, class: "btn btn-secondary" do %>
+              📅 Back to Monthly
+            <% end %>
+            <%= link_to analytics_overview_path, class: "btn btn-primary" do %>
+              📈 Analytics
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main content area -->
+    <main class="flex-1 overflow-auto bg-gray-50">
+      <div class="px-4 lg:px-6 py-6">
+
+        <!-- Date Navigation -->
+        <div class="dashboard-card mb-6">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+              <%= link_to reports_sales_daily_path(date: @date - 1.day),
+                    class: "btn btn-secondary" do %>
+                ← Previous Day
+              <% end %>
+              <h2 class="text-2xl font-bold text-gray-900"><%= @date.strftime('%A, %B %d, %Y') %></h2>
+              <% unless @date >= Date.current %>
+                <%= link_to reports_sales_daily_path(date: @date + 1.day),
+                      class: "btn btn-secondary" do %>
+                  Next Day →
+                <% end %>
+              <% end %>
+            </div>
+            <div class="text-right">
+              <div class="text-3xl font-bold text-green-600">
+                ₦<%= number_with_delimiter(@daily_stats[:total_revenue].to_i) %>
+              </div>
+              <div class="text-sm text-gray-600">Total Daily Revenue</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Daily Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="dashboard-stat">
+            <div class="dashboard-stat-value"><%= @daily_stats[:total_sales] %></div>
+            <div class="dashboard-stat-label">Total Sales</div>
+          </div>
+
+          <div class="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg p-6 shadow-lg">
+            <div class="dashboard-stat-value">₦<%= number_with_delimiter(@daily_stats[:avg_sale].to_i) %></div>
+            <div class="text-green-100 text-sm">Average Sale</div>
+          </div>
+
+          <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg p-6 shadow-lg">
+            <div class="dashboard-stat-value"><%= @daily_stats[:paid_sales] %></div>
+            <div class="text-purple-100 text-sm">Paid Sales</div>
+          </div>
+
+          <div class="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg p-6 shadow-lg">
+            <div class="dashboard-stat-value">₦<%= number_with_delimiter(@daily_stats[:outstanding].to_i) %></div>
+            <div class="text-orange-100 text-sm">Outstanding</div>
+          </div>
+        </div>
+
+        <!-- Sales Breakdown Table -->
+        <div class="dashboard-card mb-8">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">Sales Breakdown</h3>
+            <div class="flex space-x-2">
+              <%= link_to new_sale_path, class: "btn btn-primary" do %>
+                + New Sale
+              <% end %>
+            </div>
+          </div>
+
+          <% if @sales.any? %>
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sale</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <% @sales.each do |sale| %>
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <p class="text-sm font-medium text-gray-900"><%= sale.sale_number %></p>
+                          <p class="text-xs text-gray-500"><%= sale.sale_date.strftime('%I:%M %p') %></p>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <p class="text-sm font-medium text-gray-900"><%= sale.customer_name %></p>
+                          <p class="text-xs text-gray-500"><%= sale.customer_email %></p>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <p class="text-sm text-gray-900"><%= sale.staff_name %></p>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <p class="text-sm font-medium text-gray-900">₦<%= number_with_delimiter(sale.total_amount.to_i) %></p>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <p class="text-sm text-gray-900">₦<%= number_with_delimiter((sale.paid_amount || 0).to_i) %></p>
+                          <% if sale.payment_method.present? %>
+                            <p class="text-xs text-gray-500"><%= sale.payment_method.humanize %></p>
+                          <% end %>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
+                          <%= case sale.payment_status
+                              when 'paid' then 'bg-green-100 text-green-800'
+                              when 'partial' then 'bg-yellow-100 text-yellow-800'
+                              when 'unpaid' then 'bg-red-100 text-red-800'
+                              else 'bg-gray-100 text-gray-800'
+                              end %>">
+                          <%= sale.payment_status.humanize %>
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-2">
+                          <%= link_to sale, class: "text-blue-600 hover:text-blue-900" do %>
+                            View
+                          <% end %>
+                          <% if sale.payment_status != 'paid' %>
+                            <%= link_to "#", class: "text-green-600 hover:text-green-900",
+                                  onclick: "addPayment(#{sale.id})" do %>
+                              Pay
+                            <% end %>
+                          <% end %>
+                        </div>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% else %>
+            <div class="text-center py-12">
+              <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              <h3 class="mt-2 text-sm font-medium text-gray-900">No sales found</h3>
+              <p class="mt-1 text-sm text-gray-500">No sales were recorded for this date.</p>
+              <div class="mt-6">
+                <%= link_to new_sale_path, class: "btn btn-primary" do %>
+                  Create New Sale
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Sale Items Breakdown -->
+        <% if @sale_items.any? %>
+          <div class="dashboard-card">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">Items Sold Today</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <% @sale_items.group_by(&:name).each do |item_name, items| %>
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-medium text-gray-900"><%= item_name %></h4>
+                    <span class="text-sm text-gray-500">×<%= items.sum(&:quantity) %></span>
+                  </div>
+                  <div class="text-sm text-gray-600 mb-2">
+                    <%= items.first.item_type.humanize %>
+                  </div>
+                  <div class="text-lg font-bold text-green-600">
+                    ₦<%= number_with_delimiter(items.sum(&:total_price).to_i) %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+  function addPayment(saleId) {
+    // This would open a modal or redirect to add payment
+    // For now, just redirect to the sale show page
+    window.location.href = `/sales/${saleId}`;
+  }
+</script>
