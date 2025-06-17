@@ -2,7 +2,7 @@
 <% content_for :title, "Book Your Session - #{@tenant.name}" %>
 <% content_for :body_class, "bg-gray-50 min-h-screen" %>
 
-<div class="max-w-7xl mx-auto px-4 py-8">
+<div class="max-w-6xl mx-auto px-4 py-8">
   <!-- Header -->
   <div class="text-center mb-12">
     <div class="mb-6">
@@ -10,95 +10,107 @@
         <%= image_tag @tenant.logo, alt: @tenant.name, class: "h-16 mx-auto mb-4" %>
       <% end %>
       <h1 class="text-4xl font-bold text-gray-900 mb-4">Book Your Photography Session</h1>
-      <p class="text-xl text-gray-600">Choose your location and service to get started</p>
+      <p class="text-xl text-gray-600">Choose your studio location to get started</p>
     </div>
   </div>
 
-  <% if @location_services.any? %>
-    <!-- Location & Services Grid -->
-    <div class="space-y-12">
-      <% @location_services.each do |location, services| %>
-        <% if services.any? %>
-          <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <!-- Location Header -->
-            <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-6">
-              <div class="flex items-center justify-between">
-                <div>
-                  <h2 class="text-2xl font-bold text-white"><%= location.name %></h2>
-                  <% if location.address.present? %>
-                    <p class="text-blue-100 mt-1"><%= location.address %></p>
-                  <% end %>
-                </div>
-                <div class="text-blue-100">
-                  <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                  </svg>
-                </div>
+  <!-- Progress Bar -->
+  <div class="mb-8">
+    <div class="flex items-center justify-center">
+      <div class="flex items-center text-sm">
+        <div class="flex items-center text-blue-600">
+          <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">1</div>
+          <span class="ml-2 font-medium">Location</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-200 mx-4"></div>
+        <div class="flex items-center text-gray-400">
+          <div class="w-8 h-8 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-sm">2</div>
+          <span class="ml-2">Service</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-200 mx-4"></div>
+        <div class="flex items-center text-gray-400">
+          <div class="w-8 h-8 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-sm">3</div>
+          <span class="ml-2">Package</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-200 mx-4"></div>
+        <div class="flex items-center text-gray-400">
+          <div class="w-8 h-8 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-sm">4</div>
+          <span class="ml-2">Time</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-200 mx-4"></div>
+        <div class="flex items-center text-gray-400">
+          <div class="w-8 h-8 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-sm">5</div>
+          <span class="ml-2">Details</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <% if @studio_locations.any? %>
+    <!-- Studio Locations Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <% @studio_locations.each do |location| %>
+        <% services_count = location.service_packages.active.count %>
+        <% if services_count > 0 %>
+          <div class="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+            <!-- Location Image Placeholder -->
+            <div class="h-48 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+              <div class="text-center">
+                <svg class="w-16 h-16 text-blue-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <div class="text-sm text-blue-600 font-medium">Studio Location</div>
               </div>
             </div>
 
-            <!-- Services for this location -->
+            <!-- Location Details -->
             <div class="p-6">
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <% services.each do |service| %>
-                  <div class="border rounded-xl p-6 hover:shadow-lg transition-all duration-200 hover:border-blue-300">
-                    <!-- Service Image Placeholder -->
-                    <div class="h-48 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg mb-4 flex items-center justify-center">
-                      <div class="text-center">
-                        <svg class="w-16 h-16 text-blue-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        <div class="text-xs text-blue-600 font-medium"><%= service.category.humanize %></div>
-                      </div>
-                    </div>
+              <h3 class="text-2xl font-bold text-gray-900 mb-3"><%= location.name %></h3>
 
-                    <!-- Service Details -->
-                    <div class="mb-4">
-                      <h3 class="text-xl font-bold text-gray-900 mb-2"><%= service.name %></h3>
-                      <% if service.description.present? %>
-                        <p class="text-gray-600 text-sm mb-3"><%= truncate(service.description, length: 120) %></p>
-                      <% end %>
-                    </div>
+              <% if location.description.present? %>
+                <p class="text-gray-600 mb-4"><%= location.description %></p>
+              <% end %>
 
-                    <!-- Pricing & Tiers -->
-                    <div class="mb-4">
-                      <div class="text-sm text-gray-500 mb-1">Starting from</div>
-                      <div class="text-2xl font-bold text-gray-900 mb-2">
-                        $<%= number_with_delimiter(service.service_tiers.active.minimum(:price).to_i) %>
-                      </div>
-                      <div class="text-sm text-gray-500">
-                        <%= pluralize(service.service_tiers.active.count, 'package option') %> available
-                      </div>
-                    </div>
+              <!-- Address -->
+              <% if location.full_address.present? %>
+                <div class="flex items-start text-sm text-gray-500 mb-4">
+                  <svg class="w-4 h-4 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  <span><%= location.full_address %></span>
+                </div>
+              <% end %>
 
-                    <!-- Service Tiers Preview -->
-                    <div class="space-y-2 mb-6">
-                      <% service.service_tiers.active.limit(3).each do |tier| %>
-                        <div class="flex justify-between items-center text-sm">
-                          <span class="text-gray-700"><%= tier.name %></span>
-                          <span class="font-semibold text-gray-900">$<%= number_with_delimiter(tier.price.to_i) %></span>
-                        </div>
-                      <% end %>
-                      <% if service.service_tiers.active.count > 3 %>
-                        <div class="text-xs text-gray-500">+ <%= service.service_tiers.active.count - 3 %> more options</div>
-                      <% end %>
-                    </div>
-
-                    <!-- Book Now Button -->
-                    <% if service.service_tiers.any? %>
-                    <%= link_to public_booking_calendar_path(@tenant.subdomain,
-                                  studio_location_id: location.id,
-                                  service_package_id: service.id,
-                                  service_tier_id: service.service_tiers.active.first.id ),
-                          class: "w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-xl font-semibold text-center block hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5" do %>
-                      Book This Service
-                    <% end %>
-                    <% end %>
-                  </div>
-                <% end %>
+              <!-- Operating Hours Preview -->
+              <div class="text-sm text-gray-500 mb-4">
+                <div class="flex items-center">
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <% today_hours = location.operating_hours_for_day(Date.current.strftime('%A').downcase) %>
+                  <% if today_hours['start'].present? %>
+                    Today: <%= today_hours['start'] %> - <%= today_hours['end'] %>
+                  <% else %>
+                    Closed today
+                  <% end %>
+                </div>
               </div>
+
+              <!-- Services Available Count -->
+              <div class="text-sm text-blue-600 mb-6 font-medium">
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <%= pluralize(services_count, 'service') %> available
+              </div>
+
+              <!-- CTA Button -->
+              <%= link_to public_booking_services_path(@tenant.subdomain, studio_location_id: location.id),
+                    class: "w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-center block" do %>
+                Select This Location
+              <% end %>
             </div>
           </div>
         <% end %>
@@ -109,7 +121,8 @@
     <div class="text-center py-16">
       <div class="mx-auto h-24 w-24 text-gray-400 mb-6">
         <svg class="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
       </div>
       <h3 class="text-2xl font-bold text-gray-900 mb-4">No Services Available</h3>
@@ -131,7 +144,7 @@
             <%= link_to "mailto:#{@tenant.email}",
                   class: "inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" do %>
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 3.26a2 2 0 001.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
               </svg>
               Email Us
             <% end %>
@@ -140,39 +153,4 @@
       <% end %>
     </div>
   <% end %>
-
-  <!-- Trust Signals -->
-  <div class="mt-16 text-center">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <div class="flex flex-col items-center">
-        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-        </div>
-        <h4 class="font-semibold text-gray-900 mb-2">Easy Booking</h4>
-        <p class="text-gray-600 text-sm">Simple online booking in just a few clicks</p>
-      </div>
-
-      <div class="flex flex-col items-center">
-        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-          </svg>
-        </div>
-        <h4 class="font-semibold text-gray-900 mb-2">Secure Payment</h4>
-        <p class="text-gray-600 text-sm">Safe and secure online payment processing</p>
-      </div>
-
-      <div class="flex flex-col items-center">
-        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-          <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-          </svg>
-        </div>
-        <h4 class="font-semibold text-gray-900 mb-2">Professional Service</h4>
-        <p class="text-gray-600 text-sm">High-quality photography sessions with experienced professionals</p>
-      </div>
-    </div>
-  </div>
 </div>

@@ -24,6 +24,7 @@ Rails.application.routes.draw do
   scope :book do
     get '/:tenant_slug', to: 'public_booking#index', as: :public_booking
     get '/:tenant_slug/services', to: 'public_booking#services', as: :public_booking_services
+    get '/:tenant_slug/tiers', to: 'public_booking#tiers', as: :public_booking_tiers
     get '/:tenant_slug/calendar', to: 'public_booking#calendar', as: :public_booking_calendar
     get '/:tenant_slug/details', to: 'public_booking#details', as: :public_booking_details
     post '/:tenant_slug/create', to: 'public_booking#create', as: :public_booking_create

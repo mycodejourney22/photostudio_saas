@@ -1,0 +1,138 @@
+<!-- app/views/public_booking/services.html.erb -->
+<% content_for :title, "Choose Service - #{@studio_location.name}" %>
+<% content_for :body_class, "bg-gray-50 min-h-screen" %>
+
+<div class="max-w-6xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <% if @tenant.logo.present? %>
+      <%= image_tag @tenant.logo, alt: @tenant.name, class: "h-16 mx-auto mb-4" %>
+    <% end %>
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Choose Your Service</h1>
+    <p class="text-lg text-gray-600">at <%= @studio_location.name %></p>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="mb-8">
+    <div class="flex items-center justify-center">
+      <div class="flex items-center text-sm">
+        <div class="flex items-center text-green-600">
+          <div class="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <span class="ml-2 font-medium text-green-600">Location</span>
+        </div>
+        <div class="w-16 h-1 bg-green-300 mx-4"></div>
+        <div class="flex items-center text-blue-600">
+          <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">2</div>
+          <span class="ml-2 font-medium">Service</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-200 mx-4"></div>
+        <div class="flex items-center text-gray-400">
+          <div class="w-8 h-8 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-sm">3</div>
+          <span class="ml-2">Package</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-200 mx-4"></div>
+        <div class="flex items-center text-gray-400">
+          <div class="w-8 h-8 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-sm">4</div>
+          <span class="ml-2">Time</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-200 mx-4"></div>
+        <div class="flex items-center text-gray-400">
+          <div class="w-8 h-8 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-sm">5</div>
+          <span class="ml-2">Details</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Location Info -->
+  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+    <div class="flex items-center">
+      <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+      <span class="font-medium text-blue-900"><%= @studio_location.name %></span>
+      <% if @studio_location.full_address.present? %>
+        <span class="text-blue-700 ml-2">• <%= @studio_location.full_address %></span>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Service Packages -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <% @service_packages.each do |package| %>
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1">
+        <!-- Service Image Placeholder -->
+        <div class="h-48 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+          <div class="text-center">
+            <svg class="w-16 h-16 text-blue-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <div class="text-xs text-blue-600 font-medium"><%= package.category.humanize %></div>
+          </div>
+        </div>
+
+        <div class="p-6">
+          <h3 class="text-xl font-semibold text-gray-900 mb-2"><%= package.name %></h3>
+
+          <% if package.description.present? %>
+            <p class="text-gray-600 mb-4"><%= package.description %></p>
+          <% end %>
+
+          <!-- Starting Price -->
+          <div class="mb-6">
+            <div class="text-sm text-gray-500 mb-1">Starting from</div>
+            <div class="text-3xl font-bold text-gray-900">
+              $<%= number_with_delimiter(package.starting_price.to_i) %>
+            </div>
+          </div>
+
+          <!-- Tier Count -->
+          <div class="mb-6">
+            <div class="text-sm text-gray-500">
+              <%= pluralize(package.service_tiers.active.count, 'package option') %> available
+            </div>
+          </div>
+
+          <!-- CTA Button -->
+          <%= link_to public_booking_tiers_path(@tenant.subdomain,
+                        studio_location_id: @studio_location.id,
+                        service_package_id: package.id),
+                class: "w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-center block" do %>
+            View Packages
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Back Button -->
+  <div class="text-center mt-8">
+    <%= link_to public_booking_path(@tenant.subdomain),
+          class: "inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors" do %>
+      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      Change Location
+    <% end %>
+  </div>
+
+  <% if @service_packages.empty? %>
+    <div class="text-center py-12">
+      <div class="mx-auto h-12 w-12 text-gray-400 mb-4">
+        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+      </div>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">No Services Available</h3>
+      <p class="text-gray-600 mb-4">This location doesn't have any services configured yet.</p>
+      <%= link_to "Choose Different Location", public_booking_path(@tenant.subdomain),
+            class: "inline-block bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors" %>
+    </div>
+  <% end %>
+</div>

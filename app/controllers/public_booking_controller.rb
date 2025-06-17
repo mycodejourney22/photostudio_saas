@@ -6,19 +6,13 @@ class PublicBookingController < ActionController::Base
   before_action :set_tenant_from_slug
   before_action :set_booking_session
   before_action :set_studio_locations, only: [:index]
-  before_action :set_studio_location, only: [:calendar, :details, :create]
-  before_action :set_service_package, only: [:calendar, :details, :create]
+  before_action :set_studio_location, only: [:services, :tiers, :calendar, :details, :create]
+  before_action :set_service_package, only: [:tiers, :calendar, :details, :create]
   before_action :set_service_tier, only: [:calendar, :details, :create]
 
-  # Step 1: Select Studio Location & Service (Combined)
+  # Step 1: Select Studio Location (Studios only - no packages shown)
   def index
     @studio_locations = @tenant.studio_locations.active.order(:sort_order, :name)
-
-    # Group service packages by location for easier display
-    @location_services = {}
-    @studio_locations.each do |location|
-      @location_services[location] = location.service_packages.active.includes(:service_tiers).order(:sort_order, :name)
-    end
 
     # If no locations have service packages, show appropriate message
     if @studio_locations.none? { |location| location.service_packages.active.exists? }
@@ -26,17 +20,28 @@ class PublicBookingController < ActionController::Base
     end
   end
 
-  # Step 2: Services (if coming from index with location selection)
+  # Step 2: Select Service Package (for a specific studio)
   def services
-    @service_packages = @tenant.service_packages.active.includes(:service_tiers).order(:sort_order, :name)
+    @service_packages = @studio_location.service_packages.active.includes(:service_tiers).order(:sort_order, :name)
 
     if @service_packages.empty?
-      redirect_to public_booking_path(@tenant.subdomain), alert: 'No services available. Please contact us directly.'
+      redirect_to public_booking_path(@tenant.subdomain), alert: 'No services available at this location. Please choose a different location or contact us directly.'
       return
     end
   end
 
-  # Step 3: Calendar/Time Selection
+  # Step 3: Select Service Tier (for a specific service package)
+  def tiers
+    @service_tiers = @service_package.service_tiers.active.order(:sort_order, :name)
+
+    if @service_tiers.empty?
+      redirect_to public_booking_services_path(@tenant.subdomain, studio_location_id: @studio_location.id),
+                  alert: 'No packages available for this service. Please choose a different service.'
+      return
+    end
+  end
+
+  # Step 4: Calendar/Time Selection
   def calendar
     @selected_date = params[:date]&.to_date || Date.current + 1.day
     @available_dates = calculate_available_dates
@@ -62,7 +67,7 @@ class PublicBookingController < ActionController::Base
     @booking_session[:duration] = @service_tier.duration_minutes
   end
 
-  # Step 4: Customer Details & Payment
+  # Step 5: Customer Details & Payment
   def details
     @selected_slot = params[:slot]
     @selected_date = params[:date]
@@ -76,18 +81,14 @@ class PublicBookingController < ActionController::Base
       return
     end
 
-    # Store slot selection
+    # Store slot selection in session
     @booking_session[:selected_slot] = @selected_slot
     @booking_session[:selected_date] = @selected_date
-    @booking_session[:studio_location_id] = params[:studio_location_id]
-    @booking_session[:service_package_id] = params[:service_package_id]
-    @booking_session[:service_tier_id] = params[:service_tier_id]
 
     @customer = Customer.new
     @total_price = @service_tier.price
   end
 
-  # Step 5: Create Booking
   def create
     @customer_params = customer_params
     @appointment_params = appointment_params
@@ -103,33 +104,32 @@ class PublicBookingController < ActionController::Base
       @appointment = create_appointment
 
       if @appointment.persisted?
-        # Process payment or redirect to confirmation
+        # Clear booking session
+        session[:booking] = {}
+
+        # Redirect to confirmation
         redirect_to public_booking_confirmation_path(@tenant.subdomain, @appointment)
       else
+        @total_price = @service_tier.price
         flash.now[:alert] = "There was a problem booking your appointment: #{@appointment.errors.full_messages.join(', ')}"
         render :details, status: :unprocessable_entity
       end
     else
+      @total_price = @service_tier.price
       render :details, status: :unprocessable_entity
     end
   end
 
-  # Step 6: Confirmation page
   def confirmation
     @appointment = @tenant.appointments.find(params[:appointment_id])
-
-    # Clear booking session
-    session.delete(:booking)
-
-    # Ensure only confirmed appointments can be viewed
-    unless @appointment.confirmed? || @appointment.paid? || @appointment.pending?
-      redirect_to public_booking_path(@tenant.subdomain), alert: 'Appointment not found or not confirmed.'
-    end
+    @customer = @appointment.customer
+    @service_tier = @appointment.service_tier
+    @service_package = @appointment.service_package
+    @studio_location = @appointment.studio_location
   rescue ActiveRecord::RecordNotFound
     redirect_to public_booking_path(@tenant.subdomain), alert: 'Appointment not found.'
   end
 
-  # Payment callback (if using payment processing)
   def payment_callback
     reference = params[:reference]
 
@@ -181,16 +181,20 @@ class PublicBookingController < ActionController::Base
 
   def set_service_package
     package_id = params[:service_package_id] || @booking_session[:service_package_id]
-    @service_package = @tenant.service_packages.find_by!(id: package_id)
+    @service_package = @studio_location.service_packages.find_by!(id: package_id)
   rescue ActiveRecord::RecordNotFound
-    redirect_to public_booking_path(@tenant.subdomain), alert: 'Service not found.'
+    redirect_to public_booking_services_path(@tenant.subdomain, studio_location_id: @studio_location.id),
+                alert: 'Service not found.'
   end
 
   def set_service_tier
     tier_id = params[:service_tier_id] || @booking_session[:service_tier_id]
     @service_tier = @service_package.service_tiers.active.find(tier_id)
   rescue ActiveRecord::RecordNotFound
-    redirect_to public_booking_path(@tenant.subdomain), alert: 'Service tier not found.'
+    redirect_to public_booking_tiers_path(@tenant.subdomain,
+                  studio_location_id: @studio_location.id,
+                  service_package_id: @service_package.id),
+                alert: 'Service tier not found.'
   end
 
   def calculate_available_dates
@@ -262,30 +266,22 @@ class PublicBookingController < ActionController::Base
 
     # Check each appointment for time conflicts using Ruby
     appointments_on_date.none? do |appointment|
-      appointment_start = appointment.scheduled_at
-      appointment_end = appointment_start + appointment.duration_minutes.minutes
+      existing_start = appointment.scheduled_at
+      existing_end = existing_start + appointment.duration_minutes.minutes
 
-      # Two time ranges overlap if: start < other_end AND end > other_start
-      start_time < appointment_end && end_time > appointment_start
+      # Check for any overlap
+      (start_time < existing_end) && (end_time > existing_start)
     end
   end
 
   def find_or_create_customer
-    existing_customer = @tenant.customers.find_by(email: @customer_params[:email])
+    customer = @tenant.customers.find_by(email: @customer_params[:email])
 
-    if existing_customer
-      if existing_customer.update(@customer_params)
-        existing_customer
-      else
-        existing_customer # Return the customer with errors
-      end
+    if customer
+      customer.update(@customer_params)
+      customer
     else
-      customer = @tenant.customers.new(@customer_params.merge(active: true))
-      if customer.save
-        customer
-      else
-        customer # Return the customer with errors
-      end
+      @tenant.customers.create(@customer_params)
     end
   end
 
@@ -331,14 +327,21 @@ class PublicBookingController < ActionController::Base
     e.record
   end
 
+  def generate_payment_reference
+    "PAY_#{Time.current.to_i}_#{SecureRandom.hex(4).upcase}"
+  end
+
   def customer_params
-    params.require(:customer).permit(
-      :first_name, :last_name, :email, :phone,
-      :address, :city, :state, :zip_code, :notes
-    )
+    params.require(:customer).permit(:first_name, :last_name, :email, :phone, :notes)
   end
 
   def appointment_params
-    params.require(:appointment).permit(:notes, :special_requirements)
+    selected_date = params[:date] || @booking_session[:selected_date]
+    selected_slot = params[:slot] || @booking_session[:selected_slot]
+
+    params.require(:appointment).permit(:special_requests, :special_requirements, :notes).merge(
+      scheduled_at: DateTime.parse("#{selected_date} #{selected_slot}"),
+      duration_minutes: @service_tier.duration_minutes
+    )
   end
 end

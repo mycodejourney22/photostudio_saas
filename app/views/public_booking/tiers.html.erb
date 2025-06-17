@@ -1,0 +1,147 @@
+<!-- app/views/public_booking/tiers.html.erb -->
+<% content_for :title, "Choose Package - #{@service_package.name}" %>
+<% content_for :body_class, "bg-gray-50 min-h-screen" %>
+
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <% if @tenant.logo.present? %>
+      <%= image_tag @tenant.logo, alt: @tenant.name, class: "h-16 mx-auto mb-4" %>
+    <% end %>
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Choose Your Package</h1>
+    <p class="text-lg text-gray-600"><%= @service_package.name %> at <%= @studio_location.name %></p>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="mb-8">
+    <div class="flex items-center justify-center">
+      <div class="flex items-center text-sm">
+        <div class="flex items-center text-green-600">
+          <div class="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <span class="ml-2 font-medium text-green-600">Location</span>
+        </div>
+        <div class="w-16 h-1 bg-green-300 mx-4"></div>
+        <div class="flex items-center text-green-600">
+          <div class="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <span class="ml-2 font-medium text-green-600">Service</span>
+        </div>
+        <div class="w-16 h-1 bg-green-300 mx-4"></div>
+        <div class="flex items-center text-blue-600">
+          <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">3</div>
+          <span class="ml-2 font-medium">Package</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-200 mx-4"></div>
+        <div class="flex items-center text-gray-400">
+          <div class="w-8 h-8 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-sm">4</div>
+          <span class="ml-2">Time</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-200 mx-4"></div>
+        <div class="flex items-center text-gray-400">
+          <div class="w-8 h-8 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-sm">5</div>
+          <span class="ml-2">Details</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Breadcrumb Info -->
+  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+    <div class="flex items-center text-sm">
+      <svg class="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+      <span class="text-blue-900">
+        <span class="font-medium"><%= @studio_location.name %></span>
+        <span class="mx-2">→</span>
+        <span class="font-medium"><%= @service_package.name %></span>
+      </span>
+    </div>
+  </div>
+
+  <!-- Service Tiers -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <% @service_tiers.each_with_index do |tier, index| %>
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-200 <%= 'ring-2 ring-blue-500 transform scale-105' if index == 1 %>">
+        <% if index == 1 && @service_tiers.count > 2 %>
+          <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-center py-2 text-sm font-medium">
+            Most Popular
+          </div>
+        <% end %>
+
+        <div class="p-8">
+          <!-- Tier Name & Price -->
+          <div class="text-center mb-6">
+            <h3 class="text-2xl font-bold text-gray-900 mb-2"><%= tier.name %></h3>
+            <div class="text-4xl font-bold text-gray-900 mb-2">
+              $<%= number_with_delimiter(tier.price.to_i) %>
+            </div>
+            <div class="text-gray-500"><%= tier.duration_minutes %> minute session</div>
+          </div>
+
+          <!-- Description -->
+          <% if tier.description.present? %>
+            <p class="text-gray-600 text-center mb-6"><%= tier.description %></p>
+          <% end %>
+
+          <!-- Features -->
+          <% if tier.features.present? %>
+            <% features_list = tier.features.is_a?(Array) ? tier.features : tier.features.split("\n") %>
+            <ul class="space-y-3 mb-8">
+              <% features_list.each do |feature| %>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  <span class="text-gray-700"><%= feature.strip %></span>
+                </li>
+              <% end %>
+            </ul>
+          <% end %>
+
+          <!-- CTA Button -->
+          <%= link_to public_booking_calendar_path(@tenant.subdomain,
+                        studio_location_id: @studio_location.id,
+                        service_package_id: @service_package.id,
+                        service_tier_id: tier.id),
+                class: "w-full #{index == 1 && @service_tiers.count > 2 ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700' : 'bg-gray-900 hover:bg-gray-800'} text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-center block" do %>
+            Select <%= tier.name %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Back Button -->
+  <div class="text-center mt-8">
+    <%= link_to public_booking_services_path(@tenant.subdomain, studio_location_id: @studio_location.id),
+          class: "inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors" do %>
+      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      Back to Services
+    <% end %>
+  </div>
+
+  <% if @service_tiers.empty? %>
+    <div class="text-center py-12">
+      <div class="mx-auto h-12 w-12 text-gray-400 mb-4">
+        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+        </svg>
+      </div>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">No Packages Available</h3>
+      <p class="text-gray-600 mb-4">This service doesn't have any packages configured yet.</p>
+      <%= link_to "Choose Different Service", public_booking_services_path(@tenant.subdomain, studio_location_id: @studio_location.id),
+            class: "inline-block bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors" %>
+    </div>
+  <% end %>
+</div>
