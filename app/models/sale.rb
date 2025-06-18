@@ -9,6 +9,11 @@ class Sale < ApplicationRecord
   belongs_to :staff_member
   belongs_to :appointment, optional: true
   has_many :sale_items, dependent: :destroy
+  belongs_to :studio_location, optional: true  # Add this
+  validate :studio_location_belongs_to_tenant
+
+  before_validation :set_studio_location_from_appointment, if: -> { studio_location.blank? && appointment.present? }
+
 
   validates :sale_number, presence: true, uniqueness: { scope: :tenant_id }
   validates :total_amount, presence: true, numericality: { greater_than: 0 }, unless: :skip_total_validation?
@@ -17,6 +22,9 @@ class Sale < ApplicationRecord
   validates :sale_type, inclusion: { in: %w[appointment walk_in online phone] }
   validates :payment_status, inclusion: { in: %w[unpaid partial paid refunded] }
   validates :sale_status, inclusion: { in: %w[pending confirmed completed cancelled] }
+
+  scope :for_studio_location, ->(location) { where(studio_location: location) }
+  scope :for_studio_locations, ->(locations) { where(studio_location: locations) }
 
   validate :staff_member_can_process_sales
   validate :appointment_belongs_to_same_tenant, if: :appointment_id?
@@ -277,6 +285,18 @@ class Sale < ApplicationRecord
   #     break unless self.class.exists?(sale_number: sale_number, tenant_id: tenant_id)
   #   end
   # end
+
+  def studio_location_belongs_to_tenant
+    return unless studio_location
+
+    unless studio_location.tenant == tenant
+      errors.add(:studio_location, "must belong to the same tenant")
+    end
+  end
+
+  def set_studio_location_from_appointment
+    self.studio_location = appointment.studio_location if appointment&.studio_location
+  end
 
   def generate_sale_number
     return if sale_number.present?

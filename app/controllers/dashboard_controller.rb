@@ -194,15 +194,50 @@
 #     ((new_value - old_value) / old_value.to_f * 100).round(1)
 #   end
 # end
+# app/controllers/dashboard_controller.rb
+# app/controllers/dashboard_controller.rb
 class DashboardController < ApplicationController
-  before_action :authenticate_user!
-
   def index
-    @dashboard_analytics = DashboardAnalyticsService.new(current_tenant, Date.current)
+  #  binding.pry
+    @analytics = DashboardAnalyticsService.new(current_tenant, current_user)
+
+    @sales_metrics = @analytics.daily_sales_metrics
+    @booking_metrics = @analytics.booking_metrics
+    @photoshoot_metrics = @analytics.active_photoshoots_metrics
+    @expense_metrics = @analytics.expense_metrics
+    @photographer_utilization = @analytics.photographer_utilization
+    @operational_kpis = @analytics.operational_kpis
+    @financial_summary = @analytics.financial_summary
+    @usage_stats = @analytics.usage_statistics
+
+    # Permission flags
+    @can_view_analytics = user_can_view_analytics?
+    @can_view_basic_analytics = user_can_view_basic_analytics?
+
+    # Only show studio breakdown if user can see multiple studios
+    @studio_breakdown = @analytics.studio_breakdown if current_user.can_access_all_studios?(current_tenant)
   end
 
   private
 
-  # Remove the hardcoded methods since we're now using real data directly in the view
-  # The view will access current_tenant directly to get real-time data
+  def user_can_view_analytics?
+    return true if current_user.super_admin?
+
+    tenant_user = current_user.tenant_users.find_by(tenant: current_tenant)
+    return false unless tenant_user
+
+    case tenant_user.role
+    when 'owner', 'admin'
+      true
+    when 'staff'
+      staff_member = current_user.current_staff_member(current_tenant)
+      staff_member&.role&.in?(['manager', 'owner'])
+    else
+      false
+    end
+  end
+
+  def user_can_view_basic_analytics?
+    user_can_view_analytics? || current_user.tenant_users.find_by(tenant: current_tenant)&.staff?
+  end
 end

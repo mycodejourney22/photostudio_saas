@@ -3,6 +3,8 @@ class StaffMember < ApplicationRecord
   acts_as_tenant :tenant
 
   belongs_to :user, optional: true # Only for staff who have login access
+  belongs_to :studio_location, optional: true  # Add this
+
 
   # Appointment relationships
   has_many :appointments_as_photographer, class_name: 'Appointment', foreign_key: 'assigned_photographer_id'
@@ -154,6 +156,20 @@ class StaffMember < ApplicationRecord
 
   def can_edit_studio_settings?
     manager? || owner?
+  end
+
+  def assigned_to_studio?(studio_location)
+    self.studio_location == studio_location
+  end
+
+  def can_access_studio_data?(studio_location)
+    return true if owner? || manager?  # Owners and managers see all studios
+    assigned_to_studio?(studio_location)
+  end
+
+  def accessible_studio_locations
+    return tenant.studio_locations if owner? || manager?
+    studio_location.present? ? [studio_location] : []
   end
 
   # Sales performance methods

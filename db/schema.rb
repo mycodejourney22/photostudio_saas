@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_17_123731) do
+ActiveRecord::Schema[7.1].define(version: 2025_06_18_073536) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -255,6 +255,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_17_123731) do
     t.json "metadata", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "studio_location_id"
     t.index ["appointment_id", "sale_type", "created_at"], name: "index_sales_on_appointment_id_and_sale_type_and_created_at"
     t.index ["appointment_id", "sale_type"], name: "index_sales_on_appointment_id_and_sale_type"
     t.index ["appointment_id"], name: "index_sales_on_appointment_id"
@@ -262,11 +263,14 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_17_123731) do
     t.index ["customer_id"], name: "index_sales_on_customer_id"
     t.index ["sale_number"], name: "index_sales_on_sale_number", unique: true
     t.index ["staff_member_id"], name: "index_sales_on_staff_member_id"
+    t.index ["studio_location_id", "sale_date"], name: "index_sales_on_studio_location_id_and_sale_date"
+    t.index ["studio_location_id"], name: "index_sales_on_studio_location_id"
     t.index ["tenant_id", "customer_id"], name: "index_sales_on_tenant_id_and_customer_id"
     t.index ["tenant_id", "payment_status"], name: "index_sales_on_tenant_id_and_payment_status"
     t.index ["tenant_id", "sale_date"], name: "index_sales_on_tenant_id_and_sale_date"
     t.index ["tenant_id", "sale_status"], name: "index_sales_on_tenant_id_and_sale_status"
     t.index ["tenant_id", "staff_member_id"], name: "index_sales_on_tenant_id_and_staff_member_id"
+    t.index ["tenant_id", "studio_location_id"], name: "index_sales_on_tenant_id_and_studio_location_id"
     t.index ["tenant_id"], name: "index_sales_on_tenant_id"
   end
 
@@ -331,7 +335,10 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_17_123731) do
     t.json "metadata", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "studio_location_id"
+    t.index ["studio_location_id"], name: "index_staff_members_on_studio_location_id"
     t.index ["tenant_id", "role", "active"], name: "index_staff_members_on_tenant_id_and_role_and_active"
+    t.index ["tenant_id", "studio_location_id"], name: "index_staff_members_on_tenant_id_and_studio_location_id"
     t.index ["tenant_id", "user_id"], name: "index_staff_members_on_tenant_id_and_user_id", unique: true, where: "(user_id IS NOT NULL)"
     t.index ["tenant_id"], name: "index_staff_members_on_tenant_id"
     t.index ["user_id"], name: "index_staff_members_on_user_id"
@@ -469,11 +476,13 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_17_123731) do
   add_foreign_key "sales", "appointments"
   add_foreign_key "sales", "customers"
   add_foreign_key "sales", "staff_members"
+  add_foreign_key "sales", "studio_locations"
   add_foreign_key "sales", "tenants"
   add_foreign_key "service_package_studio_locations", "service_packages"
   add_foreign_key "service_package_studio_locations", "studio_locations"
   add_foreign_key "service_packages", "tenants"
   add_foreign_key "service_tiers", "service_packages"
+  add_foreign_key "staff_members", "studio_locations"
   add_foreign_key "staff_members", "tenants"
   add_foreign_key "staff_members", "users"
   add_foreign_key "studio_locations", "tenants"

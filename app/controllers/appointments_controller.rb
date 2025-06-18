@@ -1,13 +1,18 @@
 # app/controllers/appointments_controller.rb (fixed version)
 class AppointmentsController < ApplicationController
+  load_and_authorize_resource
   before_action :authenticate_user!
   before_action :set_appointment, only: [:show, :edit, :update, :destroy, :assign_staff, :update_production, :create_sale, :mark_shoot_completed, :mark_editing_completed]
   before_action :load_form_data, only: [:new, :edit, :create, :update]
 
   def index
-    @appointments = current_tenant.appointments
-                                 .includes(:customer, :assigned_photographer, :assigned_editor, :studio_location, :service_tier)
-                                 .order(:scheduled_at)
+    # @appointments = current_tenant.appointments
+    #                              .includes(:customer, :assigned_photographer, :assigned_editor, :studio_location, :service_tier)
+    #                              .order(:scheduled_at)
+
+    @appointments = filter_by_studio_access(@appointments)
+                      .includes(:customer, :assigned_photographer, :assigned_editor, :studio_location, :service_tier)
+                      .page(params[:page])
 
     # Apply search if present
     if params[:search].present?
@@ -175,7 +180,7 @@ class AppointmentsController < ApplicationController
   end
 
   def mark_shoot_completed
-    binding.pry
+    # binding.pry
     begin
       @appointment.mark_shoot_completed!
       redirect_to @appointment, notice: 'Shoot marked as completed successfully.'
@@ -612,5 +617,13 @@ class AppointmentsController < ApplicationController
     end
 
     timeline
+  end
+
+  def filter_by_studio_access(appointments)
+    return appointments if current_user.can_access_all_studios?(current_tenant)
+
+    # Staff can only see appointments from their studio location
+    accessible_studios = current_user.accessible_studio_locations(current_tenant)
+    appointments.where(studio_location: accessible_studios)
   end
 end

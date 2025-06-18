@@ -1,6 +1,13 @@
 <!-- app/views/dashboard/index.html.erb -->
 <% content_for :title, "Dashboard - #{current_tenant.name}" %>
 
+<%
+  # Get studio context from operational KPIs
+  studio_context = @operational_kpis[:studio_context]
+  is_studio_filtered = studio_context[:is_filtered]
+  accessible_studios = studio_context[:accessible_studios]
+%>
+
 <div class="min-h-screen bg-gray-50 flex">
   <!-- Sidebar - Desktop -->
   <div class="hidden lg:flex lg:flex-shrink-0">
@@ -47,23 +54,36 @@
             </h1>
             <p class="text-sm text-gray-500 mt-1">
               Here's what's happening at <%= current_tenant.name %> today
+              <% if is_studio_filtered %>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 ml-2">
+                  <%= accessible_studios.join(", ") %>
+                </span>
+              <% else %>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 ml-2">
+                  All Locations
+                </span>
+              <% end %>
             </p>
           </div>
           <div class="flex items-center space-x-4">
-            <%= link_to new_appointment_path,
-                  class: "bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2" do %>
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-              </svg>
-              <span>New Booking</span>
+            <% if can? :create, Appointment %>
+              <%= link_to new_appointment_path,
+                    class: "bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2" do %>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+                <span>New Booking</span>
+              <% end %>
             <% end %>
 
-            <%= link_to new_customer_path,
-                  class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2" do %>
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-              </svg>
-              <span>Add Customer</span>
+            <% if can? :create, Customer %>
+              <%= link_to new_customer_path,
+                    class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2" do %>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                </svg>
+                <span>Add Customer</span>
+              <% end %>
             <% end %>
           </div>
         </div>
@@ -75,57 +95,49 @@
       <!-- Key Metrics Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
         <!-- Today's Sales -->
-        <%
-          todays_sales = current_tenant.sales.where(sale_date: Date.current.all_day).sum(:total_amount)
-          yesterdays_sales = current_tenant.sales.where(sale_date: (Date.current - 1.day).all_day).sum(:total_amount)
-          sales_change = todays_sales - yesterdays_sales
-        %>
-        <%= link_to sales_path, class: "dashboard-stat cursor-pointer hover:shadow-xl transition-shadow block" do %>
-          <div class="dashboard-stat-value">₦<%= number_with_delimiter(todays_sales) %></div>
-          <div class="dashboard-stat-label">Today's Sales</div>
-          <div class="flex items-center text-sm mt-2">
-            <% if sales_change > 0 %>
-              <svg class="w-4 h-4 text-green-200 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-              </svg>
-              <span class="text-blue-100">+₦<%= number_with_delimiter(sales_change) %> vs yesterday</span>
-            <% elsif sales_change < 0 %>
-              <svg class="w-4 h-4 text-red-200 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-              </svg>
-              <span class="text-blue-100">₦<%= number_with_delimiter(sales_change) %> vs yesterday</span>
-            <% else %>
-              <span class="text-blue-100">Same as yesterday</span>
-            <% end %>
+        <% if can? :read, Sale %>
+          <%= link_to sales_path, class: "dashboard-stat cursor-pointer hover:shadow-xl transition-shadow block" do %>
+            <div class="dashboard-stat-value">₦<%= number_with_delimiter(@sales_metrics[:amount]) %></div>
+            <div class="dashboard-stat-label">Today's Sales</div>
+            <div class="flex items-center text-sm mt-2">
+              <% if @sales_metrics[:change] > 0 %>
+                <svg class="w-4 h-4 text-green-200 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <span class="text-blue-100">+₦<%= number_with_delimiter(@sales_metrics[:change]) %> vs yesterday</span>
+              <% elsif @sales_metrics[:change] < 0 %>
+                <svg class="w-4 h-4 text-red-200 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <span class="text-blue-100">₦<%= number_with_delimiter(@sales_metrics[:change]) %> vs yesterday</span>
+              <% else %>
+                <span class="text-blue-100">Same as yesterday</span>
+              <% end %>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="dashboard-stat">
+            <div class="dashboard-stat-value">---</div>
+            <div class="dashboard-stat-label">Today's Sales</div>
+            <div class="text-sm mt-2 text-blue-100">Access Restricted</div>
           </div>
         <% end %>
 
         <!-- Active Photoshoots -->
-        <%
-          todays_photoshoots = current_tenant.appointments
-                                           .where(scheduled_at: Date.current.all_day)
-                                           .where("assigned_photographer_id IS NOT NULL OR assigned_editor_id IS NOT NULL")
-                                           .count
-          yesterdays_photoshoots = current_tenant.appointments
-                                               .where(scheduled_at: (Date.current - 1.day).all_day)
-                                               .where("assigned_photographer_id IS NOT NULL OR assigned_editor_id IS NOT NULL")
-                                               .count
-          photoshoots_change = todays_photoshoots - yesterdays_photoshoots
-        %>
         <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg p-4 lg:p-6 shadow-lg">
-          <div class="dashboard-stat-value"><%= todays_photoshoots %></div>
+          <div class="dashboard-stat-value"><%= @photoshoot_metrics[:count] %></div>
           <div class="dashboard-stat-label">Active Photoshoots</div>
           <div class="flex items-center text-sm mt-2">
-            <% if photoshoots_change > 0 %>
+            <% if @photoshoot_metrics[:change] > 0 %>
               <svg class="w-4 h-4 text-green-200 mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
               </svg>
-              <span class="text-purple-100">+<%= photoshoots_change %> from yesterday</span>
-            <% elsif photoshoots_change < 0 %>
+              <span class="text-purple-100">+<%= @photoshoot_metrics[:change] %> from yesterday</span>
+            <% elsif @photoshoot_metrics[:change] < 0 %>
               <svg class="w-4 h-4 text-red-200 mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
               </svg>
-              <span class="text-purple-100"><%= photoshoots_change %> from yesterday</span>
+              <span class="text-purple-100"><%= @photoshoot_metrics[:change] %> from yesterday</span>
             <% else %>
               <span class="text-purple-100">Same as yesterday</span>
             <% end %>
@@ -133,25 +145,20 @@
         </div>
 
         <!-- Today's Bookings -->
-        <%
-          todays_bookings = current_tenant.appointments.where(scheduled_at: Date.current.all_day).count
-          yesterdays_bookings = current_tenant.appointments.where(scheduled_at: (Date.current - 1.day).all_day).count
-          bookings_change = todays_bookings - yesterdays_bookings
-        %>
         <div class="dashboard-stat">
-          <div class="dashboard-stat-value"><%= todays_bookings %></div>
+          <div class="dashboard-stat-value"><%= @booking_metrics[:count] %></div>
           <div class="dashboard-stat-label">Today's Bookings</div>
           <div class="flex items-center text-sm mt-2">
-            <% if bookings_change > 0 %>
+            <% if @booking_metrics[:change] > 0 %>
               <svg class="w-4 h-4 text-green-200 mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
               </svg>
-              <span class="text-blue-100">+<%= bookings_change %> from yesterday</span>
-            <% elsif bookings_change < 0 %>
+              <span class="text-blue-100">+<%= @booking_metrics[:change] %> from yesterday</span>
+            <% elsif @booking_metrics[:change] < 0 %>
               <svg class="w-4 h-4 text-red-200 mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
               </svg>
-              <span class="text-blue-100"><%= bookings_change %> from yesterday</span>
+              <span class="text-blue-100"><%= @booking_metrics[:change] %> from yesterday</span>
             <% else %>
               <span class="text-blue-100">Same as yesterday</span>
             <% end %>
@@ -159,31 +166,70 @@
         </div>
 
         <!-- Today's Expenses -->
-        <%
-          todays_expenses = current_tenant.expenses.where(expense_date: Date.current.all_day).sum(:amount)
-          yesterdays_expenses = current_tenant.expenses.where(expense_date: (Date.current - 1.day).all_day).sum(:amount)
-          expenses_change = todays_expenses - yesterdays_expenses
-        %>
-        <%= link_to expenses_path, class: "bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg p-4 lg:p-6 shadow-lg cursor-pointer hover:shadow-xl transition-shadow block" do %>
-          <div class="dashboard-stat-value">₦<%= number_with_delimiter(todays_expenses) %></div>
-          <div class="dashboard-stat-label">Today's Expenses</div>
-          <div class="flex items-center text-sm mt-2">
-            <% if expenses_change > 0 %>
-              <svg class="w-4 h-4 text-red-200 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-              </svg>
-              <span class="text-orange-100">+₦<%= number_with_delimiter(expenses_change) %> vs yesterday</span>
-            <% elsif expenses_change < 0 %>
-              <svg class="w-4 h-4 text-green-200 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-              </svg>
-              <span class="text-orange-100">-₦<%= number_with_delimiter(expenses_change.abs) %> vs yesterday</span>
-            <% else %>
-              <span class="text-orange-100">Same as yesterday</span>
-            <% end %>
+        <% if can? :read, Expense %>
+          <%= link_to expenses_path, class: "bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg p-4 lg:p-6 shadow-lg cursor-pointer hover:shadow-xl transition-shadow block" do %>
+            <div class="dashboard-stat-value">₦<%= number_with_delimiter(@expense_metrics[:amount]) %></div>
+            <div class="dashboard-stat-label">Today's Expenses</div>
+            <div class="flex items-center text-sm mt-2">
+              <% if @expense_metrics[:change] > 0 %>
+                <svg class="w-4 h-4 text-red-200 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <span class="text-orange-100">+₦<%= number_with_delimiter(@expense_metrics[:change]) %> vs yesterday</span>
+              <% elsif @expense_metrics[:change] < 0 %>
+                <svg class="w-4 h-4 text-green-200 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <span class="text-orange-100">-₦<%= number_with_delimiter(@expense_metrics[:change].abs) %> vs yesterday</span>
+              <% else %>
+                <span class="text-orange-100">Same as yesterday</span>
+              <% end %>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg p-4 lg:p-6 shadow-lg">
+            <div class="dashboard-stat-value">---</div>
+            <div class="dashboard-stat-label">Today's Expenses</div>
+            <div class="text-sm mt-2 text-orange-100">Access Restricted</div>
           </div>
         <% end %>
       </div>
+
+      <!-- Studio Breakdown (if user can see multiple studios) -->
+      <% if @studio_breakdown&.any? %>
+        <div class="mb-8">
+          <div class="dashboard-card">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">Studio Performance Today</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-<%= [@studio_breakdown.count, 4].min %> gap-6">
+              <% @studio_breakdown.each do |studio| %>
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <h3 class="font-semibold text-gray-900 mb-3"><%= studio[:studio_name] %></h3>
+                  <div class="space-y-2">
+                    <div class="flex justify-between">
+                      <span class="text-sm text-gray-600">Revenue:</span>
+                      <span class="text-sm font-medium text-green-600">₦<%= number_with_delimiter(studio[:revenue]) %></span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-sm text-gray-600">Bookings:</span>
+                      <span class="text-sm font-medium"><%= studio[:bookings] %></span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-sm text-gray-600">Expenses:</span>
+                      <span class="text-sm font-medium text-red-600">₦<%= number_with_delimiter(studio[:expenses]) %></span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-sm text-gray-600">Utilization:</span>
+                      <span class="text-sm font-medium <%= studio[:utilization] >= 80 ? 'text-green-600' : studio[:utilization] >= 60 ? 'text-yellow-600' : 'text-red-600' %>">
+                        <%= studio[:utilization] %>%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
 
       <!-- Content Grid -->
       <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -191,17 +237,21 @@
         <div class="xl:col-span-2 dashboard-card">
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-xl font-semibold text-gray-900">Today's Schedule</h2>
-            <%= link_to appointments_path, class: "text-blue-600 hover:text-blue-700 text-sm font-medium" do %>
-              View All
+            <% if can? :read, Appointment %>
+              <%= link_to appointments_path, class: "text-blue-600 hover:text-blue-700 text-sm font-medium" do %>
+                View All
+              <% end %>
             <% end %>
           </div>
 
           <!-- Schedule Items -->
           <%
-            todays_appointments = current_tenant.appointments
-                                               .where(scheduled_at: Date.current.all_day)
-                                               .includes(:customer, :assigned_photographer, :assigned_editor, :service_tier)
-                                               .order(:scheduled_at)
+            # Get authorized appointments for today
+            todays_appointments = Appointment.accessible_by(current_ability, :read)
+                                           .where(tenant: current_tenant)
+                                           .where(scheduled_at: Date.current.all_day)
+                                           .includes(:customer, :assigned_photographer, :assigned_editor, :service_tier)
+                                           .order(:scheduled_at)
           %>
 
           <% if todays_appointments.any? %>
@@ -241,6 +291,9 @@
                       <div class="text-xs text-gray-500">
                         <%= appointment.service_tier&.name || appointment.session_type&.humanize || 'Appointment' %> •
                         <%= appointment.status.humanize %>
+                        <% if appointment.studio_location %>
+                          • <%= appointment.studio_location.name %>
+                        <% end %>
                       </div>
 
                       <!-- Staff assignments -->
@@ -302,14 +355,16 @@
               </svg>
               <h3 class="mt-2 text-sm font-medium text-gray-900">No appointments today</h3>
               <p class="mt-1 text-sm text-gray-500">Get started by creating a new booking.</p>
-              <div class="mt-6">
-                <%= link_to new_appointment_path, class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700" do %>
-                  <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                  </svg>
-                  New Booking
-                <% end %>
-              </div>
+              <% if can? :create, Appointment %>
+                <div class="mt-6">
+                  <%= link_to new_appointment_path, class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700" do %>
+                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    New Booking
+                  <% end %>
+                </div>
+              <% end %>
             </div>
           <% end %>
         </div>
@@ -319,31 +374,16 @@
           <h2 class="text-xl font-semibold text-gray-900 mb-6">Quick Stats</h2>
 
           <!-- Quick Stats Usage Bars -->
-          <%
-            # Get actual usage data
-            current_bookings = current_tenant.appointments.where(created_at: Date.current.beginning_of_month..Date.current.end_of_month).count
-            booking_limit = 500 # You might want to get this from tenant plan
-            booking_percentage = (current_bookings.to_f / booking_limit * 100).round(1)
-
-            # Storage usage - using approximate calculation based on file attachments
-            # You can implement actual storage calculation based on your file storage system
-            current_storage = 0 # Replace with actual storage calculation
-            storage_limit_gb = 46.6 # Get from tenant plan
-            storage_percentage = storage_limit_gb > 0 ? (current_storage / (storage_limit_gb * 1_000_000_000) * 100).round(1) : 0
-
-            # Team members
-            current_team_members = current_tenant.staff_members.where(active: true).count
-            team_limit = 10 # Get from tenant plan
-            team_percentage = (current_team_members.to_f / team_limit * 100).round(1)
-          %>
+          <% usage_stats = @usage_stats %>
 
           <!-- Bookings Usage -->
           <div class="mb-6">
             <div class="flex justify-between text-sm mb-2">
               <span class="text-gray-600">Monthly Bookings</span>
-              <span class="font-medium"><%= current_bookings %>/<%= booking_limit %></span>
+              <span class="font-medium"><%= usage_stats[:monthly_bookings][:current] %>/<%= usage_stats[:monthly_bookings][:limit] %></span>
             </div>
             <div class="bg-gray-200 rounded-full h-2">
+              <% booking_percentage = (usage_stats[:monthly_bookings][:current].to_f / usage_stats[:monthly_bookings][:limit] * 100).round(1) %>
               <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: <%= [booking_percentage, 100].min %>%"></div>
             </div>
           </div>
@@ -353,14 +393,11 @@
             <div class="flex justify-between text-sm mb-2">
               <span class="text-gray-600">Storage Used</span>
               <span class="font-medium">
-                <% if current_storage > 0 %>
-                  <%= number_to_human_size(current_storage) %>/<%= storage_limit_gb %> GB
-                <% else %>
-                  0 Bytes/<%= storage_limit_gb %> GB
-                <% end %>
+                <%= number_to_human_size(usage_stats[:storage][:current]) %>/<%= number_to_human_size(usage_stats[:storage][:limit]) %>
               </span>
             </div>
             <div class="bg-gray-200 rounded-full h-2">
+              <% storage_percentage = usage_stats[:storage][:limit] > 0 ? (usage_stats[:storage][:current].to_f / usage_stats[:storage][:limit] * 100).round(1) : 0 %>
               <div class="bg-green-600 h-2 rounded-full transition-all duration-300" style="width: <%= [storage_percentage, 100].min %>%"></div>
             </div>
           </div>
@@ -369,9 +406,10 @@
           <div class="mb-6">
             <div class="flex justify-between text-sm mb-2">
               <span class="text-gray-600">Team Members</span>
-              <span class="font-medium"><%= current_team_members %>/<%= team_limit %></span>
+              <span class="font-medium"><%= usage_stats[:team_members][:current] %>/<%= usage_stats[:team_members][:limit] %></span>
             </div>
             <div class="bg-gray-200 rounded-full h-2">
+              <% team_percentage = (usage_stats[:team_members][:current].to_f / usage_stats[:team_members][:limit] * 100).round(1) %>
               <div class="bg-purple-600 h-2 rounded-full transition-all duration-300" style="width: <%= [team_percentage, 100].min %>%"></div>
             </div>
           </div>
@@ -380,14 +418,18 @@
           <div class="pt-4 border-t border-gray-200">
             <h3 class="text-sm font-medium text-gray-900 mb-3">Quick Actions</h3>
             <div class="grid grid-cols-2 gap-3">
-              <%= link_to customers_path,
-                    class: "p-3 bg-blue-50 rounded-lg text-center hover:bg-blue-100 transition-colors" do %>
-                <div class="text-blue-600 font-medium text-sm">View Customers</div>
+              <% if can? :read, Customer %>
+                <%= link_to customers_path,
+                      class: "p-3 bg-blue-50 rounded-lg text-center hover:bg-blue-100 transition-colors" do %>
+                  <div class="text-blue-600 font-medium text-sm">View Customers</div>
+                <% end %>
               <% end %>
 
-              <%= link_to appointments_path,
-                    class: "p-3 bg-green-50 rounded-lg text-center hover:bg-green-100 transition-colors" do %>
-                <div class="text-green-600 font-medium text-sm">All Bookings</div>
+              <% if can? :read, Appointment %>
+                <%= link_to appointments_path,
+                      class: "p-3 bg-green-50 rounded-lg text-center hover:bg-green-100 transition-colors" do %>
+                  <div class="text-green-600 font-medium text-sm">All Bookings</div>
+                <% end %>
               <% end %>
             </div>
           </div>
@@ -397,125 +439,120 @@
       <!-- Detailed Breakdowns -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
         <!-- Sales Breakdown -->
-        <div class="dashboard-card" id="sales-breakdown">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-lg font-semibold text-gray-900">Today's Sales Breakdown</h2>
-            <% if respond_to?(:analytics_revenue_path) %>
-              <%= link_to analytics_revenue_path, class: "text-blue-600 hover:text-blue-800 text-sm font-medium" do %>
+        <% if can? :read, Sale %>
+          <div class="dashboard-card" id="sales-breakdown">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-lg font-semibold text-gray-900">Today's Sales Breakdown</h2>
+              <%= link_to sales_path, class: "text-blue-600 hover:text-blue-800 text-sm font-medium" do %>
                 Full Sales Report
               <% end %>
-            <% end %>
-          </div>
+            </div>
 
-          <%
-            # Get today's sales and organize by category
-            todays_sales = current_tenant.sales.where(sale_date: Date.current.all_day).includes(:sale_items, sale_items: { service_tier: :service_package })
+            <%
+              # Get authorized sales for today using analytics service data
+              revenue_breakdown = @analytics.revenue_by_service_type
+              total_todays_sales = @sales_metrics[:amount]
+            %>
 
-            # Group sales by service category or type
-            sales_breakdown = {}
-            total_todays_sales = 0
-
-            todays_sales.each do |sale|
-              sale.sale_items.each do |item|
-                # Try to get category from service package, fallback to item type or name
-                category = if item.service_tier&.service_package&.category.present?
-                            item.service_tier.service_package.category.humanize
-                          elsif item.item_type.present?
-                            item.item_type.humanize
-                          else
-                            'Other Services'
-                          end
-
-                sales_breakdown[category] ||= { amount: 0, count: 0 }
-                sales_breakdown[category][:amount] += item.total_price
-                sales_breakdown[category][:count] += item.quantity
-                total_todays_sales += item.total_price
-              end
-            end
-          %>
-
-          <div class="space-y-4">
-            <% if sales_breakdown.any? %>
-              <% sales_breakdown.each do |category, data| %>
-                <div class="flex justify-between items-center py-3 border-b border-gray-100">
-                  <div>
-                    <div class="text-sm font-medium text-gray-900"><%= category %></div>
-                    <div class="text-xs text-gray-500"><%= pluralize(data[:count], 'item') %></div>
+            <div class="space-y-4">
+              <% if revenue_breakdown.any? %>
+                <% revenue_breakdown.each do |category, data| %>
+                  <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <div>
+                      <div class="text-sm font-medium text-gray-900"><%= category.humanize %></div>
+                      <div class="text-xs text-gray-500"><%= pluralize(data[:count], 'item') %></div>
+                    </div>
+                    <div class="text-sm font-bold text-green-600">₦<%= number_with_delimiter(data[:revenue]) %></div>
                   </div>
-                  <div class="text-sm font-bold text-green-600">₦<%= number_with_delimiter(data[:amount]) %></div>
+                <% end %>
+
+                <div class="pt-4 border-t-2 border-gray-200">
+                  <div class="flex justify-between items-center">
+                    <div>
+                      <div class="text-base font-semibold text-gray-900">Total Sales</div>
+                      <div class="text-sm text-gray-500">Today's transactions</div>
+                    </div>
+                    <div class="text-lg font-bold text-green-600">₦<%= number_with_delimiter(total_todays_sales) %></div>
+                  </div>
+                </div>
+              <% else %>
+                <div class="text-center py-8">
+                  <div class="text-gray-500">No sales recorded today</div>
                 </div>
               <% end %>
-
-              <div class="pt-4 border-t-2 border-gray-200">
-                <div class="flex justify-between items-center">
-                  <div>
-                    <div class="text-base font-semibold text-gray-900">Total Sales</div>
-                    <div class="text-sm text-gray-500"><%= pluralize(todays_sales.count, 'transaction') %></div>
-                  </div>
-                  <div class="text-lg font-bold text-green-600">₦<%= number_with_delimiter(total_todays_sales) %></div>
-                </div>
-              </div>
-            <% else %>
-              <div class="text-center py-8">
-                <div class="text-gray-500">No sales recorded today</div>
-              </div>
-            <% end %>
+            </div>
           </div>
-        </div>
+        <% else %>
+          <div class="dashboard-card" id="sales-breakdown">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-lg font-semibold text-gray-900">Today's Sales Breakdown</h2>
+            </div>
+            <div class="text-center py-8">
+              <div class="text-gray-500">Access Restricted</div>
+            </div>
+          </div>
+        <% end %>
 
         <!-- Expenses Breakdown -->
-        <div class="dashboard-card" id="expenses-breakdown">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-lg font-semibold text-gray-900">Today's Expenses Breakdown</h2>
-            <%= link_to expenses_path, class: "text-blue-600 hover:text-blue-800 text-sm font-medium" do %>
-              Full Expense Report
-            <% end %>
-          </div>
+        <% if can? :read, Expense %>
+          <div class="dashboard-card" id="expenses-breakdown">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-lg font-semibold text-gray-900">Today's Expenses Breakdown</h2>
+              <%= link_to expenses_path, class: "text-blue-600 hover:text-blue-800 text-sm font-medium" do %>
+                Full Expense Report
+              <% end %>
+            </div>
 
-          <%
-            todays_expenses_by_category = current_tenant.expenses
-                                                       .where(expense_date: Date.current.all_day)
-                                                       .joins(:expense_category)
-                                                       .group('expense_categories.name')
-                                                       .sum(:amount)
+            <%
+              # Get authorized expenses for today - using a simple breakdown since we don't have expense analytics method
+              authorized_expenses = Expense.accessible_by(current_ability, :read)
+                                         .where(tenant: current_tenant)
+                                         .where(expense_date: Date.current.all_day)
+                                         .joins(:expense_category)
 
-            todays_expenses_count_by_category = current_tenant.expenses
-                                                             .where(expense_date: Date.current.all_day)
-                                                             .joins(:expense_category)
-                                                             .group('expense_categories.name')
-                                                             .count
+              todays_expenses_by_category = authorized_expenses.group('expense_categories.name').sum(:amount)
+              todays_expenses_count_by_category = authorized_expenses.group('expense_categories.name').count
+              total_todays_expenses = @expense_metrics[:amount]
+            %>
 
-            total_todays_expenses = todays_expenses_by_category.values.sum
-          %>
-
-          <div class="space-y-4">
-            <% if todays_expenses_by_category.any? %>
-              <% todays_expenses_by_category.each do |category, amount| %>
-                <div class="flex justify-between items-center py-3 border-b border-gray-100">
-                  <div>
-                    <div class="text-sm font-medium text-gray-900"><%= category %></div>
-                    <div class="text-xs text-gray-500"><%= pluralize(todays_expenses_count_by_category[category] || 0, 'expense') %></div>
+            <div class="space-y-4">
+              <% if todays_expenses_by_category.any? %>
+                <% todays_expenses_by_category.each do |category, amount| %>
+                  <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <div>
+                      <div class="text-sm font-medium text-gray-900"><%= category %></div>
+                      <div class="text-xs text-gray-500"><%= pluralize(todays_expenses_count_by_category[category] || 0, 'expense') %></div>
+                    </div>
+                    <div class="text-sm font-bold text-red-600">-₦<%= number_with_delimiter(amount) %></div>
                   </div>
-                  <div class="text-sm font-bold text-red-600">-₦<%= number_with_delimiter(amount) %></div>
+                <% end %>
+
+                <div class="pt-4 border-t-2 border-gray-200">
+                  <div class="flex justify-between items-center">
+                    <div>
+                      <div class="text-base font-semibold text-gray-900">Total Expenses</div>
+                      <div class="text-sm text-gray-500">Today's transactions</div>
+                    </div>
+                    <div class="text-lg font-bold text-red-600">-₦<%= number_with_delimiter(total_todays_expenses) %></div>
+                  </div>
+                </div>
+              <% else %>
+                <div class="text-center py-8">
+                  <div class="text-gray-500">No expenses recorded today</div>
                 </div>
               <% end %>
-
-              <div class="pt-4 border-t-2 border-gray-200">
-                <div class="flex justify-between items-center">
-                  <div>
-                    <div class="text-base font-semibold text-gray-900">Total Expenses</div>
-                    <div class="text-sm text-gray-500"><%= pluralize(todays_expenses_by_category.values.sum, 'transaction') %> today</div>
-                  </div>
-                  <div class="text-lg font-bold text-red-600">-₦<%= number_with_delimiter(total_todays_expenses) %></div>
-                </div>
-              </div>
-            <% else %>
-              <div class="text-center py-8">
-                <div class="text-gray-500">No expenses recorded today</div>
-              </div>
-            <% end %>
+            </div>
           </div>
-        </div>
+        <% else %>
+          <div class="dashboard-card" id="expenses-breakdown">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-lg font-semibold text-gray-900">Today's Expenses Breakdown</h2>
+            </div>
+            <div class="text-center py-8">
+              <div class="text-gray-500">Access Restricted</div>
+            </div>
+          </div>
+        <% end %>
       </div>
 
       <!-- Operations Status -->
@@ -523,43 +560,28 @@
         <h2 class="text-lg font-semibold text-gray-900 mb-6">Operations Status</h2>
 
         <%
-          # Calculate real operational metrics
-          total_appointment_slots_today = 8 # You can make this configurable per studio location
-          todays_booking_count = current_tenant.appointments.where(scheduled_at: Date.current.all_day).count
-          booking_capacity = total_appointment_slots_today > 0 ? ((todays_booking_count.to_f / total_appointment_slots_today) * 100).round(0) : 0
-
-          # Average session length from completed appointments
-          completed_appointments_today = current_tenant.appointments
-                                                       .where(scheduled_at: Date.current.all_day, status: 'completed')
-          avg_session_length = completed_appointments_today.any? ?
-                              (completed_appointments_today.average(:duration_minutes) / 60.0).round(1) : 0
-
-          # Customer satisfaction - you might want to implement a rating system
-          # For now, using a placeholder calculation based on completed vs cancelled appointments
-          total_recent_appointments = current_tenant.appointments.where(scheduled_at: 1.month.ago..Date.current).count
-          cancelled_appointments = current_tenant.appointments.where(scheduled_at: 1.month.ago..Date.current, status: 'cancelled').count
-          satisfaction = total_recent_appointments > 0 ?
-                        (((total_recent_appointments - cancelled_appointments).to_f / total_recent_appointments) * 100).round(0) : 0
-
-          # Overdue deliveries - appointments that are completed but past expected delivery
-          overdue_deliveries = current_tenant.appointments
-                                           .where(status: 'completed')
-                                           .where('scheduled_at < ?', 2.weeks.ago) # Assuming 2 week delivery window
-                                           .where('delivery_date IS NULL OR delivery_date < ?', Date.current)
-                                           .count
+          # Use operational KPIs from analytics service
+          operational_kpis = @operational_kpis
+          capacity_utilization = operational_kpis[:capacity_utilization]
+          avg_session_hours = operational_kpis[:avg_session_hours]
+          satisfaction = operational_kpis[:satisfaction]
+          overdue_deliveries = operational_kpis[:overdue_deliveries]
         %>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div class="text-center">
-            <div class="text-3xl font-bold text-<%= booking_capacity >= 80 ? 'green' : booking_capacity >= 60 ? 'yellow' : 'red' %>-600 mb-2">
-              <%= booking_capacity %>%
+            <div class="text-3xl font-bold text-<%= capacity_utilization >= 80 ? 'green' : capacity_utilization >= 60 ? 'yellow' : 'red' %>-600 mb-2">
+              <%= capacity_utilization %>%
             </div>
             <div class="text-sm text-gray-500 uppercase tracking-wide">Booking Capacity</div>
+            <% if is_studio_filtered %>
+              <div class="text-xs text-gray-400 mt-1">for <%= accessible_studios.join(", ") %></div>
+            <% end %>
           </div>
 
           <div class="text-center">
             <div class="text-3xl font-bold text-blue-600 mb-2">
-              <%= avg_session_length > 0 ? "#{avg_session_length}hrs" : "0hrs" %>
+              <%= avg_session_hours > 0 ? "#{avg_session_hours}hrs" : "0hrs" %>
             </div>
             <div class="text-sm text-gray-500 uppercase tracking-wide">Avg Session Length</div>
           </div>
@@ -578,6 +600,79 @@
             <div class="text-sm text-gray-500 uppercase tracking-wide">Overdue Deliveries</div>
           </div>
         </div>
+
+        <!-- Financial Summary -->
+        <% if  @can_view_analytics%>
+          <div class="mt-8 pt-6 border-t border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Financial Summary</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div class="text-center">
+                <div class="text-2xl font-bold text-green-600 mb-2">
+                  ₦<%= number_with_delimiter(@financial_summary[:gross_revenue]) %>
+                </div>
+                <div class="text-sm text-gray-500 uppercase tracking-wide">Gross Revenue</div>
+              </div>
+
+              <div class="text-center">
+                <div class="text-2xl font-bold text-red-600 mb-2">
+                  ₦<%= number_with_delimiter(@financial_summary[:total_expenses]) %>
+                </div>
+                <div class="text-sm text-gray-500 uppercase tracking-wide">Total Expenses</div>
+              </div>
+
+              <div class="text-center">
+                <div class="text-2xl font-bold text-<%= @financial_summary[:net_profit] >= 0 ? 'green' : 'red' %>-600 mb-2">
+                  ₦<%= number_with_delimiter(@financial_summary[:net_profit]) %>
+                </div>
+                <div class="text-sm text-gray-500 uppercase tracking-wide">Net Profit</div>
+              </div>
+
+              <div class="text-center">
+                <div class="text-2xl font-bold text-<%= @financial_summary[:profit_margin] >= 20 ? 'green' : @financial_summary[:profit_margin] >= 10 ? 'yellow' : 'red' %>-600 mb-2">
+                  <%= @financial_summary[:profit_margin] %>%
+                </div>
+                <div class="text-sm text-gray-500 uppercase tracking-wide">Profit Margin</div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- Photographer Utilization (if available) -->
+        <% if @photographer_utilization&.any? && can?(:read, StaffMember) %>
+          <div class="mt-8 pt-6 border-t border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Photographer Utilization</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-<%= [@photographer_utilization.count, 4].min %> gap-4">
+              <% @photographer_utilization.each do |util| %>
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <div class="flex items-center justify-between mb-2">
+                    <h4 class="font-medium text-gray-900">
+                      <%= util[:photographer].first_name %> <%= util[:photographer].last_name %>
+                    </h4>
+                    <span class="text-xs px-2 py-1 rounded-full
+                      <%= case util[:status]
+                          when 'Available' then 'bg-gray-100 text-gray-800'
+                          when 'Active' then 'bg-blue-100 text-blue-800'
+                          when 'Busy' then 'bg-yellow-100 text-yellow-800'
+                          when 'Fully Booked' then 'bg-red-100 text-red-800'
+                          end %>">
+                      <%= util[:status] %>
+                    </span>
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Sessions Today:</span>
+                    <span class="font-medium"><%= util[:sessions_today] %></span>
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Utilization:</span>
+                    <span class="font-medium <%= util[:utilization_percentage] >= 80 ? 'text-green-600' : util[:utilization_percentage] >= 60 ? 'text-yellow-600' : 'text-red-600' %>">
+                      <%= util[:utilization_percentage] %>%
+                    </span>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
       </div>
     </main>
   </div>

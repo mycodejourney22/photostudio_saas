@@ -1,12 +1,16 @@
 class CustomersController < ApplicationController
+  include StudioFiltering
   before_action :set_customer, only: [:show, :edit, :update, :destroy]
   load_and_authorize_resource
 
   def index
-    @customers = current_tenant.customers
-                              .includes(:appointments)
-                              .page(params[:page])
-                              .per(25)
+    # @customers = current_tenant.customers
+    #                           .includes(:appointments)
+    #                           .page(params[:page])
+    #                           .per(25)
+    @customers = filter_customer_access(@customers)
+              .includes(:appointments)
+              .page(params[:page])
 
     @customers = @customers.search_scope(params[:search]) if params[:search].present?
     @customers = @customers.with_recent_bookings if params[:recent_bookings] == 'true'
@@ -86,4 +90,16 @@ class CustomersController < ApplicationController
       :city, :state, :zip_code, :notes, :profile_image
     )
   end
+
+
+  def filter_customer_access(customers)
+    return customers if current_user.can_access_all_studios?(current_tenant)
+
+    # Staff can only see customers who have appointments at their studio
+    accessible_studio_ids = current_user.accessible_studio_locations(current_tenant).pluck(:id)
+    customers.joins(:appointments)
+             .where(appointments: { studio_location_id: accessible_studio_ids })
+             .distinct
+  end
+
 end

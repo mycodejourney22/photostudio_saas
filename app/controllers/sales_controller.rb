@@ -1,13 +1,19 @@
 # app/controllers/sales_controller.rb (Enhanced version)
 class SalesController < ApplicationController
+  include StudioFiltering
+  load_and_authorize_resource
   before_action :authenticate_user!
   before_action :set_sale, only: [:show, :edit, :update, :destroy, :add_payment]
   before_action :load_form_data, only: [:new, :edit, :create, :update]
 
   def index
-    @sales = current_tenant.sales
-                          .includes(:customer, :staff_member, :appointment, :sale_items)
-                          .order(sale_date: :desc)
+    # @sales = current_tenant.sales
+    #                       .includes(:customer, :staff_member, :appointment, :sale_items)
+    #                       .order(sale_date: :desc)
+
+    @sales = filter_by_studio_access(@sales)
+          .includes(:customer, :staff_member)
+          .page(params[:page])
 
     # Filters
     @sales = @sales.where(sale_type: params[:sale_type]) if params[:sale_type].present?
@@ -171,6 +177,7 @@ class SalesController < ApplicationController
     def create
       # binding.pry
       @sale = current_tenant.sales.build(sale_params)
+      set_studio_location_for_sale
 
       # Set flag if user provided payment information
       if sale_params[:paid_amount].present?
@@ -615,29 +622,32 @@ class SalesController < ApplicationController
     )
   end
 
-  def calculate_sales_stats
-    today_sales = current_tenant.sales.where(sale_date: Date.current.all_day)
-    week_sales = current_tenant.sales.where(sale_date: Date.current.beginning_of_week..Date.current.end_of_week)
-    month_sales = current_tenant.sales.where(sale_date: Date.current.beginning_of_month..Date.current.end_of_month)
+def calculate_sales_stats
+  # Use CanCanCan to get only accessible sales
+  base_sales = Sale.accessible_by(current_ability, :read).where(tenant: current_tenant)
 
-    {
-      today: {
-        count: today_sales.count,
-        revenue: today_sales.sum(:total_amount),
-        avg_sale: today_sales.average(:total_amount) || 0
-      },
-      week: {
-        count: week_sales.count,
-        revenue: week_sales.sum(:total_amount),
-        avg_sale: week_sales.average(:total_amount) || 0
-      },
-      month: {
-        count: month_sales.count,
-        revenue: month_sales.sum(:total_amount),
-        avg_sale: month_sales.average(:total_amount) || 0
-      }
+  today_sales = base_sales.where(sale_date: Date.current.all_day)
+  week_sales = base_sales.where(sale_date: Date.current.beginning_of_week..Date.current.end_of_week)
+  month_sales = base_sales.where(sale_date: Date.current.beginning_of_month..Date.current.end_of_month)
+
+  {
+    today: {
+      count: today_sales.count,
+      revenue: today_sales.sum(:total_amount),
+      avg_sale: today_sales.average(:total_amount) || 0
+    },
+    week: {
+      count: week_sales.count,
+      revenue: week_sales.sum(:total_amount),
+      avg_sale: week_sales.average(:total_amount) || 0
+    },
+    month: {
+      count: month_sales.count,
+      revenue: month_sales.sum(:total_amount),
+      avg_sale: month_sales.average(:total_amount) || 0
     }
-  end
+  }
+end
 
   def build_payment_history
     # Build a timeline of payment events
@@ -697,5 +707,27 @@ class SalesController < ApplicationController
     current_tenant.staff_members.customer_service.active.first ||
     current_tenant.staff_members.managers.active.first ||
     current_tenant.staff_members.where(role: 'owner').active.first
+  end
+
+    def set_default_studio_location
+    return if @sale.studio_location.present?
+
+    # Set default studio location based on current user's assignment
+    staff_member = current_user.current_staff_member(current_tenant)
+    @sale.studio_location = staff_member&.studio_location || current_tenant.studio_locations.first
+  end
+
+  def set_studio_location_for_sale
+    # If studio_location not set in params, use default logic
+    return if @sale.studio_location.present?
+
+    if @sale.appointment&.studio_location
+      # Set from appointment if available
+      @sale.studio_location = @sale.appointment.studio_location
+    else
+      # Set from current user's assigned studio
+      staff_member = current_user.current_staff_member(current_tenant)
+      @sale.studio_location = staff_member&.studio_location || current_tenant.studio_locations.first
+    end
   end
 end

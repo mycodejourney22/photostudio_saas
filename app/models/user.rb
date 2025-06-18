@@ -157,6 +157,27 @@ class User < ApplicationRecord
     save!
   end
 
+  def current_staff_member(tenant)
+    return nil unless staff_member&.tenant == tenant
+    staff_member
+  end
+
+  def assigned_studio_location(tenant)
+    current_staff_member(tenant)&.studio_location
+  end
+
+  def can_access_all_studios?(tenant)
+    role = role_in_tenant(tenant)
+    role&.in?(['owner', 'admin']) || super_admin?
+  end
+
+  def accessible_studio_locations(tenant)
+    return tenant.studio_locations if can_access_all_studios?(tenant)
+
+    staff_member = current_staff_member(tenant)
+    staff_member&.studio_location.present? ? [staff_member.studio_location] : []
+  end
+
   def theme
     preference('theme', 'light')
   end

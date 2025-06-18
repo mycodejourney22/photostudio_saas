@@ -60,6 +60,19 @@ module ApplicationHelper
     end
   end
 
+  def current_user_studios
+    current_user.accessible_studio_locations(current_tenant)
+  end
+
+  def studio_limited_user?
+    !current_user.can_access_all_studios?(current_tenant)
+  end
+
+  def user_studio_name
+    return "All Locations" if current_user.can_access_all_studios?(current_tenant)
+    current_user.assigned_studio_location(current_tenant)&.name || "No Studio Assigned"
+  end
+
   def status_badge(status)
     case status.to_s
     when 'active'
