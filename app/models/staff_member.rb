@@ -3,7 +3,7 @@ class StaffMember < ApplicationRecord
   acts_as_tenant :tenant
 
   belongs_to :user, optional: true # Only for staff who have login access
-  belongs_to :studio_location, optional: true  # Add this
+  belongs_to :studio_location, optional: true
 
 
   # Appointment relationships
@@ -59,6 +59,11 @@ class StaffMember < ApplicationRecord
 
   def full_name
     "#{first_name} #{last_name}".strip
+  end
+
+  def display_name_with_location
+    location_part = studio_location&.name ? " (#{studio_location.name})" : ""
+    "#{full_name}#{location_part}"
   end
 
   def can_login?
@@ -342,5 +347,34 @@ class StaffMember < ApplicationRecord
     permissions << "Edit Studio Settings" if can_edit_studio_settings?
 
     permissions.any? ? permissions.join(", ") : "Basic Access"
+  end
+
+  def assigned_to_location?(location)
+    studio_location_id == location.id
+  end
+
+  def location_name
+    studio_location&.name || 'No location assigned'
+  end
+
+  def can_work_at_location?(location)
+    # Staff can work at their assigned location, or any location if not assigned to a specific one
+    studio_location_id.nil? || studio_location_id == location.id
+  end
+
+  # User account management
+  def needs_user_account?
+    has_login && user.blank?
+  end
+
+  def user_account_status
+    return 'No account needed' unless has_login
+    return 'Account exists' if user.present?
+
+    'Needs account'
+  end
+
+  def can_receive_notifications?
+    user.present? && user.active?
   end
 end

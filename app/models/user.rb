@@ -186,6 +186,51 @@ class User < ApplicationRecord
     preference('timezone', 'UTC')
   end
 
+  def last_sign_in_display
+    # Check if trackable columns exist
+    if respond_to?(:current_sign_in_at) && current_sign_in_at.present?
+      if current_sign_in_at > 1.day.ago
+        current_sign_in_at.strftime('%I:%M %p')
+      elsif current_sign_in_at > 1.week.ago
+        current_sign_in_at.strftime('%a %I:%M %p')
+      else
+        current_sign_in_at.strftime('%m/%d/%Y')
+      end
+    elsif respond_to?(:last_sign_in_at) && last_sign_in_at.present?
+      if last_sign_in_at > 1.day.ago
+        last_sign_in_at.strftime('%I:%M %p')
+      elsif last_sign_in_at > 1.week.ago
+        last_sign_in_at.strftime('%a %I:%M %p')
+      else
+        last_sign_in_at.strftime('%m/%d/%Y')
+      end
+    else
+      'Never'
+    end
+  end
+
+  def most_recent_sign_in
+    if respond_to?(:current_sign_in_at) && current_sign_in_at.present?
+      current_sign_in_at
+    elsif respond_to?(:last_sign_in_at) && last_sign_in_at.present?
+      last_sign_in_at
+    else
+      nil
+    end
+  end
+
+  # Additional method to check if user has signed in recently
+  def has_signed_in?
+    if respond_to?(:current_sign_in_at)
+      current_sign_in_at.present?
+    elsif respond_to?(:last_sign_in_at)
+      last_sign_in_at.present?
+    else
+      false
+    end
+  end
+
+
   def notifications_enabled?
     preference('notifications_enabled', true)
   end

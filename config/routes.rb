@@ -335,6 +335,8 @@ Rails.application.routes.draw do
           member do
             patch :toggle_status
             patch :reset_password
+            post :send_password_setup
+
           end
           collection do
             get :invite
