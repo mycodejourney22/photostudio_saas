@@ -197,12 +197,8 @@
     </div>
 
     <!-- Pagination -->
-    <% if respond_to?(:paginate) && appointments.respond_to?(:current_page) %>
-      <div class="flex items-center justify-center mt-8">
-        <%= paginate appointments, theme: 'twitter_bootstrap_4' %>
-      </div>
-    <% end %>
 
+    <%= paginate appointments %>
     <!-- Analytics Insights -->
     <div class="mt-8 bg-blue-50 rounded-lg p-6 border border-blue-200">
       <h4 class="text-lg font-medium text-gray-900 mb-4">📊 Business Insights</h4>
