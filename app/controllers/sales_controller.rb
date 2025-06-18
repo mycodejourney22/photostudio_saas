@@ -1,8 +1,8 @@
 # app/controllers/sales_controller.rb (Enhanced version)
 class SalesController < ApplicationController
   include StudioFiltering
-  load_and_authorize_resource
   before_action :authenticate_user!
+  load_and_authorize_resource
   before_action :set_sale, only: [:show, :edit, :update, :destroy, :add_payment]
   before_action :load_form_data, only: [:new, :edit, :create, :update]
 

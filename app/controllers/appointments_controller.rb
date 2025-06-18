@@ -1,7 +1,7 @@
 # app/controllers/appointments_controller.rb (fixed version)
 class AppointmentsController < ApplicationController
-  load_and_authorize_resource
   before_action :authenticate_user!
+  load_and_authorize_resource
   before_action :set_appointment, only: [:show, :edit, :update, :destroy, :assign_staff, :update_production, :create_sale, :mark_shoot_completed, :mark_editing_completed]
   before_action :load_form_data, only: [:new, :edit, :create, :update]
 
