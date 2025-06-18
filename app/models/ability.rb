@@ -1,4 +1,4 @@
-# app/models/ability.rb
+# app/models/ability.rb - FIXED VERSION
 class Ability
   include CanCan::Ability
 
@@ -42,6 +42,9 @@ class Ability
     can :approve, Expense, tenant_id: tenant.id
     can :reject, Expense, tenant_id: tenant.id
 
+    # Specifically for sales
+    can :manage, Sale, tenant_id: tenant.id
+
     # Can manage tenant settings
     can :manage, Tenant, id: tenant.id
     can :manage, TenantUser, tenant_id: tenant.id
@@ -60,6 +63,9 @@ class Ability
     can :manage, Customer, tenant_id: tenant.id
     can :manage, Studio, tenant_id: tenant.id
     can :manage, StaffMember, tenant_id: tenant.id
+
+    # Sales permissions for admin
+    can :manage, Sale, tenant_id: tenant.id
 
     # Expenses permissions for admin
     can :manage, Expense, tenant_id: tenant.id
@@ -118,6 +124,10 @@ class Ability
     can :read, Expense, tenant_id: tenant.id
     can :create, Expense, tenant_id: tenant.id
 
+    # Basic sales permissions for all staff
+    can :read, Sale, tenant_id: tenant.id
+    can :create, Sale, tenant_id: tenant.id
+
     # Staff can only edit their own expenses if they're in draft status
     can :update, Expense, tenant_id: tenant.id, staff_member_id: staff_member.id, approval_status: 'draft'
     can :destroy, Expense, tenant_id: tenant.id, staff_member_id: staff_member.id, approval_status: 'draft'
@@ -133,12 +143,30 @@ class Ability
   def setup_staff_role_permissions(user, tenant, staff_member)
     case staff_member.role
     when 'customer_service'
-      # Customer service can manage customers and appointments
+      # FIXED: Customer service can manage customers and appointments
       can :manage, Customer, tenant_id: tenant.id
       can :manage, Appointment, tenant_id: tenant.id
 
-      # Can view all expenses but not approve
-      can :read, Expense, tenant_id: tenant.id
+      # FIXED: Customer service can manage sales (with studio location restrictions)
+      if staff_member.studio_location.present?
+        can :manage, Sale, tenant_id: tenant.id, studio_location_id: staff_member.studio_location.id
+        can :index, Sale # Allow access to sales index page
+      else
+        # If no studio assigned, cannot access sales
+        cannot :read, Sale
+        cannot :manage, Sale
+        cannot :index, Sale
+      end
+
+      # FIXED: Customer service can only see expenses for their assigned studio location
+      if staff_member.studio_location.present?
+        can :read, Expense, tenant_id: tenant.id, studio_location_id: staff_member.studio_location.id
+        can :index, Expense # Allow access to expense index page
+      else
+        # If no studio assigned, cannot view any expenses
+        cannot :read, Expense
+        cannot :index, Expense
+      end
 
     when 'photographer'
       # Photographers can manage their own appointments
@@ -172,11 +200,32 @@ class Ability
       can :approve, Expense, tenant_id: tenant.id
       can :reject, Expense, tenant_id: tenant.id
 
+      # Managers can manage all sales
+      can :manage, Sale, tenant_id: tenant.id
+
     when 'receptionist'
       # Receptionists focus on customer service and appointments
       can :manage, Customer, tenant_id: tenant.id
       can :manage, Appointment, tenant_id: tenant.id
-      can :read, Expense, tenant_id: tenant.id
+
+      # FIXED: Receptionists can manage sales for their assigned studio location
+      if staff_member.studio_location.present?
+        can :manage, Sale, tenant_id: tenant.id, studio_location_id: staff_member.studio_location.id
+        can :index, Sale
+      else
+        cannot :read, Sale
+        cannot :manage, Sale
+        cannot :index, Sale
+      end
+
+      # FIXED: Receptionists can only see expenses for their assigned studio location
+      if staff_member.studio_location.present?
+        can :read, Expense, tenant_id: tenant.id, studio_location_id: staff_member.studio_location.id
+        can :index, Expense
+      else
+        cannot :read, Expense
+        cannot :index, Expense
+      end
 
     when 'assistant'
       # Assistants have limited permissions

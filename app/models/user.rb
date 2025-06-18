@@ -171,12 +171,25 @@ class User < ApplicationRecord
     role&.in?(['owner', 'admin']) || super_admin?
   end
 
-  def accessible_studio_locations(tenant)
-    return tenant.studio_locations if can_access_all_studios?(tenant)
+  # def accessible_studio_locations(tenant)
+  #   return tenant.studio_locations if can_access_all_studios?(tenant)
 
-    staff_member = current_staff_member(tenant)
-    staff_member&.studio_location.present? ? [staff_member.studio_location] : []
+  #   staff_member = current_staff_member(tenant)
+  #   staff_member&.studio_location.present? ? [staff_member.studio_location] : []
+  # end
+
+  def accessible_studio_locations(tenant)
+  return tenant.studio_locations if can_access_all_studios?(tenant)
+
+  staff_member = current_staff_member(tenant)
+  if staff_member&.studio_location.present?
+    # FIXED: Return an ActiveRecord relation instead of Array
+    tenant.studio_locations.where(id: staff_member.studio_location.id)
+  else
+    # Return empty relation instead of empty array
+    tenant.studio_locations.none
   end
+end
 
   def theme
     preference('theme', 'light')
