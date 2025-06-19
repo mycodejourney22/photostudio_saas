@@ -1,5 +1,7 @@
 class TenantMailer < ApplicationMailer
+  include TenantMailerConcern
   default from: ENV.fetch('MAILER_FROM_EMAIL', 'noreply@photostudio.com')
+
 
   def verification_email(tenant)
     @tenant = tenant
@@ -32,6 +34,7 @@ def appointment_confirmation(appointment)
   @service_tier = appointment.service_tier
   @service_package = appointment.service_package || @service_tier&.service_package
   @studio_location = appointment.studio_location
+  setup_tenant_mailer(@tenant)
 
   mail(
     to: @customer.email,

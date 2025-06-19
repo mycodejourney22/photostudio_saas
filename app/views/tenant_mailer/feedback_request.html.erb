@@ -1,0 +1,33 @@
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h1 style="color: #7C3AED;">How was your experience?</h1>
+
+  <p>Hi <%= @customer.first_name %>,</p>
+
+  <p>Thank you for choosing <%= @tenant.name %> for your recent photoshoot!</p>
+
+  <p>We hope you had an amazing experience. Your feedback helps us continue to improve our services.</p>
+
+  <div style="background: #F3F4F6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+    <h3>Your Recent Session</h3>
+    <p><strong>Service:</strong> <%= @service_tier&.name || @appointment.session_type&.humanize %></p>
+    <p><strong>Date:</strong> <%= @appointment.scheduled_at.strftime("%B %d, %Y") %></p>
+  </div>
+
+  <div style="text-align: center; margin: 30px 0;">
+    <p>We'd love to hear about your experience!</p>
+    <p style="font-size: 18px;">⭐⭐⭐⭐⭐</p>
+  </div>
+
+  <p>Thank you for being an amazing client!</p>
+
+  <p>Best regards,<br>
+  <%= @tenant.name %><br>
+  <%= @tenant.email %></p>
+
+  <hr style="margin: 30px 0; border: none; border-top: 1px solid #E5E7EB;">
+
+  <p style="font-size: 12px; color: #6B7280;">
+    Studio: <%= @tenant.name %><br>
+    Website: <%= @tenant.full_domain %>
+  </p>
+</div>

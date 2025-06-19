@@ -1,0 +1,48 @@
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h1 style="color: #059669;">
+    <% case @reminder_type %>
+    <% when '1_week' %>
+      Your session is next week!
+    <% when '24_hours' %>
+      Your session is tomorrow!
+    <% when '2_hours' %>
+      Your session starts soon!
+    <% else %>
+      Session reminder
+    <% end %>
+  </h1>
+
+  <p>Hi <%= @customer.first_name %>,</p>
+
+  <p>This is a friendly reminder about your upcoming appointment with <%= @tenant.name %>.</p>
+
+  <div style="background: #F3F4F6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+    <h3>Session Details</h3>
+    <p><strong>Date & Time:</strong> <%= @appointment.scheduled_at.strftime("%A, %B %d, %Y at %I:%M %p") %></p>
+    <p><strong>Service:</strong> <%= @service_tier&.name || @appointment.session_type&.humanize %></p>
+    <% if @studio_location %>
+      <p><strong>Location:</strong> <%= @studio_location.name %></p>
+      <% if @studio_location.address.present? %>
+        <p><strong>Address:</strong> <%= @studio_location.address %></p>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if @reminder_type == '24_hours' %>
+    <div style="background: #FEF3C7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+      <p><strong>Preparation tips:</strong></p>
+      <ul>
+        <li>Get a good night's sleep</li>
+        <li>Avoid busy patterns on clothing</li>
+        <li>Bring a few outfit options</li>
+        <li>Arrive 10 minutes early</li>
+      </ul>
+    </div>
+  <% end %>
+
+  <p>We're excited to work with you!</p>
+
+  <p>Best regards,<br>
+  <%= @tenant.name %><br>
+  <%= @tenant.email %></p>
+</div>
