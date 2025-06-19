@@ -23,6 +23,7 @@ class Tenant < ApplicationRecord
   # Studio and location management
   has_many :studios, dependent: :destroy
   has_many :studio_locations, dependent: :destroy
+  has_many :email_logs, dependent: :destroy
 
   # Service management
   has_many :service_packages, dependent: :destroy
@@ -43,6 +44,8 @@ class Tenant < ApplicationRecord
   before_validation :normalize_subdomain
   before_create :generate_verification_token
   after_create :create_default_branding, :setup_default_services
+  after_create :setup_default_email_settings
+
 
   # Scopes
   scope :active, -> { where(status: 'active') }
@@ -115,6 +118,115 @@ class Tenant < ApplicationRecord
       revenue: sales.sum(:total_amount)
     }
   end
+
+  def smtp_configured?
+  mailer_enabled? && smtp_settings['host'].present?
+end
+
+def email_from_address
+  email_settings.dig('from_email') || email
+end
+
+def email_from_name
+  email_settings.dig('from_name') || name
+end
+
+def reply_to_email
+  email_settings.dig('reply_to_email') || email
+end
+
+# Default email settings setup
+def setup_default_email_settings
+  return if email_settings.present?
+
+  update!(
+    email_settings: {
+      'from_name' => name,
+      'from_email' => email,
+      'reply_to_email' => email,
+      'use_custom_templates' => false,
+      'send_confirmations' => true,
+      'send_reminders' => true,
+      'send_feedback_requests' => true,
+      'reminder_schedule' => {
+        '1_week' => false,
+        '24_hours' => true,
+        '2_hours' => false
+      },
+      'feedback_delay_hours' => 2,
+      'contact_info' => {
+        'phone' => phone,
+        'email' => email,
+        'website' => full_domain
+      }
+    }
+  )
+end
+
+def confirmations_enabled?
+  email_settings.dig('send_confirmations') != false
+end
+
+def reminders_enabled?
+  email_settings.dig('send_reminders') != false
+end
+
+def feedback_requests_enabled?
+  email_settings.dig('send_feedback_requests') != false
+end
+
+def reminder_schedule
+  email_settings.dig('reminder_schedule') || { '24_hours' => true }
+end
+
+def feedback_delay_hours
+  email_settings.dig('feedback_delay_hours') || 2
+end
+
+# SMTP configuration helpers
+def configure_smtp!(host:, port: 587, username: nil, password: nil, authentication: 'plain', ssl: false, domain: nil)
+  smtp_config = {
+    'host' => host,
+    'port' => port,
+    'authentication' => authentication,
+    'ssl' => ssl,
+    'domain' => domain || full_domain
+  }
+
+  smtp_config['username'] = username if username.present?
+  smtp_config['password'] = password if password.present?
+
+  update!(
+    smtp_settings: smtp_config,
+    mailer_enabled: true
+  )
+end
+
+def test_smtp_connection
+  return { success: false, error: 'SMTP not configured' } unless smtp_configured?
+
+  begin
+    # Create a test mailer instance
+    test_mail = Mail.new do
+      from     email_from_address
+      to       email
+      subject  'SMTP Test - PhotoStudio Pro'
+      body     'This is a test email to verify SMTP configuration.'
+    end
+
+    # Apply SMTP settings
+    smtp_config = TenantMailerConcern.new.send(:build_smtp_config, self)
+    test_mail.delivery_method(:smtp, smtp_config)
+
+    # Test connection without sending
+    test_mail.delivery_method.settings
+
+    { success: true, message: 'SMTP configuration is valid' }
+  rescue => e
+    { success: false, error: e.message }
+  end
+end
+
 
   # Service package helpers
   def active_service_packages

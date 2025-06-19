@@ -1,0 +1,422 @@
+<!-- app/views/admin/email_settings/show.html.erb -->
+<% content_for :title, "Email Settings - #{current_tenant.name}" %>
+
+<div class="min-h-screen bg-gray-50 flex">
+  <!-- Sidebar - Desktop -->
+  <div class="hidden lg:flex lg:flex-shrink-0">
+    <div class="flex flex-col w-64">
+      <div class="flex-1 flex flex-col min-h-0 bg-gradient-to-b from-blue-600 to-purple-700">
+        <%= render 'shared/sidebar' %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile sidebar overlay -->
+  <div class="lg:hidden" data-controller="mobile-navigation">
+    <!-- Mobile menu button -->
+    <div class="fixed top-4 left-4 z-50">
+      <button data-action="mobile-navigation#toggleMenu"
+              class="bg-white p-2 rounded-lg shadow-lg text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile backdrop -->
+    <div data-mobile-navigation-target="backdrop"
+         data-action="click->mobile-navigation#closeOnBackdrop"
+         class="hidden fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+
+    <!-- Mobile sidebar -->
+    <div data-mobile-navigation-target="menu"
+         class="fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-blue-600 to-purple-700 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out">
+      <%= render 'shared/sidebar' %>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
+      <div class="px-4 lg:px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">Email Settings</h1>
+            <p class="text-gray-600 mt-1">Configure your studio's email notifications and SMTP settings.</p>
+          </div>
+
+          <% if @tenant.smtp_configured? %>
+            <div class="flex items-center space-x-2">
+              <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+              <span class="text-sm text-green-600 font-medium">SMTP Active</span>
+            </div>
+          <% else %>
+            <div class="flex items-center space-x-2">
+              <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
+              <span class="text-sm text-gray-500 font-medium">Using System SMTP</span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main content area -->
+    <main class="flex-1 overflow-auto">
+      <div class="max-w-4xl mx-auto py-8 px-4 lg:px-6">
+
+        <!-- Test Result Alert -->
+        <% if @smtp_test_result %>
+          <div class="mb-6 p-4 rounded-lg <%= @smtp_test_result[:success] ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200' %>">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <% if @smtp_test_result[:success] %>
+                  <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  </svg>
+                <% else %>
+                  <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                  </svg>
+                <% end %>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm <%= @smtp_test_result[:success] ? 'text-green-800' : 'text-red-800' %>">
+                  <%= @smtp_test_result[:message] %>
+                </p>
+              </div>
+            </div>
+          </div>
+        <% end %>
+
+        <%= form_with model: @tenant, url: admin_email_settings_path, method: :patch, local: true, class: "space-y-8" do |form| %>
+
+    <!-- Email Preferences Section -->
+    <div class="bg-white shadow rounded-lg">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-900">Email Preferences</h2>
+        <p class="text-sm text-gray-600">Configure which emails to send and when.</p>
+      </div>
+
+      <div class="p-6 space-y-6">
+        <!-- Basic Email Settings -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <%= form.label :from_name, "From Name", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.text_field :from_name,
+                value: @tenant.email_settings.dig('from_name') || @tenant.name,
+                name: "tenant[email_settings][from_name]",
+                class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+          </div>
+
+          <div>
+            <%= form.label :from_email, "From Email", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.email_field :from_email,
+                value: @tenant.email_settings.dig('from_email') || @tenant.email,
+                name: "tenant[email_settings][from_email]",
+                class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+          </div>
+
+          <div>
+            <%= form.label :reply_to_email, "Reply-To Email", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.email_field :reply_to_email,
+                value: @tenant.email_settings.dig('reply_to_email') || @tenant.email,
+                name: "tenant[email_settings][reply_to_email]",
+                class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+          </div>
+
+          <div>
+            <%= form.label :feedback_delay_hours, "Feedback Request Delay (hours)", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.number_field :feedback_delay_hours,
+                value: @tenant.email_settings.dig('feedback_delay_hours') || 2,
+                name: "tenant[email_settings][feedback_delay_hours]",
+                min: 1, max: 168,
+                class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+            <p class="mt-1 text-sm text-gray-500">How long to wait after appointment completion before sending feedback request</p>
+          </div>
+        </div>
+
+        <!-- Email Types -->
+        <div>
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Email Types</h3>
+          <div class="space-y-3">
+            <label class="flex items-center">
+              <%= form.check_box :send_confirmations,
+                  { checked: @tenant.email_settings.dig('send_confirmations') != false,
+                    name: "tenant[email_settings][send_confirmations]" },
+                  "true", "false" %>
+              <span class="ml-2 text-sm text-gray-700">Send appointment confirmation emails</span>
+            </label>
+
+            <label class="flex items-center">
+              <%= form.check_box :send_reminders,
+                  { checked: @tenant.email_settings.dig('send_reminders') != false,
+                    name: "tenant[email_settings][send_reminders]" },
+                  "true", "false" %>
+              <span class="ml-2 text-sm text-gray-700">Send appointment reminder emails</span>
+            </label>
+
+            <label class="flex items-center">
+              <%= form.check_box :send_feedback_requests,
+                  { checked: @tenant.email_settings.dig('send_feedback_requests') != false,
+                    name: "tenant[email_settings][send_feedback_requests]" },
+                  "true", "false" %>
+              <span class="ml-2 text-sm text-gray-700">Send feedback request emails</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Reminder Schedule -->
+        <div>
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Reminder Schedule</h3>
+          <div class="space-y-3">
+            <label class="flex items-center">
+              <%= form.check_box :one_week,
+                  { checked: @tenant.reminder_schedule['1_week'] == true,
+                    name: "tenant[email_settings][reminder_schedule][one_week]" },
+                  "true", "false" %>
+              <span class="ml-2 text-sm text-gray-700">1 week before appointment</span>
+            </label>
+
+            <label class="flex items-center">
+              <%= form.check_box :twenty_four_hours,
+                  { checked: @tenant.reminder_schedule['24_hours'] != false,
+                    name: "tenant[email_settings][reminder_schedule][twenty_four_hours]" },
+                  "true", "false" %>
+              <span class="ml-2 text-sm text-gray-700">24 hours before appointment</span>
+            </label>
+
+            <label class="flex items-center">
+              <%= form.check_box :two_hours,
+                  { checked: @tenant.reminder_schedule['2_hours'] == true,
+                    name: "tenant[email_settings][reminder_schedule][two_hours]" },
+                  "true", "false" %>
+              <span class="ml-2 text-sm text-gray-700">2 hours before appointment</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SMTP Configuration Section -->
+    <div class="bg-white shadow rounded-lg">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-900">SMTP Configuration</h2>
+        <p class="text-sm text-gray-600">Configure your email server settings.</p>
+        <% unless @tenant.smtp_configured? %>
+          <div class="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p class="text-sm text-yellow-800">
+              ⚠️ SMTP is not configured. Emails will use the system default SMTP settings.
+            </p>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="p-6 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <%= form.label :smtp_host, "SMTP Host", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.text_field :smtp_host,
+                value: @tenant.smtp_settings['host'],
+                name: "tenant[smtp_settings][host]",
+                placeholder: "smtp.gmail.com",
+                class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+          </div>
+
+          <div>
+            <%= form.label :smtp_port, "Port", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.number_field :smtp_port,
+                value: @tenant.smtp_settings['port'] || 587,
+                name: "tenant[smtp_settings][port]",
+                class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+          </div>
+
+          <div>
+            <%= form.label :smtp_username, "Username", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.text_field :smtp_username,
+                value: @tenant.smtp_settings['username'],
+                name: "tenant[smtp_settings][username]",
+                class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+          </div>
+
+          <div>
+            <%= form.label :smtp_password, "Password", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.password_field :smtp_password,
+                value: @tenant.smtp_settings['password'],
+                name: "tenant[smtp_settings][password]",
+                class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+          </div>
+
+          <div>
+            <%= form.label :smtp_authentication, "Authentication", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.select :smtp_authentication,
+                options_for_select([
+                  ['Plain', 'plain'],
+                  ['Login', 'login'],
+                  ['CRAM-MD5', 'cram_md5']
+                ], @tenant.smtp_settings['authentication'] || 'plain'),
+                {},
+                { name: "tenant[smtp_settings][authentication]",
+                  class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
+          </div>
+
+          <div>
+            <%= form.label :smtp_domain, "Domain", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.text_field :smtp_domain,
+                value: @tenant.smtp_settings['domain'] || @tenant.full_domain,
+                name: "tenant[smtp_settings][domain]",
+                class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+          </div>
+        </div>
+
+        <!-- SSL Option -->
+        <div class="flex items-center">
+          <%= form.check_box :smtp_ssl,
+              { checked: @tenant.smtp_settings['ssl'] == true,
+                name: "tenant[smtp_settings][ssl]" },
+              "true", "false" %>
+          <span class="ml-2 text-sm text-gray-700">Use SSL/TLS encryption</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Information Section -->
+    <div class="bg-white shadow rounded-lg">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-900">Contact Information</h2>
+        <p class="text-sm text-gray-600">This information appears in your email templates.</p>
+      </div>
+
+      <div class="p-6 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <%= form.label :contact_email, "Contact Email", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.email_field :contact_email,
+                value: @tenant.email_settings.dig('contact_info', 'email') || @tenant.email,
+                name: "tenant[email_settings][contact_info][email]",
+                class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+          </div>
+
+          <div>
+            <%= form.label :contact_website, "Website", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.text_field :contact_website,
+                value: @tenant.email_settings.dig('contact_info', 'website') || @tenant.full_domain,
+                name: "tenant[email_settings][contact_info][website]",
+                class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+          </div>
+
+          <div class="md:col-span-2">
+            <%= form.label :contact_address, "Studio Address", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.text_area :contact_address,
+                value: @tenant.email_settings.dig('contact_info', 'address'),
+                name: "tenant[email_settings][contact_info][address]",
+                rows: 3,
+                placeholder: "Enter your main studio address (optional)",
+                class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex justify-between items-center">
+      <div class="flex space-x-3">
+        <%= form.submit "Save Settings",
+            class: "bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg" %>
+
+        <% if @tenant.smtp_configured? %>
+          <%= link_to "Test SMTP", admin_email_settings_path(test_smtp: true),
+              method: :post,
+              class: "bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg" %>
+        <% end %>
+      </div>
+
+      <% if @tenant.smtp_configured? %>
+        <%= link_to "Reset SMTP", admin_email_settings_path(reset_smtp: true),
+            method: :delete,
+            data: { confirm: "Are you sure? This will disable custom SMTP and revert to system defaults." },
+            class: "bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg" %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- Email Statistics (simplified until email_logs table is created) -->
+  <div class="mt-8 bg-white shadow rounded-lg">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Email Configuration Status</h2>
+      <p class="text-sm text-gray-600">Current email setup for your studio.</p>
+    </div>
+
+    <div class="p-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="text-center">
+          <div class="text-2xl font-bold <%= @tenant.smtp_configured? ? 'text-green-600' : 'text-gray-400' %>">
+            <%= @tenant.smtp_configured? ? '✓' : '○' %>
+          </div>
+          <div class="text-sm text-gray-600">SMTP Configured</div>
+          <% if @tenant.smtp_configured? %>
+            <div class="text-xs text-green-600 mt-1">Using <%= @tenant.smtp_settings['host'] %></div>
+          <% else %>
+            <div class="text-xs text-gray-500 mt-1">Using system default</div>
+          <% end %>
+        </div>
+
+        <div class="text-center">
+          <div class="text-2xl font-bold <%= @tenant.confirmations_enabled? ? 'text-blue-600' : 'text-gray-400' %>">
+            <%= @tenant.confirmations_enabled? ? '✓' : '○' %>
+          </div>
+          <div class="text-sm text-gray-600">Confirmations enabled</div>
+        </div>
+
+        <div class="text-center">
+          <div class="text-2xl font-bold <%= @tenant.reminders_enabled? ? 'text-purple-600' : 'text-gray-400' %>">
+            <%= @tenant.reminders_enabled? ? '✓' : '○' %>
+          </div>
+          <div class="text-sm text-gray-600">Reminders enabled</div>
+        </div>
+      </div>
+
+      <% if @tenant.smtp_configured? %>
+        <div class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <h4 class="text-green-800 font-medium">Email System Ready</h4>
+          <p class="text-green-700 text-sm mt-1">
+            Your custom SMTP is configured and ready to send appointment emails.
+          </p>
+        </div>
+      <% else %>
+        <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <h4 class="text-yellow-800 font-medium">Using System Email</h4>
+          <p class="text-yellow-700 text-sm mt-1">
+            Configure custom SMTP above for branded emails from your domain.
+          </p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Help Section -->
+  <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+    <h3 class="text-lg font-medium text-blue-900">Need Help?</h3>
+    <div class="mt-3 text-sm text-blue-800">
+      <h4 class="font-medium">Popular SMTP Providers:</h4>
+      <ul class="mt-2 space-y-1">
+        <li><strong>Gmail:</strong> smtp.gmail.com, Port 587, Use App Password</li>
+        <li><strong>SendGrid:</strong> smtp.sendgrid.net, Port 587</li>
+        <li><strong>Mailgun:</strong> smtp.mailgun.org, Port 587</li>
+        <li><strong>Postmark:</strong> smtp.postmarkapp.com, Port 587</li>
+      </ul>
+
+      <div class="mt-4">
+        <h4 class="font-medium">Tips:</h4>
+        <ul class="mt-2 space-y-1">
+          <li>• For Gmail, use an App Password instead of your regular password</li>
+          <li>• Test your SMTP settings after configuration</li>
+          <li>• Use a professional email address for better deliverability</li>
+          <li>• Keep your SMTP credentials secure</li>
+        </ul>
+      </div>
+    </div>
+      </div>
+    </main>
+  </div>
+</div>

@@ -9,6 +9,9 @@ class Appointment < ApplicationRecord
   belongs_to :service_tier, optional: true # new package-based system
   belongs_to :booked_by_staff, class_name: 'StaffMember', optional: true
 
+  has_many :email_logs, dependent: :destroy
+
+
   # Staff assignments for production workflow
   # Check if we have assigned_photographer_id or photographer_id columns
   if column_names.include?('assigned_photographer_id')
@@ -37,6 +40,13 @@ class Appointment < ApplicationRecord
   validates :status, inclusion: { in: %w[pending confirmed in_progress completed cancelled] }
   validates :payment_status, inclusion: { in: %w[unpaid partial_paid paid refunded] }
   validates :booking_source, inclusion: { in: %w[customer staff walk_in online] }
+
+  has_many :email_logs, dependent: :destroy
+
+  # Email automation callbacks
+  after_create :send_confirmation_email, if: :should_send_confirmation?
+  after_update :send_status_update_email, if: :status_changed_to_important_state?
+  after_update :schedule_feedback_request, if: :just_completed?
 
   # Validate staff assignments based on roles (only if columns exist)
   validate :photographer_must_be_photographer_role, if: -> { assigned_photographer.present? }
@@ -482,4 +492,70 @@ class Appointment < ApplicationRecord
       errors.add(:assigned_editor, "must be an editor")
     end
   end
+
+  def should_send_confirmation?
+  customer.email.present? &&
+  tenant.smtp_configured? &&
+  tenant.confirmations_enabled? &&
+  status.in?(['confirmed', 'pending'])
+end
+
+def status_changed_to_important_state?
+  saved_change_to_status? &&
+  status.in?(['confirmed', 'in_progress', 'completed', 'cancelled']) &&
+  customer.email.present? &&
+  tenant.smtp_configured?
+end
+
+def just_completed?
+  saved_change_to_status? &&
+  status == 'completed' &&
+  tenant.feedback_requests_enabled?
+end
+
+def send_confirmation_email
+  AppointmentConfirmationJob.perform_later(id)
+end
+
+def send_status_update_email
+  previous_status = status_before_last_save
+  AppointmentMailerService.new(self).send_status_update(previous_status)
+end
+
+def schedule_feedback_request
+  delay_hours = tenant.feedback_delay_hours || 2
+  AppointmentFeedbackJob.set(wait: delay_hours.hours).perform_later(id)
+end
+
+# Add this method for checking if just created
+def just_created?
+  created_at >= 5.minutes.ago
+end
+
+# Email token helpers
+def generate_cancellation_token
+  payload = {
+    appointment_id: id,
+    customer_email: customer.email,
+    action: 'cancel',
+    expires_at: 24.hours.from_now.to_i
+  }
+  JWT.encode(payload, Rails.application.secret_key_base, 'HS256')
+end
+
+def generate_reschedule_token
+  payload = {
+    appointment_id: id,
+    customer_email: customer.email,
+    action: 'reschedule',
+    expires_at: 7.days.from_now.to_i
+  }
+  JWT.encode(payload, Rails.application.secret_key_base, 'HS256')
+end
+
+def gallery_ready?
+  # Implement based on your gallery/photo delivery system
+  # For now, assume it's ready if appointment is completed and has been 24+ hours
+  completed? && completed_at.present? && completed_at <= 24.hours.ago
+end
 end

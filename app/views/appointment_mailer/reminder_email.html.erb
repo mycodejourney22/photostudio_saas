@@ -1,0 +1,98 @@
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+  <!-- Header -->
+  <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; text-align: center;">
+    <% if @tenant.logo.attached? %>
+      <%= image_tag @tenant.logo, style: "max-height: 60px; margin-bottom: 15px;" %>
+    <% end %>
+    <h1 style="margin: 0; font-size: 28px;">
+      <% case @reminder_type %>
+      <% when '24_hours' %>
+        Your session is tomorrow!
+      <% when '2_hours' %>
+        Your session starts soon!
+      <% when '1_week' %>
+        Session reminder
+      <% else %>
+        Session reminder
+      <% end %>
+    </h1>
+    <p style="margin: 10px 0 0 0; opacity: 0.9;"><%= @tenant.name %></p>
+  </div>
+
+  <!-- Main Content -->
+  <div style="padding: 30px;">
+    <p style="font-size: 18px; margin-bottom: 25px;">Hi <%= @customer.first_name %>,</p>
+
+    <p style="margin-bottom: 20px;">
+      <% case @reminder_type %>
+      <% when '24_hours' %>
+        Just a friendly reminder that your photoshoot is scheduled for tomorrow!
+      <% when '2_hours' %>
+        Your photoshoot starts in about 2 hours. We can't wait to see you!
+      <% when '1_week' %>
+        Your photoshoot is coming up next week. Here's a quick reminder of the details:
+      <% else %>
+        This is a reminder about your upcoming photoshoot:
+      <% end %>
+    </p>
+
+    <!-- Appointment Details -->
+    <div style="background: #f8f9fa; border-left: 4px solid #28a745; padding: 20px; margin: 25px 0;">
+      <h3 style="margin: 0 0 15px 0; color: #28a745;">Session Details</h3>
+
+      <div style="margin-bottom: 12px;">
+        <strong>Date & Time:</strong> <%= @appointment.scheduled_at.strftime("%A, %B %d, %Y at %I:%M %p") %>
+      </div>
+
+      <div style="margin-bottom: 12px;">
+        <strong>Service:</strong> <%= @service_tier.name %>
+      </div>
+
+      <div style="margin-bottom: 12px;">
+        <strong>Location:</strong> <%= @studio_location.name %>
+        <% if @studio_location.address.present? %>
+          <br><small style="color: #666;"><%= @studio_location.address %></small>
+        <% end %>
+      </div>
+
+      <div style="margin-bottom: 12px;">
+        <strong>Duration:</strong> <%= @appointment.duration_minutes %> minutes
+      </div>
+    </div>
+
+    <!-- Preparation Tips -->
+    <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin: 25px 0;">
+      <h4 style="margin: 0 0 15px 0; color: #856404;">Preparation Tips</h4>
+      <ul style="margin: 0; padding-left: 20px; color: #856404;">
+        <% @preparation_tips.each do |tip| %>
+          <li style="margin-bottom: 8px;"><%= tip %></li>
+        <% end %>
+      </ul>
+    </div>
+
+    <!-- Need to reschedule? -->
+    <div style="text-align: center; margin: 30px 0;">
+      <p style="margin-bottom: 15px;">Need to make changes?</p>
+      <% if @reschedule_url %>
+        <a href="<%= @reschedule_url %>" style="display: inline-block; background: #667eea; color: white; text-decoration: none; padding: 12px 25px; border-radius: 5px;">Reschedule Appointment</a>
+      <% end %>
+    </div>
+
+    <!-- Contact Info -->
+    <div style="border-top: 1px solid #e9ecef; padding-top: 20px; margin-top: 30px;">
+      <p style="margin: 5px 0;">
+        <strong>Questions or need directions?</strong><br>
+        Email: <%= @contact_info['email'] %><br>
+        <% if @contact_info['phone'].present? %>
+          Phone: <%= @contact_info['phone'] %><br>
+        <% end %>
+      </p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 14px;">
+    <p style="margin: 0;">We're excited to create something amazing with you!</p>
+    <p style="margin: 5px 0 0 0;">© <%= Date.current.year %> <%= @tenant.name %></p>
+  </div>
+</div>

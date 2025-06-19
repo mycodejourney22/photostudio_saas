@@ -326,6 +326,12 @@ Rails.application.routes.draw do
 
     # Regular user access to setup (limited) - MOVED TO TENANT CONTEXT
     namespace :admin do
+
+      resource :email_settings, only: [:show, :update] do
+        post :test_smtp
+        delete :reset_smtp
+      end
+
       namespace :setup do
         root 'dashboard#index'
         resources :expense_categories, except: [:show]

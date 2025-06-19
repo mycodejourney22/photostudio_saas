@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_18_073536) do
+ActiveRecord::Schema[7.1].define(version: 2025_06_19_151545) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -128,6 +128,25 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_18_073536) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["tenant_id"], name: "index_customers_on_tenant_id"
+  end
+
+  create_table "email_logs", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.bigint "appointment_id", null: false
+    t.string "email_type", null: false
+    t.string "recipient_email", null: false
+    t.datetime "sent_at"
+    t.datetime "failed_at"
+    t.text "error_message"
+    t.json "metadata", default: {}
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["appointment_id", "email_type"], name: "index_email_logs_on_appointment_id_and_email_type"
+    t.index ["appointment_id"], name: "index_email_logs_on_appointment_id"
+    t.index ["failed_at"], name: "index_email_logs_on_failed_at"
+    t.index ["sent_at"], name: "index_email_logs_on_sent_at"
+    t.index ["tenant_id", "email_type"], name: "index_email_logs_on_tenant_id_and_email_type"
+    t.index ["tenant_id"], name: "index_email_logs_on_tenant_id"
   end
 
   create_table "expense_attachments", force: :cascade do |t|
@@ -422,7 +441,11 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_18_073536) do
     t.json "metadata", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.json "smtp_settings", default: {}
+    t.json "email_settings", default: {}
+    t.boolean "mailer_enabled", default: false
     t.index ["email"], name: "index_tenants_on_email", unique: true
+    t.index ["mailer_enabled"], name: "index_tenants_on_mailer_enabled"
     t.index ["subdomain"], name: "index_tenants_on_subdomain", unique: true
     t.index ["verification_token"], name: "index_tenants_on_verification_token", unique: true
   end
@@ -463,6 +486,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_18_073536) do
   add_foreign_key "appointments", "users"
   add_foreign_key "brandings", "tenants"
   add_foreign_key "customers", "tenants"
+  add_foreign_key "email_logs", "appointments"
+  add_foreign_key "email_logs", "tenants"
   add_foreign_key "expense_attachments", "expenses"
   add_foreign_key "expense_categories", "tenants"
   add_foreign_key "expenses", "expense_categories"
