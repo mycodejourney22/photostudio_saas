@@ -21,7 +21,7 @@ class Sale < ApplicationRecord
   validates :sale_date, presence: true
   validates :sale_type, inclusion: { in: %w[appointment walk_in online phone] }
   validates :payment_status, inclusion: { in: %w[unpaid partial paid refunded] }
-  validates :sale_status, inclusion: { in: %w[pending confirmed completed cancelled] }
+  validates :sale_status, inclusion: { in: %w[ confirmed completed cancelled] }
 
   scope :for_studio_location, ->(location) { where(studio_location: location) }
   scope :for_studio_locations, ->(locations) { where(studio_location: locations) }
@@ -46,7 +46,7 @@ class Sale < ApplicationRecord
   scope :recent, -> { order(created_at: :desc) }
 
   enum sale_type: { appointment: 0, walk_in: 1, online: 2, phone: 3 }
-  enum payment_status: { unpaid: 0, partial: 1, paid: 2, refunded: 3 }
+  enum payment_status: { unpaid: 0, partial: 1, paid: 2, refunded: 3}
   enum sale_status: { pending: 0, confirmed: 1, completed: 2, cancelled: 3 }
 
   # FIXED: Correct callback order - calculate totals FIRST

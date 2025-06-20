@@ -103,10 +103,11 @@
                 <!-- Staff Member -->
                 <div>
                   <%= form.label :staff_member_id, "Staff Member", class: "block text-sm font-medium text-gray-700 mb-2" %>
-                  <%= form.select :staff_member_id,
-                        options_for_select([['Select Staff Member', '']] + @staff_members.select { |s| s.role.in?(['customer_service', 'manager', 'receptionist']) }.map {|s| ["#{s.full_name} (#{s.role.humanize})", s.id]}, @sale.staff_member_id),
-                        {},
-                        { class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" } %>
+                  <%= form.hidden_field :staff_member_id, value: current_user.staff_member&.id %>
+                  <div class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-900">
+                    <%= current_user.staff_member&.first_name %> <%= current_user.staff_member&.last_name %>  (You)
+                  </div>
+                  <p class="mt-1 text-xs text-gray-500">Sale will be assigned to you</p>
                 </div>
 
                 <!-- Sale Type -->
@@ -131,13 +132,16 @@
                         class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" %>
                 </div>
 
-                <!-- Appointment (if applicable) -->
-                <div id="appointmentField" style="<%= 'display: none;' unless @sale.sale_type == 'appointment' %>">
-                  <%= form.label :appointment_id, "Related Appointment", class: "block text-sm font-medium text-gray-700 mb-2" %>
-                  <%= form.select :appointment_id,
-                        options_for_select([['Select Appointment', '']] + @appointments.map {|a| ["#{a.customer.full_name} - #{a.scheduled_at.strftime('%m/%d/%Y %I:%M %p')}", a.id]}, @sale.appointment_id),
-                        {},
-                        { class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" } %>
+
+                <div>
+                  <div id="appointmentField" style="<%= 'display: none;' unless @sale.sale_type == 'appointment' %>">
+                    <%= form.label :appointment_id, "Related Appointment", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                    <%= form.hidden_field :appointment_id, value: @appointment.id %>
+                    <div class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-900">
+                      <%= "#{@appointment.customer.full_name} - #{@appointment.scheduled_at.strftime('%m/%d/%Y %I:%M %p')}"%> (You)
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Sale will be assigned to you</p>
+                  </div>
                 </div>
               </div>
 
@@ -373,16 +377,16 @@
                 <!-- Totals -->
                 <div class="flex justify-between">
                   <span class="text-sm text-gray-600">Subtotal</span>
-                  <span class="text-sm font-medium text-gray-900" data-sales-form-target="subtotalAmount">₦0.00</span>
+                  <span class="text-sm font-medium text-gray-900" data-sales-form-target="subtotalAmount">$0.00</span>
                 </div>
                 <div class="flex justify-between">
                   <span class="text-sm text-gray-600">Discount</span>
-                  <span class="text-sm font-medium text-gray-900" data-sales-form-target="discountAmount">₦0.00</span>
+                  <span class="text-sm font-medium text-gray-900" data-sales-form-target="discountAmount">$0.00</span>
                 </div>
                 <div class="border-t border-gray-200 pt-4">
                   <div class="flex justify-between">
                     <span class="text-lg font-semibold text-gray-900">Total</span>
-                    <span class="text-lg font-semibold text-gray-900" data-sales-form-target="totalAmount">₦0.00</span>
+                    <span class="text-lg font-semibold text-gray-900" data-sales-form-target="totalAmount">$0.00</span>
                   </div>
                 </div>
 
@@ -429,7 +433,7 @@
                 <!-- Balance Left -->
                 <div class="balance-row flex justify-between text-sm" style="display: none;">
                   <span class="text-gray-600">Balance Left</span>
-                  <span class="font-medium text-orange-600" data-sales-form-target="balanceLeft">₦0.00</span>
+                  <span class="font-medium text-orange-600" data-sales-form-target="balanceLeft">$0.00</span>
                 </div>
 
                 <!-- Payment Status Display -->
