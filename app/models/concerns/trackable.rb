@@ -3,8 +3,8 @@ module Trackable
 
   included do
     before_create :set_uuid
-    after_create :track_creation
-    after_update :track_updates
+    # after_create :track_creation
+    # after_update :track_updates
 
     private
 
