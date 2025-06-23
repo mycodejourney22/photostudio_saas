@@ -28,6 +28,13 @@ class TenantConstraint
       return parts.first if parts.length >= 2 && parts.first != 'localhost'
     end
 
+    # For Heroku: demo.shuttersuites-638880348a66.herokuapp.com -> 'demo'
+    if host.include?('herokuapp.com')
+      # If it has more than 3 parts, it's a subdomain
+      # demo.shuttersuites-638880348a66.herokuapp.com -> ['demo', 'shuttersuites-638880348a66', 'herokuapp', 'com']
+      return parts.first if parts.length > 3
+    end
+
     # For production: demo.photostudio.com -> 'demo'
     return parts.first if parts.length >= 3
 
