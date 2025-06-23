@@ -1,22 +1,47 @@
+# default: &default
+#   adapter: postgresql
+#   encoding: unicode
+#   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+#   username: <%= ENV.fetch("DATABASE_USERNAME", "postgres") %>
+#   password: <%= ENV.fetch("DATABASE_PASSWORD", "postgres") %>
+#   # Remove password line entirely or set to empty
+#   host: <%= ENV.fetch("DATABASE_HOST", "localhost") %>
+#   port: <%= ENV.fetch("DATABASE_PORT", "5432") %>
+
+# development:
+#   <<: *default
+#   database: photostudio_saas_development
+
+# test:
+#   <<: *default
+#   database: photostudio_saas_test
+
+# production:
+#   <<: *default
+#   database: <%= ENV.fetch("DATABASE_NAME") { "photostudio_saas_production" } %>
+#   url: <%= ENV['DATABASE_URL'] %>
+# config/database.yml
 default: &default
   adapter: postgresql
   encoding: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  username: <%= ENV.fetch("DATABASE_USERNAME", "postgres") %>
-  password: <%= ENV.fetch("DATABASE_PASSWORD", "postgres") %>
-  # Remove password line entirely or set to empty
-  host: <%= ENV.fetch("DATABASE_HOST", "localhost") %>
-  port: <%= ENV.fetch("DATABASE_PORT", "5432") %>
 
 development:
   <<: *default
   database: photostudio_saas_development
+  username: <%= ENV.fetch("DATABASE_USERNAME", "postgres") %>
+  password: <%= ENV.fetch("DATABASE_PASSWORD", "postgres") %>
+  host: <%= ENV.fetch("DATABASE_HOST", "localhost") %>
+  port: <%= ENV.fetch("DATABASE_PORT", "5432") %>
 
 test:
   <<: *default
   database: photostudio_saas_test
+  username: <%= ENV.fetch("DATABASE_USERNAME", "postgres") %>
+  password: <%= ENV.fetch("DATABASE_PASSWORD", "postgres") %>
+  host: <%= ENV.fetch("DATABASE_HOST", "localhost") %>
+  port: <%= ENV.fetch("DATABASE_PORT", "5432") %>
 
 production:
   <<: *default
-  database: <%= ENV.fetch("DATABASE_NAME") { "photostudio_saas_production" } %>
   url: <%= ENV['DATABASE_URL'] %>
