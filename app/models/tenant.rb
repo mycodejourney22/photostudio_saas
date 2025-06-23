@@ -155,7 +155,7 @@ def setup_default_email_settings
       },
       'feedback_delay_hours' => 2,
       'contact_info' => {
-        'phone' => phone,
+        'phone' => '',
         'email' => email,
         'website' => full_domain
       }

@@ -12,6 +12,8 @@ class TenantRegistrationController < ApplicationController
     @tenant = Tenant.new(tenant_params)
     @user = User.new(user_params)
 
+    @user.skip_confirmation!
+
     # Validate both models before attempting to save
     tenant_valid = @tenant.valid?
     user_valid = @user.valid?

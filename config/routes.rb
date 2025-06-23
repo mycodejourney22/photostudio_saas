@@ -7,7 +7,10 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   # Root route
-  root "dashboard#index"
+  # root "dashboard#index"
+  root 'tenant_registration#new'
+
+
 
   # Devise routes for authentication
   devise_for :users, controllers: {
@@ -17,8 +20,14 @@ Rails.application.routes.draw do
   }
 
   # Public tenant registration
-  get '/register', to: 'tenant_registration#new', as: :new_tenant_registration
-  post '/register', to: 'tenant_registration#create', as: :tenant_registrations
+  # get '/register', to: 'tenant_registration#new', as: :new_tenant_registration
+  # post '/register', to: 'tenant_registration#create', as: :tenant_registrations
+      get 'signup', to: 'tenant_registration#new', as: :new_tenant_registration
+    post 'signup', to: 'tenant_registration#create', as: :tenant_registration
+    get 'signup/verify/:token', to: 'tenant_registration#verify', as: :tenant_registration_verify
+    get 'signup/verified', to: 'tenant_registration#verified', as: :tenant_registration_verified
+    get 'signup/success', to: 'tenant_registration#success', as: :tenant_registration_success
+    get 'check-subdomain', to: 'tenant_registration#check_subdomain'
 
   # Public booking flow
   scope :book do
