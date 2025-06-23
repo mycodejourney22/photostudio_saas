@@ -87,7 +87,7 @@ Rails.application.configure do
       address: 'smtp.sendgrid.net',
       user_name: ENV['SENDGRID_USERNAME'],
       password: ENV['SENDGRID_PASSWORD'],
-      domain: ENV.fetch('APP_DOMAIN', 'shuttersuites.herokuapp.com'),
+      domain: ENV.fetch('APP_DOMAIN', 'shuttersuites-638880348a66.herokuapp.com'),
       authentication: :plain,
       enable_starttls_auto: true
     }
@@ -98,7 +98,7 @@ Rails.application.configure do
       address: ENV.fetch('MAILGUN_SMTP_SERVER', 'smtp.mailgun.org'),
       user_name: ENV['MAILGUN_SMTP_LOGIN'],
       password: ENV['MAILGUN_SMTP_PASSWORD'],
-      domain: ENV.fetch('APP_DOMAIN', 'shuttersuites.herokuapp.com'),
+      domain: ENV.fetch('APP_DOMAIN', 'shuttersuites-638880348a66.herokuapp.com'),
       authentication: :plain,
       enable_starttls_auto: true
     }
@@ -107,7 +107,7 @@ Rails.application.configure do
     config.action_mailer.smtp_settings = {
       address: ENV.fetch('SMTP_HOST'),
       port: ENV.fetch('SMTP_PORT', 587),
-      domain: ENV.fetch('SMTP_DOMAIN', ENV.fetch('APP_DOMAIN', 'shuttersuites.herokuapp.com')),
+      domain: ENV.fetch('SMTP_DOMAIN', ENV.fetch('APP_DOMAIN', 'shuttersuites-638880348a66.herokuapp.com')),
       user_name: ENV.fetch('SMTP_USERNAME'),
       password: ENV.fetch('SMTP_PASSWORD'),
       authentication: 'plain',
@@ -119,7 +119,7 @@ Rails.application.configure do
     config.action_mailer.smtp_settings = {
       address: 'localhost',
       port: 587,
-      domain: ENV.fetch('APP_DOMAIN', 'shuttersuites.herokuapp.com'),
+      domain: ENV.fetch('APP_DOMAIN', 'shuttersuites-638880348a66.herokuapp.com'),
       authentication: :plain,
       enable_starttls_auto: true
     }
@@ -129,7 +129,7 @@ Rails.application.configure do
   end
 
   config.action_mailer.default_url_options = {
-    host: ENV.fetch('APP_DOMAIN', 'shuttersuites.herokuapp.com'),
+    host: ENV.fetch('APP_DOMAIN', 'shuttersuites-638880348a66.herokuapp.com'),
     protocol: 'https'
   }
 
