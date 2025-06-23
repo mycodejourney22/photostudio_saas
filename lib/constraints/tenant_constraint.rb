@@ -28,11 +28,12 @@ class TenantConstraint
       return parts.first if parts.length >= 2 && parts.first != 'localhost'
     end
 
-    # For Heroku: demo.shuttersuites-638880348a66.herokuapp.com -> 'demo'
+    # For Heroku:
+    # - shuttersuites-638880348a66.herokuapp.com -> nil (main domain)
+    # - demo.shuttersuites-638880348a66.herokuapp.com -> 'demo' (subdomain)
     if host.include?('herokuapp.com')
-      # If it has more than 3 parts, it's a subdomain
-      # demo.shuttersuites-638880348a66.herokuapp.com -> ['demo', 'shuttersuites-638880348a66', 'herokuapp', 'com']
-      return parts.first if parts.length > 3
+      return nil if parts.length == 3  # Main Heroku domain
+      return parts.first if parts.length == 4  # Subdomain
     end
 
     # For production: demo.photostudio.com -> 'demo'
