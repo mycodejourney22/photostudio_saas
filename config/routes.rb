@@ -17,8 +17,8 @@ Rails.application.routes.draw do
   }
 
   # Public tenant registration
-  get '/register', to: 'tenant_registrations#new', as: :new_tenant_registration
-  post '/register', to: 'tenant_registrations#create', as: :tenant_registrations
+  get '/register', to: 'tenant_registration#new', as: :new_tenant_registration
+  post '/register', to: 'tenant_registration#create', as: :tenant_registrations
 
   # Public booking flow
   scope :book do
