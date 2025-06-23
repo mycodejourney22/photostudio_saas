@@ -76,19 +76,60 @@ Rails.application.configure do
 
   config.action_mailer.perform_caching = false
   config.action_mailer.delivery_method = :smtp
-  config.action_mailer.smtp_settings = {
-    address: ENV.fetch('SMTP_HOST'),
-    port: ENV.fetch('SMTP_PORT', 587),
-    domain: ENV.fetch('SMTP_DOMAIN'),
-    user_name: ENV.fetch('SMTP_USERNAME'),
-    password: ENV.fetch('SMTP_PASSWORD'),
-    authentication: 'plain',
-    enable_starttls_auto: true
-  }
+  # DEFAULT/FALLBACK SMTP Configuration
 
 
-    config.action_mailer.default_url_options = {
-    host: ENV.fetch('APP_DOMAIN'),
+  # Use Heroku add-ons for default SMTP or set fallback SMTP
+  if ENV['SENDGRID_USERNAME'].present?
+    # SendGrid addon is available
+    config.action_mailer.smtp_settings = {
+      port: ENV.fetch('SENDGRID_SMTP_PORT', 587),
+      address: 'smtp.sendgrid.net',
+      user_name: ENV['SENDGRID_USERNAME'],
+      password: ENV['SENDGRID_PASSWORD'],
+      domain: ENV.fetch('APP_DOMAIN', 'shuttersuites.herokuapp.com'),
+      authentication: :plain,
+      enable_starttls_auto: true
+    }
+  elsif ENV['MAILGUN_SMTP_LOGIN'].present?
+    # Mailgun addon is available
+    config.action_mailer.smtp_settings = {
+      port: ENV.fetch('MAILGUN_SMTP_PORT', 587),
+      address: ENV.fetch('MAILGUN_SMTP_SERVER', 'smtp.mailgun.org'),
+      user_name: ENV['MAILGUN_SMTP_LOGIN'],
+      password: ENV['MAILGUN_SMTP_PASSWORD'],
+      domain: ENV.fetch('APP_DOMAIN', 'shuttersuites.herokuapp.com'),
+      authentication: :plain,
+      enable_starttls_auto: true
+    }
+  elsif ENV['SMTP_HOST'].present?
+    # Custom SMTP environment variables are set
+    config.action_mailer.smtp_settings = {
+      address: ENV.fetch('SMTP_HOST'),
+      port: ENV.fetch('SMTP_PORT', 587),
+      domain: ENV.fetch('SMTP_DOMAIN', ENV.fetch('APP_DOMAIN', 'shuttersuites.herokuapp.com')),
+      user_name: ENV.fetch('SMTP_USERNAME'),
+      password: ENV.fetch('SMTP_PASSWORD'),
+      authentication: 'plain',
+      enable_starttls_auto: true
+    }
+  else
+    # Minimal fallback SMTP configuration
+    # This allows the app to start even without SMTP configured
+    config.action_mailer.smtp_settings = {
+      address: 'localhost',
+      port: 587,
+      domain: ENV.fetch('APP_DOMAIN', 'shuttersuites.herokuapp.com'),
+      authentication: :plain,
+      enable_starttls_auto: true
+    }
+
+    # In development/testing, you might want to use :test delivery method
+    # config.action_mailer.delivery_method = :test if Rails.env.development?
+  end
+
+  config.action_mailer.default_url_options = {
+    host: ENV.fetch('APP_DOMAIN', 'shuttersuites.herokuapp.com'),
     protocol: 'https'
   }
 
