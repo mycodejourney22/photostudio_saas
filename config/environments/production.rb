@@ -168,7 +168,7 @@ Rails.application.configure do
 
   config.action_mailer.perform_caching = false
 
-  config.active_storage.service = :amazon
+  config.active_storage.service = :production
 
 
   # Ignore bad email addresses and do not raise email delivery errors.
