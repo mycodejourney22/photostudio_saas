@@ -1,0 +1,226 @@
+<% content_for :title, "Edit Sale - #{current_tenant.name}" %>
+
+<div class="min-h-screen bg-gray-50 flex">
+  <!-- Sidebar - Desktop -->
+  <div class="hidden lg:flex lg:flex-shrink-0">
+    <div class="flex flex-col w-64">
+      <div class="flex-1 flex flex-col min-h-0 bg-gradient-to-b from-blue-600 to-purple-700">
+        <%= render 'shared/sidebar' %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile sidebar overlay -->
+  <div class="lg:hidden" data-controller="mobile-navigation">
+    <!-- Mobile menu button -->
+    <div class="fixed top-4 left-4 z-50">
+      <button data-action="mobile-navigation#toggleMenu"
+              class="bg-white p-2 rounded-lg shadow-lg text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile backdrop -->
+    <div data-mobile-navigation-target="backdrop"
+         data-action="click->mobile-navigation#closeOnBackdrop"
+         class="hidden fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+
+    <!-- Mobile sidebar -->
+    <div data-mobile-navigation-target="menu"
+         class="fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-blue-600 to-purple-700 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out">
+      <%= render 'shared/sidebar' %>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
+      <div class="px-4 lg:px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4 ml-12 lg:ml-0">
+            <%= link_to sales_path, class: "text-gray-500 hover:text-gray-700" do %>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+              </svg>
+            <% end %>
+            <div>
+              <h1 class="text-xl lg:text-2xl font-bold text-gray-900">
+                Edit Sale
+              </h1>
+              <p class="text-gray-600 text-sm mt-1">Update sale information and payment details</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-4 lg:p-6">
+      <div class="max-w-4xl mx-auto">
+
+        <%= form_with model: @sale, local: true, class: "space-y-6" do |form| %>
+
+          <!-- Error Messages -->
+          <% if @sale.errors.any? %>
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <h3 class="text-sm font-medium text-red-800">Please fix the following errors:</h3>
+                  <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+                    <% @sale.errors.full_messages.each do |message| %>
+                      <li><%= message %></li>
+                    <% end %>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          <% end %>
+
+          <!-- Sale Details Card -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h2 class="text-lg font-semibold text-gray-900">Sale Information</h2>
+            </div>
+            <div class="p-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Sale Date -->
+                <div>
+                  <%= form.label :sale_date, "Sale Date", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                  <%= form.datetime_local_field :sale_date,
+                        value: @sale.sale_date&.strftime("%Y-%m-%dT%H:%M"),
+                        class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" %>
+                </div>
+
+                <!-- Staff Member -->
+               <div>
+                  <%= form.label :staff_member_id, "Staff Member", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                  <%= form.hidden_field :staff_member_id, value: current_user.staff_member&.id %>
+                  <div class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-900">
+                    <%= current_user.staff_member&.first_name %> <%= current_user.staff_member&.last_name %>  (You)
+                  </div>
+                  <p class="mt-1 text-xs text-gray-500">Sale will be assigned to you</p>
+                </div>
+
+                <!-- Sale Type -->
+                <div>
+                  <%= form.label :sale_type, "Sale Type", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                  <%= form.select :sale_type,
+                        options_for_select([
+                          ['Sale Type', ''],
+                          ['appointment', 'appointment'],
+                          ['walk_in', 'walk_in'],
+                          ['online', 'online'],
+                          ['phone', 'phone']
+                        ], @sale.sale_type),
+                        {},
+                        { class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" } %>
+                </div>
+
+                <!-- Payment Method -->
+                <div>
+                  <%= form.label :payment_method, "Payment Method", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                  <%= form.select :payment_method,
+                        options_for_select([
+                          ['Payment Method', ''],
+                          ['POS', 'POS'],
+                          ['Cash', 'Cash'],
+                          ['Transfer', 'Transfer']
+                        ], @sale.payment_method),
+                        {},
+                        { class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" } %>
+                </div>
+              </div>
+
+              <!-- Amount Fields -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div>
+                  <%= form.label :paid_amount, "Amount Paid", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                  <%= form.number_field :paid_amount,
+                        step: :any,
+                        class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500",
+                        placeholder: "Amount Paid" %>
+                </div>
+
+                <div>
+                  <%= form.label :total_amount, "Total Amount", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                  <%= form.number_field :total_amount,
+                        step: :any,
+                        class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500",
+                        placeholder: "Total Amount" %>
+                </div>
+              </div>
+
+              <!-- Payment Status -->
+              <div class="mt-6">
+                <%= form.label :payment_status, "Payment Status", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.select :payment_status,
+                      options_for_select([
+                        ['Payment Status', ''],
+                        ['Pending', 'pending'],
+                        ['Paid', 'paid'],
+                        ['Partially Paid', 'partially_paid'],
+                        ['Refunded', 'refunded']
+                      ], @sale.payment_status),
+                      {},
+                      { class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" } %>
+              </div>
+
+              <!-- Customer Information -->
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <div>
+                  <%= form.label :customer_name, "Customer Name", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                  <%= form.text_field :customer_name,
+                        class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500",
+                        placeholder: "Customer Name" %>
+                </div>
+
+                <div>
+                  <%= form.label :customer_phone, "Phone", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                  <%= form.text_field :customer_phone,
+                        class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500",
+                        placeholder: "Customer Phone" %>
+                </div>
+
+                <div>
+                  <%= form.label :customer_email, "Email", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                  <%= form.email_field :customer_email,
+                        class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500",
+                        placeholder: "Customer Email" %>
+                </div>
+              </div>
+
+              <!-- Notes -->
+              <div class="mt-6">
+                <%= form.label :notes, "Notes", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.text_area :notes,
+                      rows: 3,
+                      class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500",
+                      placeholder: "Notes" %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="flex justify-end space-x-4">
+            <%= link_to sales_path, class: "px-6 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors" do %>
+              Cancel
+            <% end %>
+
+            <%= form.submit "Update Sale",
+                  class: "px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all" %>
+          </div>
+
+        <% end %>
+      </div>
+    </main>
+  </div>
+</div>

@@ -1,0 +1,99 @@
+<!-- app/views/sales/_table.html.erb -->
+<div class="g-table">
+  <div class="g-table__header">
+    <div class="g-table__col--date">Date</div>
+    <div class="g-table__col--name">Name</div>
+    <div class="g-table__col--cso">C.S.O</div>
+    <div class="g-table__col--product">Product</div>
+    <div class="g-table__col--amount">Amount</div>
+    <div class="g-table__col--payment">Payment</div>
+    <% if current_user.admin? || current_user.manager? || current_user.super_admin? %>
+      <div class="g-table__col--actions">Actions</div>
+    <% end %>
+  </div>
+
+  <% sales.each do |sale| %>
+    <div class="g-table__row">
+      <div class="g-table__status <%= sale.void? ? 'g-table__status--cancelled' : 'g-table__status--confirmed' %>"></div>
+
+      <div class="g-table__col--date g-table__cell">
+        <%= sale.date.to_date %>
+      </div>
+
+      <div class="g-table__col--name g-table__cell">
+        <%= sale.customer_name.split(" ").map(&:capitalize).join(" ") %>
+      </div>
+
+      <div class="g-table__col--cso g-table__cell">
+        <%= sale.customer_service_officer_name || (sale.staff_id ? Staff.find(sale.staff_id).name : nil) %>
+      </div>
+
+      <div class="g-table__col--product g-table__cell">
+        <%= sale.product_service_name %>
+      </div>
+
+      <div class="g-table__col--amount g-table__cell">
+        <%= sale.amount_paid %>
+      </div>
+
+      <div class="g-table__col--payment g-table__cell">
+        <%= sale.payment_type %>
+      </div>
+
+      <% if current_user.admin? || current_user.manager? || current_user.super_admin? %>
+        <div class="g-table__col--actions g-table__cell">
+          <div class="action-buttons">
+            <% unless sale.void? %>
+              <%= link_to 'Edit', edit_sale_path(sale), class: "g-button--link g-button--small" %>
+            <% end %>
+
+            <div data-controller="modal">
+              <% if sale.void? %>
+                <span class="g-text--muted">Voided</span>
+              <% else %>
+                <%= link_to 'Void Sale', '#', data: { action: "click->modal#open" }, class: "g-button--link g-button--danger" %>
+
+                <!-- Modal for voiding sale -->
+                <div data-modal-target="modal" class="g-modal">
+                  <div class="g-modal__dialog">
+                    <div class="g-modal__content">
+                      <div class="g-modal__header">
+                        <h5 class="g-modal__title">Void Sale</h5>
+                        <button type="button" class="g-modal__close" data-action="modal#close"></button>
+                      </div>
+
+                      <%= form_with(model: sale, local: true) do |f| %>
+                        <div class="g-modal__body">
+                          <div class="g-form__group">
+                            <div class="g-form__check">
+                              <%= f.check_box :void, class: "g-form__check-input" %>
+                              <%= f.label :void, "Void this sale", class: "g-form__check-label" %>
+                            </div>
+                          </div>
+
+                          <div class="g-form__group">
+                            <%= f.label :void_reason, "Reason", class: "g-form__label" %>
+                            <%= f.text_area :void_reason,
+                                class: "g-form__control",
+                                rows: 3,
+                                placeholder: "Enter reason for voiding sale" %>
+                          </div>
+                        </div>
+                        <div class="g-modal__footer">
+                          <button type="button" class="g-button g-button--secondary" data-action="modal#close">
+                            Cancel
+                          </button>
+                          <%= f.submit "Confirm", class: "g-button g-button--primary" %>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
