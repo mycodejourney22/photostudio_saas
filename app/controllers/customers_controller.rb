@@ -1,6 +1,6 @@
 class CustomersController < ApplicationController
   include StudioFiltering
-  before_action :set_customer, only: [:show, :edit, :update, :destroy]
+  before_action :set_customer, only: [:show,  :update, :destroy]
   load_and_authorize_resource
 
   def index
@@ -20,6 +20,9 @@ class CustomersController < ApplicationController
       format.json { render json: CustomerSerializer.new(@customers).serializable_hash }
     end
   end
+
+  # def edit
+  # end
 
   def show
     @appointments = @customer.appointments.includes(:user, :studio).recent.limit(10)

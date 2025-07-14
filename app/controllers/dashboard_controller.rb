@@ -207,6 +207,8 @@ class DashboardController < ApplicationController
       @monthly_sales_total = current_tenant.sales.where(created_at: Time.zone.now.beginning_of_month..).sum(:total_amount)
       @revenue_data = revenue_chart_data
       @bookings_data = bookings_status_data
+      @latest_sales = current_tenant.sales.where(created_at: Time.zone.now.all_month).order(created_at: :desc).limit(5)
+
       @upcoming_appointments = current_tenant.appointments.includes(:customer)
                                     .where("scheduled_at > ?", Time.zone.now)
                                     .order(:scheduled_at).limit(5)

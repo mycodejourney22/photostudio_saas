@@ -126,6 +126,10 @@ class Appointment < ApplicationRecord
     sales.order(:created_at).first
   end
 
+  def appointment_customer
+    customer
+  end
+
   def additional_sales
     # All sales except the first one are additional sales
     main_sale_id = main_sale&.id
