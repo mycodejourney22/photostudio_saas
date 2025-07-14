@@ -198,25 +198,58 @@
 # app/controllers/dashboard_controller.rb
 class DashboardController < ApplicationController
   def index
-  #  binding.pry
-    @analytics = DashboardAnalyticsService.new(current_tenant, current_user)
+  # binding.pry
+    
+    if current_tenant.individual?
+      today = Time.zone.today
+      @todays_appointments_count = current_tenant.appointments.where(scheduled_at: today.all_day).count
+      @upcoming_appointments_count = current_tenant.appointments.where("scheduled_at > ?", Time.zone.now).count
+      @monthly_sales_total = current_tenant.sales.where(created_at: Time.zone.now.beginning_of_month..).sum(:total_amount)
+      @revenue_data = revenue_chart_data
+      @bookings_data = bookings_status_data
+      @upcoming_appointments = current_tenant.appointments.includes(:customer)
+                                    .where("scheduled_at > ?", Time.zone.now)
+                                    .order(:scheduled_at).limit(5)
+    else
+      @analytics = DashboardAnalyticsService.new(current_tenant, current_user)
 
-    @sales_metrics = @analytics.daily_sales_metrics
-    @booking_metrics = @analytics.booking_metrics
-    @photoshoot_metrics = @analytics.active_photoshoots_metrics
-    @expense_metrics = @analytics.expense_metrics
-    @photographer_utilization = @analytics.photographer_utilization
-    @operational_kpis = @analytics.operational_kpis
-    @financial_summary = @analytics.financial_summary
-    @usage_stats = @analytics.usage_statistics
+      @sales_metrics = @analytics.daily_sales_metrics
+      @booking_metrics = @analytics.booking_metrics
+      @photoshoot_metrics = @analytics.active_photoshoots_metrics
+      @expense_metrics = @analytics.expense_metrics
+      @photographer_utilization = @analytics.photographer_utilization
+      @operational_kpis = @analytics.operational_kpis
+      @financial_summary = @analytics.financial_summary
+      @usage_stats = @analytics.usage_statistics
 
-    # Permission flags
-    @can_view_analytics = user_can_view_analytics?
-    @can_view_basic_analytics = user_can_view_basic_analytics?
+      # Permission flags
+      @can_view_analytics = user_can_view_analytics?
+      @can_view_basic_analytics = user_can_view_basic_analytics?
 
-    # Only show studio breakdown if user can see multiple studios
-    @studio_breakdown = @analytics.studio_breakdown if current_user.can_access_all_studios?(current_tenant)
+      # Only show studio breakdown if user can see multiple studios
+      @studio_breakdown = @analytics.studio_breakdown if current_user.can_access_all_studios?(current_tenant)
+    end
   end
+
+  def stats
+    if current_tenant.individual?
+      stats = {
+        today_bookings: today_bookings_count,
+        week_revenue: week_revenue_amount,
+        active_customers: active_customers_count
+      }
+
+      render json: {
+        data: {
+          type: "dashboard_stats",
+          attributes: stats
+        }
+      }
+    else
+      head :no_content
+    end
+  end
+
 
   private
 
@@ -239,5 +272,53 @@ class DashboardController < ApplicationController
 
   def user_can_view_basic_analytics?
     user_can_view_analytics? || current_user.tenant_users.find_by(tenant: current_tenant)&.staff?
+  end
+
+  def today_bookings_count
+    Appointment.where(
+      tenant_id: current_tenant.id,
+      scheduled_at: Time.zone.today.all_day
+    ).count
+  end
+
+  def week_revenue_amount
+    Appointment.where(
+      tenant_id: current_tenant.id,
+      scheduled_at: Time.zone.today.beginning_of_week..Time.zone.today.end_of_week
+    ).sum(:paid_amount).to_f.round(2)
+  end
+
+  def active_customers_count
+    Customer.where(tenant_id: current_tenant.id).joins(:appointments).distinct.count
+  end
+
+  def revenue_chart_data
+    (0..5).map do |i|
+      month_start = i.months.ago.beginning_of_month
+      month_end = i.months.ago.end_of_month
+
+      revenue = Appointment.where(
+        tenant_id: current_tenant.id,
+        scheduled_at: month_start..month_end
+      ).sum(:paid_amount).to_f.round(2)
+
+      {
+        month: month_start.strftime("%b %Y"),
+        revenue: revenue
+      }
+    end.reverse
+  end
+
+  def bookings_status_data
+    scope = Appointment.where(
+      tenant_id: current_tenant.id,
+      scheduled_at: Time.zone.today.all_month
+    )
+
+    [
+      scope.where(status: :completed).count,
+      scope.where(status: :confirmed).count,
+      scope.where(status: :pending).count
+    ]
   end
 end

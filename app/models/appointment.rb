@@ -52,6 +52,7 @@ class Appointment < ApplicationRecord
   validate :photographer_must_be_photographer_role, if: -> { assigned_photographer.present? }
   validate :editor_must_be_editor_role, if: -> { assigned_editor.present? }
 
+
   scope :upcoming, -> { where(scheduled_at: Time.current..) }
   scope :today, -> { where(scheduled_at: Date.current.all_day) }
   scope :this_week, -> { where(scheduled_at: Date.current.beginning_of_week..Date.current.end_of_week) }

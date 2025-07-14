@@ -36,15 +36,18 @@ class Tenant < ApplicationRecord
 
   # Validations
   validates :name, presence: true, length: { minimum: 2, maximum: 100 }
-  validates :subdomain, presence: true, uniqueness: true, format: { with: /\A[a-z0-9-]+\z/ }
+  validates :subdomain, presence: true, uniqueness: true
   validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
-  validates :plan_type, inclusion: { in: %w[starter professional enterprise] }
+  # validates :plan_type, inclusion: { in: %w[starter professional enterprise] }
 
   # Callbacks
   before_validation :normalize_subdomain
   before_create :generate_verification_token
   after_create :create_default_branding, :setup_default_services
   after_create :setup_default_email_settings
+
+  after_create :setup_defaults_location_staff
+
 
 
   # Scopes
@@ -53,7 +56,7 @@ class Tenant < ApplicationRecord
 
   # Enums
   enum status: { pending: 0, trial: 1, active: 2, suspended: 3, cancelled: 4 }
-  enum plan_type: { starter: 0, professional: 1, enterprise: 2 }
+  enum plan_type: { starter: 0, professional: 1, enterprise: 2, studio: 3, individual: 4 }
 
   # Instance methods
   def full_domain
@@ -63,6 +66,14 @@ class Tenant < ApplicationRecord
   def can_be_deleted?
     # Check if tenant has any critical data
     users.none? && appointments.none? && sales.none? && expenses.none?
+  end
+
+  def individual?
+    plan_type == "individual"
+  end
+  
+  def studio?
+    plan_type == "studio"
   end
 
   # Add expense-related setup
@@ -464,6 +475,27 @@ end
       )
 
       user
+    end
+  end
+
+  def setup_defaults_location_staff
+    studio_location = StudioLocation.find_or_create_by!(name: name, tenant_id: id)
+
+    if plan_type == "individual"
+      user = User.find_by(email: email)
+      if user
+        StaffMember.create!(
+          user: user,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          email: user.email,
+          role: "photographer",
+          active: true,
+          has_login: true,
+          studio_location: studio_location,
+          tenant_id: id
+        )
+      end
     end
   end
 end

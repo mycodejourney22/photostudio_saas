@@ -8,7 +8,7 @@ Rails.application.routes.draw do
 
   # Root route
   # root "dashboard#index"
-  root 'tenant_registration#new'
+  root 'home#index'
 
 
 
@@ -22,7 +22,7 @@ Rails.application.routes.draw do
   # Public tenant registration
   # get '/register', to: 'tenant_registration#new', as: :new_tenant_registration
   # post '/register', to: 'tenant_registration#create', as: :tenant_registrations
-      get 'signup', to: 'tenant_registration#new', as: :new_tenant_registration
+    get 'signup', to: 'tenant_registration#new', as: :new_tenant_registration
     post 'signup', to: 'tenant_registration#create', as: :tenant_registration
     get 'signup/verify/:token', to: 'tenant_registration#verify', as: :tenant_registration_verify
     get 'signup/verified', to: 'tenant_registration#verified', as: :tenant_registration_verified

@@ -6,6 +6,8 @@ class StudioLocation < ApplicationRecord
   has_many :service_packages, through: :service_package_studio_locations
   has_many :appointments, dependent: :restrict_with_error
   has_many :expenses, dependent: :restrict_with_error
+  before_validation :build_default_operating_hours, on: :create
+
 
 
 
@@ -65,16 +67,19 @@ class StudioLocation < ApplicationRecord
   end
 
   def build_default_operating_hours
-    self.operating_hours ||= {
-      'monday' => { 'start' => '09:00', 'end' => '17:00' },
-      'tuesday' => { 'start' => '09:00', 'end' => '17:00' },
-      'wednesday' => { 'start' => '09:00', 'end' => '17:00' },
-      'thursday' => { 'start' => '09:00', 'end' => '17:00' },
-      'friday' => { 'start' => '09:00', 'end' => '17:00' },
-      'saturday' => { 'start' => '10:00', 'end' => '16:00' },
-      'sunday' => { 'start' => '', 'end' => '' }
-    }
+    if operating_hours.blank? || operating_hours == {}
+      self.operating_hours = {
+        'monday'    => { 'start' => '09:00', 'end' => '17:00' },
+        'tuesday'   => { 'start' => '09:00', 'end' => '17:00' },
+        'wednesday' => { 'start' => '09:00', 'end' => '17:00' },
+        'thursday'  => { 'start' => '09:00', 'end' => '17:00' },
+        'friday'    => { 'start' => '09:00', 'end' => '17:00' },
+        'saturday'  => { 'start' => '10:00', 'end' => '16:00' },
+        'sunday'    => { 'start' => '', 'end' => '' }
+      }
+    end
   end
+    
 
   def booking_buffer_minutes
     booking_settings['buffer_time'] || 15

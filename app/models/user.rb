@@ -15,8 +15,11 @@ class User < ApplicationRecord
   # Validations
   validates :first_name, :last_name, presence: true
   validates :first_name, :last_name, length: { minimum: 2, maximum: 50 }
-  validates :phone, format: { with: /\A[\+]?[1-9][\d\s\-\(\)]{7,15}\z/ }, allow_blank: true
+  validates :phone, format: { with: /\A\+?\d{10,15}\z/, message: "is invalid" }, allow_blank: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
+  before_validation :normalize_phone
+  before_create :set_default_preferences
+  after_create :send_welcome_notification
 
   # Scopes
   scope :active, -> { where(active: true) }
@@ -297,9 +300,7 @@ end
   end
 
   # Callbacks
-  before_validation :normalize_phone
-  before_create :set_default_preferences
-  after_create :send_welcome_notification
+  
 
   def set_default_preferences
     self.preferences ||= {

@@ -17,7 +17,7 @@ class Admin::Setup::ServicesController < Admin::Setup::BaseController
 
   def create
     @service_package = @tenant.service_packages.build(service_package_params)
-
+    @service_package.name = params["service_package"]["category"]
     if @service_package.save
       handle_studio_location_assignments
       redirect_to admin_setup_services_path(tenant_id: @tenant.id), notice: 'Service package created successfully.'
@@ -79,7 +79,12 @@ class Admin::Setup::ServicesController < Admin::Setup::BaseController
 
   def service_package_params
     params.require(:service_package).permit(
-      :name, :slug, :description, :category, :sort_order,
+      :name,
+      :slug,
+      :description,
+      :category,
+      :sort_order,
+      :photo,                        
       metadata: {},
       studio_location_ids: []
     )

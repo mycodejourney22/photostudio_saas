@@ -9,7 +9,7 @@ class Customer < ApplicationRecord
 
   validates :first_name, :last_name, presence: true
   validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
-  validates :phone, format: { with: /\A[\+]?[1-9][\d\s\-\(\)]{7,15}\z/ }, allow_blank: true
+  validates :phone, presence: true, allow_blank: true
 
   scope :active, -> { where(active: true) }
   scope :with_recent_bookings, -> { joins(:appointments).where(appointments: { created_at: 1.month.ago.. }) }

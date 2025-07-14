@@ -10,6 +10,8 @@ class ServicePackage < ApplicationRecord
 
   validates :name, presence: true, length: { maximum: 100 }
   validates :slug, presence: true, uniqueness: { scope: :tenant_id }
+  has_one_attached :photo
+
   # validates :category, inclusion: {
   #   in: %w[portrait wedding family newborn maternity commercial event other]
   # }

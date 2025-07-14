@@ -92,7 +92,13 @@ class TenantRegistrationController < ApplicationController
   private
 
   def tenant_params
-    params.require(:tenant).permit(:name, :subdomain, :email, :plan_type)
+    params.require(:tenant).permit(
+      :name,
+      :subdomain,
+      :email,
+      :plan_type,
+      owner: [:first_name, :last_name, :email, :password]
+    )
   end
 
   def user_params

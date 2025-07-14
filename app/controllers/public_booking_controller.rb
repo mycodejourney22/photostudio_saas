@@ -14,6 +14,10 @@ class PublicBookingController < ActionController::Base
   def index
     @studio_locations = @tenant.studio_locations.active.order(:sort_order, :name)
 
+    if @studio_locations.size == 1
+      redirect_to public_booking_services_path(studio_location_id: @studio_locations.first.id)
+    end
+
     # If no locations have service packages, show appropriate message
     if @studio_locations.none? { |location| location.service_packages.active.exists? }
       flash.now[:alert] = "No services are currently available for booking. Please contact us directly."
@@ -43,6 +47,7 @@ class PublicBookingController < ActionController::Base
 
   # Step 4: Calendar/Time Selection
   def calendar
+    # binding.pry
     @selected_date = params[:date]&.to_date || Date.current + 1.day
     @available_dates = calculate_available_dates
     @time_slots = calculate_time_slots(@selected_date)
@@ -200,7 +205,7 @@ class PublicBookingController < ActionController::Base
   def calculate_available_dates
     start_date = Date.current + 1.day
     end_date = start_date + @studio_location.advance_booking_days.to_i.days
-
+# start_date + studio.advance_booking_days.to_i.days
     available_dates = []
     (start_date..end_date).each do |date|
       next unless @studio_location.open_on_day?(date.strftime('%A').downcase)
@@ -209,6 +214,7 @@ class PublicBookingController < ActionController::Base
       if has_availability_on_date?(date)
         available_dates << date
       end
+      available_dates
     end
 
     available_dates.first(30) # Limit to 30 days

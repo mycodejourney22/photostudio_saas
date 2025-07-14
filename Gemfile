@@ -27,6 +27,8 @@ gem 'sidekiq', '~> 7.2'
 # File Uploads & Processing
 gem 'image_processing', '~> 1.2'
 gem 'aws-sdk-s3', '~> 1.0'
+gem "cloudinary"
+
 
 # Payments - Paystack
 gem 'paystack', '~> 0.1.6'
@@ -67,6 +69,8 @@ gem 'icalendar'
 group :development do
   gem 'web-console'
   gem 'error_highlight', '>= 0.4.0', platforms: [:ruby]
+  gem 'letter_opener'
+
 end
 
 group :test do

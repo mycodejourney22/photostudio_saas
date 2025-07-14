@@ -6,10 +6,27 @@ local:
   service: Disk
   root: <%= Rails.root.join("storage") %>
 
+cloudinary:
+  service: Cloudinary
+  folder: <%= Rails.env %>
+
 # Use this for development with local disk storage
 development:
   service: Disk
   root: <%= Rails.root.join("storage") %>
+
+wasabi:
+  service: S3
+  access_key_id: <%= ENV['WASABI_ACCESS_KEY'] %>
+  secret_access_key: <%= ENV['WASABI_SECRET_ACCESS'] %>
+  region: 'eu-west-1'
+  bucket: <%= ENV['WASABI_BUCKET'] %>
+  public: true
+  endpoint: 'https://s3.eu-west-1.wasabisys.com'
+  force_path_style: true
+  upload:
+    cache_control: 'max-age=31557600'
+    acl: 'bucket-owner-full-control'
 
 # For production - you can choose between local disk or cloud storage
 production:
