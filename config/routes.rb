@@ -366,7 +366,7 @@ Rails.application.routes.draw do
           resources :operating_hours, only: [:edit, :update]
         end
 
-        resources :services do
+        resources :services, param: :slug do
           resources :service_tiers, except: [:index]
           member do
             patch :toggle_status

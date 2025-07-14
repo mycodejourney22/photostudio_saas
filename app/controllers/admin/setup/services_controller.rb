@@ -1,7 +1,7 @@
 class Admin::Setup::ServicesController < Admin::Setup::BaseController
   before_action :set_tenant_context
   before_action :ensure_tenant_selected
-  before_action :set_service_package, only: [:show, :edit, :update, :destroy, :toggle_status]
+  before_action :set_service_package, only: [:show, :edit,  :update, :destroy, :toggle_status]
 
   def index
     @service_packages = @tenant.service_packages.includes(:service_tiers).order(:sort_order, :name)
@@ -40,6 +40,7 @@ class Admin::Setup::ServicesController < Admin::Setup::BaseController
   end
 
   def update
+    @service_package.name = params["service_package"]["category"]
     if @service_package.update(service_package_params)
       handle_studio_location_assignments
       redirect_to admin_setup_services_path(tenant_id: @tenant.id), notice: 'Service package updated successfully.'
@@ -74,7 +75,8 @@ class Admin::Setup::ServicesController < Admin::Setup::BaseController
   end
 
   def set_service_package
-    @service_package = @tenant.service_packages.find(params[:id])
+    # @service_package = @tenant.service_packages.find(params[:id])
+    @service_package = @tenant.service_packages.find_by!(slug: params[:slug])
   end
 
   def service_package_params
