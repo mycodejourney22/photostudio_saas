@@ -1,5 +1,9 @@
 // Configure your import map in config/importmap.rb. Read more: https://github.com/rails/importmap-rails
 import "@hotwired/turbo-rails"
+
+import Rails from "@rails/ujs"
+Rails.start()
+
 import "controllers"
 
 // import * as ActiveStorage from "@rails/activestorage"
@@ -12,6 +16,8 @@ import "controllers"
 // Rails.start()
 // Turbo.start()
 // ActiveStorage.start()
+
+
 
 // Global error handling
 window.addEventListener('error', (event) => {
