@@ -4,6 +4,15 @@
     <div>
       <h2 class="text-2xl font-bold text-gray-900">Studio Locations</h2>
       <p class="text-gray-600">Manage your studio locations and operating hours</p>
+      <% booking_url = Rails.env.production? ? "https://shuttersuites.co/book/#{@tenant.subdomain}" : "http://localhost:3000/book/#{@tenant.subdomain}" %>
+      <div class="mt-2">
+        <p class="text-sm text-gray-700">
+          Share this booking link with customers:
+          <a href="<%= booking_url %>" target="_blank" class="text-blue-600 hover:underline">
+            <%= booking_url %>
+          </a>
+        </p>
+      </div>
     </div>
 
     <%= link_to new_admin_setup_studio_location_path,
