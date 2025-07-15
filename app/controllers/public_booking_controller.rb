@@ -171,6 +171,7 @@ class PublicBookingController < ActionController::Base
 
   def confirm_cancel
     @appointment.update!(status: :cancelled)
+    AppointmentMailerService.new(@appointment).send_cancellation
     flash[:notice] = "Your appointment has been cancelled."
     redirect_to booking_public_booking_cancelled_path(  tenant_slug: @appointment.tenant.subdomain,
     appointment_id: @appointment.id)
@@ -220,6 +221,7 @@ class PublicBookingController < ActionController::Base
     @appointment = Appointment.find_by(id: params[:appointment_id], tenant: @tenant)
   
     if @appointment.update(appointment_params)
+      AppointmentMailerService.new(@appointment).send_reschedule
       redirect_to booking_public_booking_reschedule_confirmed_path(
         tenant_slug: @tenant.subdomain,
         appointment_id: @appointment.id

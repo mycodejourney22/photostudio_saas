@@ -2,9 +2,9 @@ class EmailLog < ApplicationRecord
   belongs_to :tenant
   belongs_to :appointment
 
-  validates :email_type, presence: true, inclusion: {
-    in: %w[confirmation reminder feedback_request status_update]
-  }
+  # validates :email_type, presence: true, inclusion: {
+  #   in: %w[confirmation reminder feedback_request status_update]
+  # }
   validates :recipient_email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
 
   scope :sent, -> { where.not(sent_at: nil) }

@@ -1,0 +1,18 @@
+<h2>Appointment Rescheduled</h2>
+<p>Hello <%= @customer.first_name %>,</p>
+<p>Your appointment with <strong><%= @tenant.name %></strong> has been successfully rescheduled.</p>
+
+<div style="background-color: #f0f8ff; padding: 10px; border-radius: 6px;">
+  <strong>New Date & Time:</strong> <%= @appointment.scheduled_at.in_time_zone("Africa/Lagos").strftime("%A, %B %d, %Y at %I:%M %p") %><br>
+  <strong>Session Type:</strong> <%= @appointment.session_type.humanize %>
+</div>
+
+<p>We look forward to seeing you then!</p>
+
+<hr>
+<small>
+  Powered by ShutterSuites<br>
+  Studio: <%= @tenant.name %><br>
+  Email: <%= @tenant.email %><br>
+  Website: <%= @tenant.full_domain %>
+</small>

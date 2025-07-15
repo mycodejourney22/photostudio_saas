@@ -39,6 +39,28 @@ class AppointmentMailer < ApplicationMailer
     )
   end
 
+  def cancellation_email(appointment)
+    @appointment = appointment
+    @tenant = appointment.tenant
+    @customer = appointment.customer
+
+    mail(
+      to: @customer.email,
+      subject: "Your appointment has been cancelled"
+    )
+  end
+
+  def reschedule_email(appointment)
+    @appointment = appointment
+    @tenant = appointment.tenant
+    @customer = appointment.customer
+
+    mail(
+      to: @customer.email,
+      subject: "Your appointment has been rescheduled"
+    )
+  end
+
   def reminder_email(appointment, reminder_type = '24_hours')
     @appointment = appointment
     @customer = appointment.customer

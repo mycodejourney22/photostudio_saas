@@ -78,6 +78,33 @@ class AppointmentMailerService
     end
   end
 
+  def send_cancellation
+    # return unless should_send_confirmations?
+  
+    begin
+      AppointmentMailer.cancellation_email(appointment).deliver_now
+      log_email_sent('cancellation')
+      true
+    rescue => e
+      log_email_error('cancellation', e)
+      false
+    end
+  end
+  
+  def send_reschedule
+    # return unless should_send_confirmations?
+  
+    begin
+      AppointmentMailer.reschedule_email(appointment).deliver_now
+      log_email_sent('reschedule')
+      true
+    rescue => e
+      log_email_error('reschedule', e)
+      false
+    end
+  end
+  
+
   private
 
   def should_send_confirmations?

@@ -1,0 +1,13 @@
+<h2>Appointment Cancelled</h2>
+<p>Hello <%= @customer.first_name %>,</p>
+<p>Your appointment with <strong><%= @tenant.name %></strong> has been cancelled.</p>
+
+<p>If this was a mistake, you can always rebook via our website.</p>
+
+<hr>
+<small>
+  Powered by ShutterSuites<br>
+  Studio: <%= @tenant.name %><br>
+  Email: <%= @tenant.email %><br>
+  Website: <%= @tenant.full_domain %>
+</small>
