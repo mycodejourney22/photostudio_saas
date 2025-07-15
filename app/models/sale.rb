@@ -26,7 +26,7 @@ class Sale < ApplicationRecord
   scope :for_studio_location, ->(location) { where(studio_location: location) }
   scope :for_studio_locations, ->(locations) { where(studio_location: locations) }
 
-  validate :staff_member_can_process_sales
+  # validate :staff_member_can_process_sales
   validate :appointment_belongs_to_same_tenant, if: :appointment_id?
   validate :customer_belongs_to_same_tenant, if: :customer_id?
   validate :at_least_one_sale_item, unless: :skip_item_validation
@@ -449,13 +449,13 @@ class Sale < ApplicationRecord
     'partial'
   end
 
-  def staff_member_can_process_sales
-    return unless staff_member
+  # def staff_member_can_process_sales
+  #   return unless staff_member 
 
-    unless staff_member.can_process_sales?
-      errors.add(:staff_member, "must be customer service, manager, or owner to process sales")
-    end
-  end
+  #   unless staff_member.can_process_sales? || tenant.plan_type == 'photographer'
+  #     errors.add(:staff_member, "must be customer service, manager, or owner to process sales")
+  #   end
+  # end
 
   def appointment_belongs_to_same_tenant
     return unless appointment

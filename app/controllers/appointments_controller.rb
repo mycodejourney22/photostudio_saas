@@ -326,6 +326,7 @@ class AppointmentsController < ApplicationController
     @appointment.payment_status = 'unpaid'
 
     load_form_data
+
   end
 
   def create_walk_in
@@ -431,7 +432,7 @@ class AppointmentsController < ApplicationController
   end
 
   def load_form_data
-    @customers = current_tenant.customers.active.order(:first_name, :last_name)
+    @customers = current_tenant.customers.order(:first_name, :last_name)
     @photographers = current_tenant.staff_members.photographers.active
     @editors = current_tenant.staff_members.editors.active
     @studio_locations = current_tenant.studio_locations.active

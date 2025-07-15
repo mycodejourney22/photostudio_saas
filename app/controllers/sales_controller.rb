@@ -440,6 +440,9 @@ class SalesController < ApplicationController
 
   def new
     @sale = current_tenant.sales.build
+    if params[:appointment_id].present?
+      @appointment = current_tenant.appointments.find_by(id: params[:appointment_id])
+    end
     @sale.sale_date = Time.current
     @sale.sale_type = params[:sale_type] || 'walk_in'
 
@@ -535,6 +538,9 @@ class SalesController < ApplicationController
     def create
       # binding.pry
       @sale = current_tenant.sales.build(sale_params)
+      if params[:appointment_id].present?
+        @appointment = current_tenant.appointments.find_by(id: params[:appointment_id])
+      end
 
       # Set flag if user provided payment information
       if sale_params[:paid_amount].present?
@@ -565,6 +571,7 @@ class SalesController < ApplicationController
 
         redirect_to @sale, notice: 'Sale created successfully.'
       else
+        @appointment = Appointment.find_by(id: sale_params[:appointment_id])
         load_form_data
         render :new, status: :unprocessable_entity
       end

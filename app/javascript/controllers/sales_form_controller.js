@@ -16,9 +16,10 @@ export default class extends Controller {
   ]
 
   connect() {
+    console.log("YESSSSSSSSS NOW")
     this.itemIndex = this.itemsContainerTarget.children.length
     this.updateTotal()
-    this.validateForm() // Initial validation
+    // this.validateForm() // Initial validation
     this.addValidationListeners()
   }
 

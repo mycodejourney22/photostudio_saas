@@ -186,7 +186,7 @@
             <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
               <h2 class="text-lg font-semibold text-gray-900">Sale Items</h2>
               <button type="button"
-                      data-action="click->sales-form#addSaleItem"
+                      data-action="click->sales-form#addItem"
                       class="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
@@ -197,7 +197,7 @@
             <div class="p-6">
 
               <!-- Sale Items List -->
-              <div data-sales-form-target="saleItemsList">
+              <div data-sales-form-target="itemsContainer">
                 <%= form.fields_for :sale_items do |item_form| %>
                   <div class="sale-item-row bg-gray-50 p-4 rounded-lg mb-4">
                     <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
@@ -238,7 +238,7 @@
                               min: 1,
                               required: true,
                               class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500",
-                              data: { action: "change->sales-form#calculateItemTotal" } %>
+                              data: { action: "change->sales-form#itemChanged" } %>
                       </div>
 
                       <!-- Unit Price (REQUIRED) -->
@@ -251,7 +251,7 @@
                               min: 0.01,
                               required: true,
                               class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500",
-                              data: { action: "change->sales-form#calculateItemTotal" } %>
+                              data: { action: "change->sales-form#itemChanged" } %>
                       </div>
 
                       <!-- Total Price -->
@@ -336,34 +336,8 @@
                   </div>
                 </div>
               </div>
-
-              <!-- Quick Add Buttons -->
-              <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-200">
-                <button type="button"
-                        data-action="click->sales-form#addQuickItem"
-                        data-sales-form-item-type-param="passport"
-                        class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-md hover:bg-gray-200 transition-colors">
-                  + Passport Photos
-                </button>
-                <button type="button"
-                        data-action="click->sales-form#addQuickItem"
-                        data-sales-form-item-type-param="prints"
-                        class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-md hover:bg-gray-200 transition-colors">
-                  + Prints
-                </button>
-                <button type="button"
-                        data-action="click->sales-form#addQuickItem"
-                        data-sales-form-item-type-param="digital"
-                        class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-md hover:bg-gray-200 transition-colors">
-                  + Digital Gallery
-                </button>
-                <button type="button"
-                        data-action="click->sales-form#addQuickItem"
-                        data-sales-form-item-type-param="rush"
-                        class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-md hover:bg-gray-200 transition-colors">
-                  + Rush Service
-                </button>
-              </div>
+              
+                
             </div>
           </div>
 
@@ -377,16 +351,16 @@
                 <!-- Totals -->
                 <div class="flex justify-between">
                   <span class="text-sm text-gray-600">Subtotal</span>
-                  <span class="text-sm font-medium text-gray-900" data-sales-form-target="subtotalAmount">$0.00</span>
+                  <span class="text-sm font-medium text-gray-900" data-sales-form-target="subtotal">0.00</span>
                 </div>
                 <div class="flex justify-between">
                   <span class="text-sm text-gray-600">Discount</span>
-                  <span class="text-sm font-medium text-gray-900" data-sales-form-target="discountAmount">$0.00</span>
+                  <span class="text-sm font-medium text-gray-900" data-sales-form-target="discount">0.00</span>
                 </div>
                 <div class="border-t border-gray-200 pt-4">
                   <div class="flex justify-between">
                     <span class="text-lg font-semibold text-gray-900">Total</span>
-                    <span class="text-lg font-semibold text-gray-900" data-sales-form-target="totalAmount">$0.00</span>
+                    <span class="text-lg font-semibold text-gray-900" data-sales-form-target="total">0.00</span>
                   </div>
                 </div>
 
@@ -400,8 +374,7 @@
                           ['Cash', 'cash'],
                           ['Credit/Debit Card', 'card'],
                           ['Bank Transfer', 'bank_transfer'],
-                          ['Check', 'check'],
-                          ['PayPal', 'paypal'],
+                          ['POS', 'pos'],
                           ['Other', 'other']
                         ], @sale.payment_method),
                         { include_blank: 'Select payment method...' },
