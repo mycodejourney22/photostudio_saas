@@ -9,7 +9,7 @@ def system!(*args)
 end
 
 FileUtils.chdir APP_ROOT do
-  puts "🧪 PhotoStudio Test Suite"
+  puts "🧪 ShutterSuites Test Suite"
   puts "=" * 50
 
   case ARGV[0]

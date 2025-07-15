@@ -52,6 +52,16 @@ Rails.application.routes.draw do
     get '/:studio_location_id/:service_package_id/:service_tier_id/details', to: 'booking#details', as: :details
     post '/:studio_location_id/:service_package_id/:service_tier_id/create', to: 'booking#create', as: :create
     get '/confirmation/:payment_reference', to: 'booking#confirmation', as: :confirmation
+    get '/:tenant_slug/reschedule/:appointment_id', to: 'public_booking#reschedule', as: :public_booking_reschedule
+    get '/:tenant_slug/cancel/:appointment_id', to: 'public_booking#cancel', as: :public_booking_cancel
+    post '/:tenant_slug/cancel/:appointment_id/confirm', to: 'public_booking#confirm_cancel', as: :public_booking_confirm_cancel
+    get '/:tenant_slug/cancel/:appointment_id/confirmed', to: 'public_booking#cancelled', as: :public_booking_cancelled
+    get '/:tenant_slug/available_slots', to: 'public_booking#available_slots'
+
+    patch '/:tenant_slug/reschedule/:appointment_id', to: 'public_booking#update_reschedule', as: :public_booking_update_reschedule
+
+    get '/:tenant_slug/reschedule/:appointment_id/confirmed', to: 'public_booking#reschedule_confirmed', as: :public_booking_reschedule_confirmed
+
   end
 
   # Admin routes (for super admin functionality) - SYSTEM LEVEL ONLY
@@ -75,6 +85,9 @@ Rails.application.routes.draw do
 
   # Tenant-scoped routes (main application)
   scope constraints: TenantConstraint.new do
+
+    get '/appointments/:id/cancel', to: 'appointments#cancel', as: :appointment_cancellation
+
     # Dashboard
     get '/dashboard', to: 'dashboard#index', as: :dashboard
     get '/dashboard/stats', to: 'dashboard#stats', as: :dashboard_stats

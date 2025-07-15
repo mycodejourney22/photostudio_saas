@@ -9,6 +9,8 @@ class PublicBookingController < ActionController::Base
   before_action :set_studio_location, only: [:services, :tiers, :calendar, :details, :create]
   before_action :set_service_package, only: [:tiers, :calendar, :details, :create]
   before_action :set_service_tier, only: [:calendar, :details, :create]
+  before_action :set_appointment_from_token, only: [:cancel, :confirm_cancel]
+
 
   # Step 1: Select Studio Location (Studios only - no packages shown)
   def index
@@ -109,6 +111,8 @@ class PublicBookingController < ActionController::Base
       @appointment = create_appointment
 
       if @appointment.persisted?
+        AppointmentMailerService.new(@appointment).send_confirmation
+
         # Clear booking session
         session[:booking] = {}
 
@@ -160,6 +164,78 @@ class PublicBookingController < ActionController::Base
     end
   end
 
+  def cancel
+    @customer = @appointment.customer
+    @studio_location = @appointment.studio_location
+  end
+
+  def confirm_cancel
+    @appointment.update!(status: :cancelled)
+    flash[:notice] = "Your appointment has been cancelled."
+    redirect_to booking_public_booking_cancelled_path(  tenant_slug: @appointment.tenant.subdomain,
+    appointment_id: @appointment.id)
+  end
+
+  def available_slots
+    set_tenant_from_slug
+    date = params[:date].to_date
+  
+    @studio_location = @appointment&.studio_location || @tenant.studio_locations.first
+    @service_tier = @appointment&.service_tier || @tenant.service_tiers.first
+  
+    time_slots = calculate_time_slots(date)
+  
+    render json: time_slots.map { |slot| { value: slot[:time], label: slot[:display_time] } }
+  end
+  
+
+  def cancelled
+    @appointment = Appointment.find(params[:appointment_id])
+    @tenant = @appointment.tenant
+  end
+
+  def reschedule
+    set_tenant_from_slug
+    @appointment = Appointment.find_by(id: params[:appointment_id], tenant: @tenant)
+  
+    if @appointment.nil? || !valid_token?(:reschedule)
+      redirect_to root_path, alert: "Invalid or expired reschedule link"
+      return
+    end
+  
+    # Load current associations
+    @studio_location = @appointment.studio_location
+    @service_tier = @appointment.service_tier
+    @service_package = @appointment.service_package
+  
+    # Compute availability
+    @available_dates = calculate_available_dates
+    @selected_date = Date.current + 1.day
+    @time_slots = calculate_time_slots(@selected_date)
+  end
+  
+  
+  def update_reschedule
+    set_tenant_from_slug
+    @appointment = Appointment.find_by(id: params[:appointment_id], tenant: @tenant)
+  
+    if @appointment.update(appointment_params)
+      redirect_to booking_public_booking_reschedule_confirmed_path(
+        tenant_slug: @tenant.subdomain,
+        appointment_id: @appointment.id
+      )
+    else
+      flash.now[:alert] = "Failed to update appointment time"
+      render :reschedule, status: :unprocessable_entity
+    end
+  end
+  
+  def reschedule_confirmed
+    set_tenant_from_slug
+    @appointment = Appointment.find_by(id: params[:appointment_id], tenant: @tenant)
+  end
+  
+
   private
 
   def set_tenant_from_slug
@@ -200,6 +276,18 @@ class PublicBookingController < ActionController::Base
                   studio_location_id: @studio_location.id,
                   service_package_id: @service_package.id),
                 alert: 'Service tier not found.'
+  end
+
+  def valid_token?(action_type)
+    token = params[:token]
+    return false if token.blank?
+  
+    begin
+      decoded = JWT.decode(token, Rails.application.secret_key_base, true, { algorithm: 'HS256' }).first
+      decoded['action'] == action_type.to_s && decoded['appointment_id'].to_i == @appointment.id
+    rescue JWT::DecodeError
+      false
+    end
   end
 
   def calculate_available_dates
@@ -263,6 +351,7 @@ class PublicBookingController < ActionController::Base
     booked_count < max_bookings
   end
 
+  
   def slot_available?(start_time, end_time)
     # Get all non-cancelled appointments for this location on the selected date
     appointments_on_date = @tenant.appointments
@@ -342,12 +431,34 @@ class PublicBookingController < ActionController::Base
   end
 
   def appointment_params
-    selected_date = params[:date] || @booking_session[:selected_date]
-    selected_slot = params[:slot] || @booking_session[:selected_slot]
+    base = params.require(:appointment).permit(:special_requests, :special_requirements, :notes, :scheduled_at, :session_type)
+  
+    # Check if scheduled_at came from datetime_select (multi-parameter hash)
+    if params[:appointment]["scheduled_at(1i)"]
+      base[:scheduled_at] = DateTime.new(
+        params[:appointment]["scheduled_at(1i)"].to_i,
+        params[:appointment]["scheduled_at(2i)"].to_i,
+        params[:appointment]["scheduled_at(3i)"].to_i,
+        params[:appointment]["scheduled_at(4i)"].to_i,
+        params[:appointment]["scheduled_at(5i)"].to_i
+      )
+    else
+      selected_date = params[:date] || @booking_session[:selected_date]
+      selected_slot = params[:slot] || @booking_session[:selected_slot]
+      base[:scheduled_at] = DateTime.parse("#{selected_date} #{selected_slot}")
+    end
+  
+    base[:duration_minutes] = @service_tier.duration_minutes if @service_tier
+  
+    base
+  end
+  
 
-    params.require(:appointment).permit(:special_requests, :special_requirements, :notes).merge(
-      scheduled_at: DateTime.parse("#{selected_date} #{selected_slot}"),
-      duration_minutes: @service_tier.duration_minutes
-    )
+  def set_appointment_from_token
+    decoded = JWT.decode(params[:token], Rails.application.secret_key_base, true, algorithm: 'HS256').first
+    @appointment = Appointment.find(decoded["appointment_id"])
+    raise ActiveRecord::RecordNotFound unless @appointment.customer.email == decoded["customer_email"]
+  rescue
+    redirect_to root_path, alert: "Invalid or expired cancellation link."
   end
 end

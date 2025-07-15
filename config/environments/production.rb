@@ -133,6 +133,11 @@ Rails.application.configure do
     protocol: 'https'
   }
 
+  Rails.application.routes.default_url_options = {
+    host: ENV.fetch('APP_DOMAIN', 'shuttersuites-638880348a66.herokuapp.com'),
+    protocol: 'https'
+  }
+
   # Security headers
   config.force_ssl = true
   config.ssl_options = {

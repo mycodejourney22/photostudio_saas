@@ -1,0 +1,20 @@
+<div style="max-width: 600px; margin: 50px auto; font-family: Arial, sans-serif; text-align: center;">
+  <h1 style="color: #10B981; font-size: 2em;">Appointment Cancelled</h1>
+
+  <p style="font-size: 1.2em;">
+    Thank you, <strong><%= @appointment.customer.first_name %></strong>.
+  </p>
+
+  <p style="margin-top: 20px;">
+    Your appointment with <strong><%= @tenant.name %></strong> on
+    <strong><%= @appointment.scheduled_at.strftime('%A, %B %d, %Y at %I:%M %p') %></strong>
+    has been successfully cancelled.
+  </p>
+
+  <div style="margin-top: 30px;">
+    <p style="font-size: 0.9em; color: #6B7280;">
+      Powered by <strong>ShutterSuites</strong><br>
+      <a href="<%= root_url %>" style="color: #4F46E5;">Visit Homepage</a>
+    </p>
+  </div>
+</div>

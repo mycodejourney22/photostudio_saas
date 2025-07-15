@@ -1,0 +1,41 @@
+<!-- app/views/public_booking/reschedule.html.erb -->
+<div class="max-w-md mx-auto font-sans p-6 bg-white shadow-md rounded-md" data-controller="reschedule">
+  <h2 class="text-xl font-bold text-gray-800 mb-4">Reschedule Your Appointment</h2>
+  <p class="text-sm text-gray-600 mb-2">Hello <%= @appointment.customer.first_name %>,</p>
+  <p class="text-sm text-gray-600 mb-4">
+    You can choose a new time for your appointment with <strong><%= @tenant.name %></strong>.
+  </p>
+
+  <%= form_with model: @appointment,
+                url: booking_public_booking_update_reschedule_path(tenant_slug: @tenant.subdomain, appointment_id: @appointment.id, token: params[:token]),
+                method: :patch,
+                data: { controller: "form" } do |f| %>
+
+    <div class="mb-4">
+      <%= label_tag :date, "New Date", class: "block text-gray-700 text-sm font-medium" %>
+      <%= select_tag :date,
+                     options_for_select(@available_dates.map { |d| [d.strftime('%A, %B %d'), d] }),
+                     prompt: 'Select a date',
+                     class: "w-full mt-1 border-gray-300 rounded-md shadow-sm",
+                     data: { action: "reschedule#fetchSlots" } %>
+    </div>
+
+    <div class="mb-4">
+      <%= label_tag :slot, "Available Time Slots", class: "block text-gray-700 text-sm font-medium" %>
+      <%= select_tag :slot,
+                     "",
+                     prompt: 'Select a time',
+                     class: "w-full mt-1 border-gray-300 rounded-md shadow-sm",
+                     id: "time-slot-select" %>
+    </div>
+
+    <div class="mb-4">
+      <%= f.label :session_type, "Session Type", class: "block text-gray-700 text-sm font-medium" %>
+      <%= f.select :session_type, Appointment.session_types.keys.map { |s| [s.humanize, s] }, {}, class: "w-full mt-1 border-gray-300 rounded-md shadow-sm" %>
+    </div>
+
+    <%= f.submit "Confirm Reschedule", class: "w-full bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700" %>
+  <% end %>
+
+  <p class="text-xs text-gray-400 mt-6 text-center">Powered by ShutterSuites</p>
+</div>

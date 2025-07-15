@@ -1,6 +1,10 @@
 # app/mailers/appointment_mailer.rb
+require 'jwt'
+
 class AppointmentMailer < ApplicationMailer
   include TenantMailerConcern
+  include Rails.application.routes.url_helpers
+  include Rails.application.routes.mounted_helpers
 
   def confirmation_email(appointment)
     @appointment = appointment
@@ -12,17 +16,20 @@ class AppointmentMailer < ApplicationMailer
 
     setup_tenant_mailer(@tenant)
 
-    @cancellation_url = appointment_cancellation_url(
-      @appointment.id,
+    @cancellation_url = booking_public_booking_cancel_url(
+      tenant_slug: @tenant.subdomain,
+      appointment_id: @appointment.id,
       token: generate_cancellation_token(@appointment),
-      host: @tenant.full_domain
+      host: Rails.env.production? ? "shuttersuites.co" : "localhost:3000",
+      protocol: Rails.env.production? ? "https" : "http"
     )
 
-    @reschedule_url = public_booking_reschedule_url(
+    @reschedule_url = booking_public_booking_reschedule_url(
       @tenant.subdomain,
       appointment_id: @appointment.id,
       token: generate_reschedule_token(@appointment),
-      host: @tenant.full_domain
+      host: Rails.env.production? ? "shuttersuites.co" : "localhost:3000",
+      protocol: Rails.env.production? ? "https" : "http"
     )
 
     mail(
@@ -45,11 +52,12 @@ class AppointmentMailer < ApplicationMailer
     @preparation_tips = get_preparation_tips(@appointment.session_type)
     @contact_info = @tenant.email_settings.dig('contact_info') || default_contact_info
 
-    @reschedule_url = public_booking_reschedule_url(
+    @reschedule_url = booking_public_booking_reschedule_url(
       @tenant.subdomain,
       appointment_id: @appointment.id,
       token: generate_reschedule_token(@appointment),
-      host: @tenant.full_domain
+      host: Rails.env.production? ? "shuttersuites.co" : "localhost:3000",
+      protocol: Rails.env.production? ? "https" : "http"
     )
 
     mail(
@@ -106,7 +114,14 @@ class AppointmentMailer < ApplicationMailer
     )
   end
 
+  # def default_url_options
+  #   protocol = Rails.env.production? ? 'https' : 'http'
+  #   { host: @tenant.full_domain, protocol: protocol }
+  # end
+
   private
+
+ 
 
   def appointment_confirmation_subject
     studio_name = @tenant.name

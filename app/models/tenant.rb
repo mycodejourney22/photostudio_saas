@@ -60,7 +60,11 @@ class Tenant < ApplicationRecord
 
   # Instance methods
   def full_domain
-    "#{subdomain}.#{Rails.application.config.app_domain}"
+    if Rails.env.production?
+      "#{subdomain}.shuttersuites.co"
+    else
+      "#{subdomain}.localhost:3000"
+    end
   end
 
   def can_be_deleted?
@@ -221,7 +225,7 @@ def test_smtp_connection
     test_mail = Mail.new do
       from     email_from_address
       to       email
-      subject  'SMTP Test - PhotoStudio Pro'
+      subject  'SMTP Test - ShutterSuites Pro'
       body     'This is a test email to verify SMTP configuration.'
     end
 
@@ -462,7 +466,7 @@ end
     # Create system user if it doesn't exist
     User.transaction do
       user = User.create!(
-        email: "system+#{subdomain}@photostudio.internal",
+        email: "system+#{subdomain}@shuttersuites.internal",
         password: SecureRandom.hex(20),
         first_name: "Online",
         last_name: "Booking",

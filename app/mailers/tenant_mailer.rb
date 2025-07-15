@@ -1,6 +1,6 @@
 class TenantMailer < ApplicationMailer
   include TenantMailerConcern
-  default from: ENV.fetch('MAILER_FROM_EMAIL', 'noreply@photostudio.com')
+  default from: ENV.fetch('MAILER_FROM_EMAIL', 'noreply@shuttersuites.co')
 
 
   def verification_email(tenant)
@@ -13,7 +13,7 @@ class TenantMailer < ApplicationMailer
 
     mail(
       to: @tenant.email,
-      subject: "Welcome to PhotoStudio Pro - Verify Your Studio"
+      subject: "Welcome to ShutterSuites Pro - Verify Your Studio"
     )
   end
 
@@ -23,7 +23,7 @@ class TenantMailer < ApplicationMailer
 
     mail(
       to: @tenant.email,
-      subject: "Your PhotoStudio Pro account is ready!"
+      subject: "Your ShutterSuites Pro account is ready!"
     )
   end
 

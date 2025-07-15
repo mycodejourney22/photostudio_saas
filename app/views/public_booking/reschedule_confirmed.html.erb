@@ -1,0 +1,25 @@
+<!-- app/views/public_booking/reschedule_confirmed.html.erb -->
+<div style="max-width: 600px; margin: 40px auto; font-family: Arial, sans-serif; padding: 20px; border: 1px solid #E5E7EB; border-radius: 10px; background: #F9FAFB;">
+  <h2 style="color: #4F46E5;">Appointment Rescheduled</h2>
+
+  <p>Hello <strong><%= @appointment.customer.first_name %></strong>,</p>
+
+  <p>Your appointment with <strong><%= @tenant.name %></strong> has been successfully rescheduled.</p>
+
+  <div style="margin: 20px 0; padding: 15px; background-color: #E0F2FE; border-radius: 6px;">
+    <p><strong>New Date & Time:</strong> <%= @appointment.scheduled_at.in_time_zone("West Central Africa").strftime("%A, %B %d, %Y at %I:%M %p") %>
+</p>
+    <p><strong>Session Type:</strong> <%= @appointment.session_type.humanize %></p>
+  </div>
+
+  <p>We look forward to seeing you then!</p>
+
+  <hr style="margin-top: 30px; border: none; border-top: 1px solid #E5E7EB;">
+
+  <p style="font-size: 12px; color: #6B7280;">
+    Powered by <strong>ShutterSuites</strong><br>
+    Studio: <%= @tenant.name %><br>
+    Email: <%= @tenant.email %><br>
+    Website: <a href="https://<%= @tenant.full_domain %>"><%= @tenant.full_domain %></a>
+  </p>
+</div>

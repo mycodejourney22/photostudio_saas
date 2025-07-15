@@ -269,7 +269,7 @@ end
       return if super_admins.exists?
 
       create_super_admin!(
-        email: 'admin@photostudio.com',
+        email: 'admin@shuttersuites.co',
         password: SecureRandom.alphanumeric(12),
         first_name: 'Super',
         last_name: 'Admin'

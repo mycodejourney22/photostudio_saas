@@ -8,7 +8,7 @@ class AppointmentMailerService
   end
 
   def send_confirmation
-    return unless should_send_confirmations?
+    # return unless should_send_confirmations?
 
     begin
       AppointmentMailer.confirmation_email(appointment).deliver_now

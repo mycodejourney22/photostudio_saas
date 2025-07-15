@@ -8,7 +8,7 @@
 
   <div style="background: #F3F4F6; padding: 20px; border-radius: 8px; margin: 20px 0;">
     <h3>Appointment Details</h3>
-    <p><strong>Service:</strong> <%= @service_tier&.name || @appointment.session_type&.humanize %></p>
+    <p><strong>Service:</strong><%= @service_package.name %> <%= @service_tier&.name || @appointment.session_type&.humanize %></p>
     <p><strong>Date & Time:</strong> <%= @appointment.scheduled_at.strftime("%A, %B %d, %Y at %I:%M %p") %></p>
     <p><strong>Duration:</strong> <%= @appointment.duration_minutes %> minutes</p>
     <% if @studio_location %>
@@ -17,16 +17,23 @@
         <p><strong>Address:</strong> <%= @studio_location.address %></p>
       <% end %>
     <% end %>
-    <p><strong>Investment:</strong> <%= number_to_currency(@appointment.price, unit: "₦") %></p>
+    <p><strong>Amount:</strong> <%= number_to_currency(@appointment.price, unit: "₦") %></p>
   </div>
 
   <div style="background: #E0F2FE; padding: 15px; border-radius: 8px; margin: 20px 0;">
     <p><strong>What to bring:</strong></p>
     <ul>
-      <li>Please arrive 10 minutes early</li>
-      <li>Bring a valid ID</li>
+      <li>Please arrive 30 minutes early</li>
       <li>Come ready to have fun!</li>
     </ul>
+  </div>
+
+  <div style="margin: 20px 0; padding: 15px; background: #FEF9C3; border-radius: 8px;">
+    <p><strong>Need to make changes?</strong></p>
+    <p>
+      <a href="<%= @reschedule_url %>" style="color: #2563EB; text-decoration: underline;">Reschedule Appointment</a> |
+      <a href="<%= @cancellation_url %>" style="color: #DC2626; text-decoration: underline;">Cancel Appointment</a>
+    </p>
   </div>
 
   <p>We look forward to seeing you!</p>
@@ -40,91 +47,6 @@
   <p style="font-size: 12px; color: #6B7280;">
     Studio: <%= @tenant.name %><br>
     Email: <%= @tenant.email %><br>
-    Website: <%= @tenant.full_domain %>
-  </p>
-</div>
-
-<!-- app/views/tenant_mailer/appointment_reminder.html.erb -->
-<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-  <h1 style="color: #059669;">
-    <% case @reminder_type %>
-    <% when '1_week' %>
-      Your session is next week!
-    <% when '24_hours' %>
-      Your session is tomorrow!
-    <% when '2_hours' %>
-      Your session starts soon!
-    <% else %>
-      Session reminder
-    <% end %>
-  </h1>
-
-  <p>Hi <%= @customer.first_name %>,</p>
-
-  <p>This is a friendly reminder about your upcoming appointment with <%= @tenant.name %>.</p>
-
-  <div style="background: #F3F4F6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-    <h3>Session Details</h3>
-    <p><strong>Date & Time:</strong> <%= @appointment.scheduled_at.strftime("%A, %B %d, %Y at %I:%M %p") %></p>
-    <p><strong>Service:</strong> <%= @service_tier&.name || @appointment.session_type&.humanize %></p>
-    <% if @studio_location %>
-      <p><strong>Location:</strong> <%= @studio_location.name %></p>
-      <% if @studio_location.address.present? %>
-        <p><strong>Address:</strong> <%= @studio_location.address %></p>
-      <% end %>
-    <% end %>
-  </div>
-
-  <% if @reminder_type == '24_hours' %>
-    <div style="background: #FEF3C7; padding: 15px; border-radius: 8px; margin: 20px 0;">
-      <p><strong>Preparation tips:</strong></p>
-      <ul>
-        <li>Get a good night's sleep</li>
-        <li>Avoid busy patterns on clothing</li>
-        <li>Bring a few outfit options</li>
-        <li>Arrive 10 minutes early</li>
-      </ul>
-    </div>
-  <% end %>
-
-  <p>We're excited to work with you!</p>
-
-  <p>Best regards,<br>
-  <%= @tenant.name %><br>
-  <%= @tenant.email %></p>
-</div>
-
-<!-- app/views/tenant_mailer/feedback_request.html.erb -->
-<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-  <h1 style="color: #7C3AED;">How was your experience?</h1>
-
-  <p>Hi <%= @customer.first_name %>,</p>
-
-  <p>Thank you for choosing <%= @tenant.name %> for your recent photoshoot!</p>
-
-  <p>We hope you had an amazing experience. Your feedback helps us continue to improve our services.</p>
-
-  <div style="background: #F3F4F6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-    <h3>Your Recent Session</h3>
-    <p><strong>Service:</strong> <%= @service_tier&.name || @appointment.session_type&.humanize %></p>
-    <p><strong>Date:</strong> <%= @appointment.scheduled_at.strftime("%B %d, %Y") %></p>
-  </div>
-
-  <div style="text-align: center; margin: 30px 0;">
-    <p>We'd love to hear about your experience!</p>
-    <p style="font-size: 18px;">⭐⭐⭐⭐⭐</p>
-  </div>
-
-  <p>Thank you for being an amazing client!</p>
-
-  <p>Best regards,<br>
-  <%= @tenant.name %><br>
-  <%= @tenant.email %></p>
-
-  <hr style="margin: 30px 0; border: none; border-top: 1px solid #E5E7EB;">
-
-  <p style="font-size: 12px; color: #6B7280;">
-    Studio: <%= @tenant.name %><br>
     Website: <%= @tenant.full_domain %>
   </p>
 </div>

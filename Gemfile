@@ -29,6 +29,7 @@ gem 'image_processing', '~> 1.2'
 gem 'aws-sdk-s3', '~> 1.0'
 gem "cloudinary"
 
+gem 'jwt'
 
 # Payments - Paystack
 gem 'paystack', '~> 0.1.6'

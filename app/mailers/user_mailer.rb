@@ -1,5 +1,5 @@
 class UserMailer < ApplicationMailer
-  default from: 'noreply@photostudio.com'
+  default from: 'noreply@shuttersuites.co'
 
   def welcome_email(user)
     @user = user
@@ -7,7 +7,7 @@ class UserMailer < ApplicationMailer
 
     mail(
       to: @user.email,
-      subject: 'Welcome to PhotoStudio!'
+      subject: 'Welcome to ShutterSuites!'
     )
   end
 end

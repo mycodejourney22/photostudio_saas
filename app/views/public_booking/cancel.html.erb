@@ -1,0 +1,24 @@
+<div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+  <h1>Cancel Appointment</h1>
+
+  <p>Hi <%= @customer.first_name %>,</p>
+
+  <p>Are you sure you want to cancel your appointment scheduled for:</p>
+
+  <p>
+    <strong>Date:</strong> <%= @appointment.scheduled_at.strftime('%A, %B %d, %Y at %I:%M %p') %><br>
+    <strong>Location:</strong> <%= @studio_location.name if @studio_location %>
+  </p>
+
+  <%= form_with url: booking_public_booking_confirm_cancel_path(token: params[:token]), method: :post do %>
+    <%= hidden_field_tag :appointment_id, @appointment.id %>
+
+    <div style="margin-top: 20px;">
+      <%= submit_tag "Yes, cancel appointment", style: "padding: 10px 20px; background-color: red; color: white; border: none;" %>
+    </div>
+  <% end %>
+
+  <p style="margin-top: 20px;">
+    <a href="<%= booking_public_booking_reschedule_url(@tenant.subdomain, appointment_id: @appointment.id) %>">Reschedule instead</a>
+  </p>
+</div>
