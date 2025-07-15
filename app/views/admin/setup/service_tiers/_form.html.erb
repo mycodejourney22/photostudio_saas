@@ -70,38 +70,55 @@
     </div>
   </div>
 
-  <div class="bg-white rounded-lg shadow p-6">
-    <h3 class="text-lg font-medium text-gray-900 mb-4">Features Included</h3>
+  <div data-controller="features" class="bg-white rounded-lg shadow p-6">
+  <h3 class="text-lg font-medium text-gray-900 mb-4">Features Included</h3>
 
-    <div id="features-list">
-      <% features = @service_tier.features.presence || [""] %>
-      <% features.each_with_index do |feature, index| %>
-        <div class="flex items-center mb-3 feature-item">
-          <input type="text"
-                 name="service_tier[features][]"
-                 value="<%= feature %>"
-                 placeholder="Enter a feature..."
-                 class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-          <button type="button"
-                  class="ml-2 text-red-600 hover:text-red-800 remove-feature"
-                  onclick="removeFeature(this)">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-            </svg>
-          </button>
-        </div>
-      <% end %>
-    </div>
-
-    <button type="button"
-            onclick="addFeature()"
-            class="mt-3 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-      <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
-      </svg>
-      Add Feature
-    </button>
+  <div data-features-target="list" id="features-list">
+    <% features = @service_tier.features.presence || [""] %>
+    <% features.each do |feature| %>
+      <div class="flex items-center mb-3 feature-item">
+        <input type="text"
+               name="service_tier[features][]"
+               value="<%= feature %>"
+               placeholder="Enter a feature..."
+               class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+        <button type="button"
+                data-action="features#remove"
+                class="ml-2 text-red-600 hover:text-red-800">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+      </div>
+    <% end %>
   </div>
+
+  <template data-features-target="template">
+    <div class="flex items-center mb-3 feature-item">
+      <input type="text"
+             name="service_tier[features][]"
+             placeholder="Enter a feature..."
+             class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+      <button type="button"
+              data-action="features#remove"
+              class="ml-2 text-red-600 hover:text-red-800">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+        </svg>
+      </button>
+    </div>
+  </template>
+
+  <button type="button"
+          data-action="features#add"
+          class="mt-3 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+      <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+    </svg>
+    Add Feature
+  </button>
+</div>
+
 
   <div class="flex justify-end space-x-3">
     <%= link_to "Cancel", admin_setup_services_path,
