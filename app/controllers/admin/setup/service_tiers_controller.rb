@@ -43,7 +43,7 @@ class Admin::Setup::ServiceTiersController < Admin::Setup::BaseController
   private
 
   def set_service_package
-    @service_package = @tenant.service_packages.find_by!(slug: params[:service_id])
+    @service_package = @tenant.service_packages.find_by!(slug: params[:service_slug])
   end
 
   def set_service_tier
