@@ -1,0 +1,25 @@
+<!-- app/views/sessions_redirect/new.html.erb -->
+<div class="max-w-md mx-auto mt-10 p-6 bg-white rounded shadow">
+  <h1 class="text-2xl font-bold mb-4 text-center">Find Your Studio Login</h1>
+
+  <% if flash[:alert] %>
+    <div class="bg-red-100 text-red-700 p-2 rounded mb-4">
+      <%= flash[:alert] %>
+    </div>
+  <% end %>
+
+  <%= form_with url: find_login_path, method: :post, local: true, data: { turbo: false } do |f| %>
+    <div class="mb-4">
+      <%= f.label :identifier, "Your email or studio name", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :identifier, required: true, class: "mt-1 block w-full border border-gray-300 rounded px-3 py-2" %>
+    </div>
+
+    <div>
+      <%= f.submit "Continue to Login", class: "w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-md" %>
+    </div>
+  <% end %>
+
+  <p class="text-center text-sm text-gray-500 mt-6">
+    Powered by <span class="font-semibold text-gray-700">ShutterSuites</span>
+  </p>
+</div>

@@ -11,7 +11,8 @@ Rails.application.routes.draw do
   root 'home#index'
 
 
-
+  get  '/login-redirect', to: 'sessions_redirect#new', as: :login_redirect
+  post '/find-login',     to: 'sessions_redirect#create', as: :find_login
   # Devise routes for authentication
   devise_for :users, controllers: {
     registrations: 'users/registrations',
