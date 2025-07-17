@@ -154,7 +154,7 @@ end
 def setup_default_email_settings
   return if email_settings.present?
 
-  update!(
+  update_columns(
     email_settings: {
       'from_name' => name,
       'from_email' => email,
@@ -375,6 +375,8 @@ end
 
   def generate_verification_token
     self.verification_token = SecureRandom.urlsafe_base64(32)
+    Rails.logger.info "[DEBUG] Token generated for tenant: #{verification_token}"
+
   end
 
   def create_default_branding
