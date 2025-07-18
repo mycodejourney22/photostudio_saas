@@ -29,5 +29,5 @@ class Admin::Setup::DashboardController < Admin::Setup::BaseController
     issues << "Owner account not configured" unless @tenant.tenant_users.where(role: 'owner').exists?
 
     issues
-    end
   end
+end

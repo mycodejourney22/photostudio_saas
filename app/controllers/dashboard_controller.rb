@@ -199,7 +199,8 @@
 class DashboardController < ApplicationController
   def index
   # binding.pry
-    
+    @incomplete_setups = detect_incomplete_setups
+
     if current_tenant.individual?
       today = Time.zone.today
       @todays_appointments_count = current_tenant.appointments.where(scheduled_at: today.all_day).count
@@ -291,6 +292,17 @@ class DashboardController < ApplicationController
       tenant_id: current_tenant.id,
       scheduled_at: Time.zone.today.beginning_of_week..Time.zone.today.end_of_week
     ).sum(:paid_amount).to_f.round(2)
+  end
+
+  def detect_incomplete_setups
+    issues = []
+
+    issues << "No studio locations configured" if current_tenant.studio_locations.none?
+    issues << "No service packages available" if current_tenant.service_packages.none?
+    issues << "No staff members added" if current_tenant.staff_members.none?
+    issues << "Owner account not configured" unless current_tenant.tenant_users.where(role: 'owner').exists?
+
+    issues
   end
 
   def active_customers_count
