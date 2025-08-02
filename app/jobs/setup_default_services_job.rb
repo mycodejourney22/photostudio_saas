@@ -32,7 +32,7 @@ class SetupDefaultServicesJob < ApplicationJob
       }
     )
 
-    create_default_service_packages(tenant, studio_location)
+    # create_default_service_packages(tenant, studio_location)
   end
 
   def create_default_service_packages(tenant, studio_location = nil)

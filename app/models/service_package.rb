@@ -22,6 +22,10 @@ class ServicePackage < ApplicationRecord
 
   CATEGORIES = %w[
     portrait
+    single
+    kiddies
+    family_&_friends
+    corporate_headshot
     family
     wedding
     commercial
@@ -31,7 +35,7 @@ class ServicePackage < ApplicationRecord
     newborn
   ].freeze
 
-  validates :category, inclusion: { in: CATEGORIES }
+  # validates :category, inclusion: { in: CATEGORIES }
 
 
   scope :recent, -> { order(created_at: :desc) }
@@ -39,6 +43,15 @@ class ServicePackage < ApplicationRecord
 
 
   before_validation :generate_slug, if: -> { name.present? && slug.blank? }
+
+  def format_category_name(category)
+    category.to_s
+            .gsub('_&_', ' & ')
+            .gsub('_', ' ')
+            .split(' ')
+            .map(&:capitalize)
+            .join(' ')
+  end
 
   def to_param
     slug
